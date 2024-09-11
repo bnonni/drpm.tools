@@ -1,0 +1,77 @@
+{
+  "name": "dpm",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "description": "Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "clean:tests": "rimraf tests/compiled",
+    "build:tests": "npm tsc -p tests/tsconfig.json",
+    "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha"
+  },
+  "homepage": "https://dpm.software",
+  "bugs": {
+    "url": "https://github.com/bnonni/dpm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/bnonni/dpm.git"
+  },
+  "license": "Apache-2.0",
+  "contributors": [
+    {
+      "name": "Bryan Nonni",
+      "url": "https://github.com/bnonni"
+    }
+  ],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js"
+    }
+  },
+  "keywords": [
+    "decentralized",
+    "decentralized-applications",
+    "decentralized-identity",
+    "decentralized-web",
+    "web5",
+    "dpm",
+    "package manager",
+    "decentralized package manager",
+    "dwn",
+    "dweb node",
+    "decentralized web node",
+    "dwn protocol"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@web5/dids": "^1.1.4"
+  },
+  "devDependencies": {
+    "@types/eslint": "^9.6.1",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.5.4",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "c8": "^10.1.2",
+    "chai": "^5.1.1",
+    "eslint-plugin-mocha": "^10.5.0",
+    "globals": "^15.9.0",
+    "mocha": "^10.7.3",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.5.0"
+  }
+}
