@@ -12,7 +12,9 @@
   "scripts": {
     "clean:tests": "rimraf tests/compiled",
     "build:tests": "npm tsc -p tests/tsconfig.json",
-    "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha"
+    "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha",
+    "build": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
+    "start": "npm run build; node --experimental-loader ./dist/esm/dpm.js dist/esm/index.js"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -57,6 +59,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4"
   },
   "devDependencies": {

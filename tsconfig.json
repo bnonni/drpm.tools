@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "declarationDir": "dist/types",
+    "outDir": "dist/esm",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": false,
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "eslint.config.cjs",
+    "node_modules"
+  ]
+}
