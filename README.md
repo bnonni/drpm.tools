@@ -1,10 +1,8 @@
 # Decentralized Package Manager (DPM)
 
-<img src="/docs/img/logo/tan/profile.webp" height=500 width=500 />
+<img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
 
 Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN).
-
-Check out [dpm.software](https://dpm.software) (Website Coming Soon!)
 
 ## Goal
 

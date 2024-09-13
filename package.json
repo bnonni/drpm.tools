@@ -13,7 +13,9 @@
     "clean:tests": "rimraf tests/compiled",
     "build:tests": "npm tsc -p tests/tsconfig.json",
     "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha",
-    "build": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
+    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
+    "build:cjs": "rimraf dist/cjs && node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
+    "build": "npm run build:esm && npm run build:cjs",
     "start": "npm run build; node --experimental-loader ./dist/esm/dpm.js dist/esm/index.js"
   },
   "homepage": "https://dpm.software",

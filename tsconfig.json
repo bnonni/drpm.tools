@@ -19,6 +19,7 @@
   ],
   "exclude": [
     "eslint.config.cjs",
+    "src/web-features.ts",
     "node_modules"
   ]
 }
