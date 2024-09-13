@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralized Package Manager (DPM)</title>
+</head>
+
+<body>
+    <h1>Decentralized Package Manager (DPM)</h1>
+    <p>Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages
+        stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN).</p>
+    <p>Check out <a href="https://dpm.software">dpm.software</a> (Website Coming Soon!)</p>
+
+    <h2>Goal</h2>
+    <p>The goal of DPM is to ensure reliability and eliminate broken links by pointing to immutable sources. Instead of
+        relying on centralized repositories like npm or Bun, DPM converts Decentralized Module Import (DMI) statements
+        into Decentralized Resource Locators (DRLs) using a pre-defined convention and resolves the DRL to the location
+        of the software on the DWeb.</p>
+
+    <h2>Summary</h2>
+    <p>Npmjs packages are published under users and/or organizations. Users publish package names directly to npmjs
+        while organizations can have a list of packages that roll up under the org umbrella.</p>
+    <ul>
+        <li>User: <a href="http://npmjs.com/~bnonni">npmjs.com/~bnonni</a></li>
+        <li>Organization: <a href="http://npmjs.com/org/web5">npmjs.com/org/web5</a></li>
+        <li>Package: <a href="http://npmjs.com/package/tool5">npmjs.com/package/tool5</a></li>
+    </ul>
+    <p>On DPM, Users and Organizations are represented by their DID supporting DHT method. The <code>did:dht</code>
+        resolves to the did document where the dwn endpoint should be present as a "service". DPM uses the DMI to build
+        the DRL resolving the DID to get the DWN and query for the package record.</p>
+    <ul>
+        <li>Packages are stored in the publisher's DWN using the DPM protocol</li>
+        <li>DRLs are resolved using <a
+                href="https://github.com/TBD54566975/web5-js/blob/main/packages/api/src/web-features.ts">this link</a>
+        </li>
+    </ul>
+
+    <h2>Decentralized Module Import (DMI)</h2>
+    <ul>
+        <li>DRL resolution can be done in the browser context using <a
+                href="https://github.com/TBD54566975/web5-js/blob/main/packages/api/src/web-features.ts">polyfills</a>.
+        </li>
+        <li>DMI resolution will be done by way of a loader script executioning some assumptions defined by a
+            DMI-Resolver spec (Coming Soon!)</li>
+    </ul>
+
+    <pre><code>import * as Web5 from 'did:dht:@web5/package/api/0.0.1'
+import * as Web5 from 'did:dht:@web5/package/api/0.0.1?hash=AIjFIKRllrhcb48dqUNAAZl0ig9'
+</code></pre>
+
+    <h2>Decentralized Resource Locators (DRL)</h2>
+    <img src="./docs/img/drls.png" alt="DRLs">
+
+    <h2>DPM Loader</h2>
+    <p>Coming Soon!</p>
+
+    <h2>DPM Lockfile</h2>
+    <p>The dpm.lock file contains the DRL@hashed-dwn-record-content to ensure the integrity of the software being
+        installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more
+        resilient and trustworthy ecosystem for software distribution.</p>
+    <ul>
+        <li>After install, dpm will produce a file called <code>dpm.lock</code></li>
+        <li>The lockfile functions like a packge-lock.json: it locks each particular package to the specified version
+        </li>
+        <li>It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version</li>
+        <li>The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the
+            query</li>
+        <li>This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path</li>
+    </ul>
+
+    <pre><code>{{
+    "did:dht:bnonni/package/dpm/0.0.1": {
+        "version": "0.0.1",
+        "resolved": "http://dweb/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1",
+        "integrity": "sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==",
+        "license": "Apache-2.0"
+    }
+}}
+</code></pre>
+
+    <h2>Project Resources</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Resource</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="./CODEOWNERS">CODEOWNERS</a></td>
+                <td>Outlines the project lead(s)</td>
+            </tr>
+            <tr>
+                <td><a href="./CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a></td>
+                <td>Expected behavior for project contributors, promoting a welcoming environment</td>
+            </tr>
+            <tr>
+                <td><a href="./CONTRIBUTING.md">CONTRIBUTING.md</a></td>
+                <td>Developer guide to build, test, run, access CI, chat, discuss, file issues</td>
+            </tr>
+            <tr>
+                <td><a href="./GOVERNANCE.md">GOVERNANCE.md</a></td>
+                <td>Project governance</td>
+            </tr>
+            <tr>
+                <td><a href="./LICENSE">LICENSE</a></td>
+                <td><a href="https://opensource.org/licenses/Apache-2.0"><img
+                            src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"
+                            alt="Apache License 2.0"></a></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
