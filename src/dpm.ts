@@ -18,17 +18,14 @@ export async function resolve(
 }
 
 function DMItoDRL(pathParts: string[]) {
-  return `http://dweb/${pathParts?.[0]}/read/protocols/dpm/package?filter.tags.name="${pathParts?.[1]}"&filter.tags.version="${pathParts?.[2]}"`;
+  return `file:///dweb/${pathParts?.[0]}/read/protocols/dpm/package?filter.tags.name="${pathParts?.[1]}"&filter.tags.version="${pathParts?.[2]}"`;
 }
-// http://dweb/did:dht:123/read/protocols/dpm/package?filter.tags.name="cool-package"&filter.tags.version="0.1.0";
+
 export function load(url: string, context: any, defaultLoad: Function) {
-  if (url.startsWith('http://dweb/did:dht:')) {
-    console.log('load dmi');
-    return {
-      source       : 'console.log("Hello, DMI!")',
-      contentType  : 'application/javascript',
-      shortCircuit : true
-    };
-  }
+  console.log('function load ~~');
+  console.log('url', url);
+  console.log('context', context);
+  console.log('defaultLoad', defaultLoad);
+
   return defaultLoad(url, context, defaultLoad);
 }
