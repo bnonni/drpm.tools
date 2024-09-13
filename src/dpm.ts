@@ -3,35 +3,46 @@ import { Resolution, ResolveContext } from './types.js';
 
 const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 const didUrlRegex = /^https?:\/\/dweb\/([^/]+)\/?(.*)?$/;
-// const httpToHttpsRegex = /^http:/;
-const trailingSlashRegex = /\/$/;
 
 async function getDwnEndpoints(did: string) {
-  const { didDocument } = await DidResolver.resolve(did);
-  let endpoints = didDocument?.service?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint;
-  return (Array.isArray(endpoints) ? endpoints : [endpoints]).filter(url => url.startsWith('http'));
+  try {
+    console.log('getDwnEndpoints did', did);
+    const { didDocument } = await DidResolver.resolve(did);
+    let endpoints = didDocument?.service?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint;
+    return (Array.isArray(endpoints) ? endpoints : [endpoints]).filter(url => url.startsWith('https'));
+  } catch (error) {
+    console.log('getDwnEndpoints error', error);
+  }
 }
 
-async function fetchResource(did: string, drl: string) {
+async function fetchResource(did: string, drl: string): Promise<Response> {
+  console.log('fetchResource did, drl', did, drl);
   const endpoints = await getDwnEndpoints(did);
+  console.log('fetchResource endpoints', endpoints);
   if (!endpoints?.length) {
+    console.log('DWeb Node resolution failed: no valid endpoints found');
     throw new Error('DWeb Node resolution failed: no valid endpoints found.');
   }
   for (const endpoint of endpoints) {
+    console.log('fetchResource endpoint', endpoint);
     try {
-      const url = drl.replace('https://dweb/', endpoint.replace(trailingSlashRegex, ''));
+      const url = drl.replace('https://dweb/', endpoint);
+      console.log('fetchResource url', url);
       const response = await fetch(url);
-      if (response.ok) {
-        return response;
+      console.log('fetchResource response', response);
+      if (!response.ok) {
+        console.log(`DWN endpoint error: ${response.status}`);
+        continue;
       }
-      console.log(`DWN endpoint error: ${response.status}`);
-      return new Error('DWeb Node request failed');
-    }
-    catch (error) {
+      return response;
+    } catch (error) {
       console.log(`DWN endpoint error: ${error}`);
-      return new Error('DWeb Node request failed: ' + error);
+      throw new Error('DWeb Node request failed: ' + error);
     }
   }
+  const failedToFetchResource = 'DWeb Node request failed: no valid response from any endpoint.';
+  console.log(failedToFetchResource);
+  throw new Error(failedToFetchResource);
 }
 
 /**
@@ -47,15 +58,18 @@ export async function resolve(
   context: ResolveContext,
   defaultResolve: Function
 ): Promise<Resolution> {
-  if (specifier.startsWith('did:dht:')) {
+  if (specifier && specifier.startsWith('did:dht:')) {
     console.log('DMI detected', specifier);
     const [did, packageName, version] = specifier.split('/') ?? [];
+    console.log('did, packageName, version', did, packageName, version);
     if(!(did && packageName && version)) {
       throw new Error('DMI resolution failed: invalid DMI format' + specifier);
     }
     const drl = `https://dweb/${did}/read/records/dpm/package?filter.tags.name="${packageName}"&filter.tags.version="${version}"`;
     console.log('DRL created', drl);
-    return { url: drl, shortCircuit: true };
+    const response = await fetchResource(did, drl);
+    const data = await response.json();
+    console.log('DPM resolved DMI to DWN record', data);
   }
   return defaultResolve(specifier, context, defaultResolve);
 }
@@ -68,7 +82,6 @@ export async function load(url: string, context: any, defaultLoad: Function) {
       throw new Error('DRL parsing failed: invalid DRL format - no DID present' + url);
     }
     console.log('DID parsed', did);
-    return await fetchResource(did, url);
   }
   return defaultLoad(url, context, defaultLoad);
 }
