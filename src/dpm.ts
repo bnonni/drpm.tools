@@ -1,31 +1,53 @@
-type ResolveContext = {
-  conditions: string[];
-  importAttributes: {};
-  parentURL: string;
-};
-type Function = (...args: any[]) => any;
-type Resolution = { url: string; shortCircuit?: boolean };
+import { Resolution, ResolveContext } from './types.js';
+import { fetchResource } from './utils.js';
 
+const didUrlRegex = /^https?:\/\/dweb\/([^/]+)\/?(.*)?$/;
+
+/**
+ * resolve is a built-in hook that allows you to intercept and modify the resolution of a module specifier.
+ * Function that takes in a  (i.e. an import path) and detects a DMI, converts to a DRL and fetches the resource.
+ * @param specifier either normal code import or DMI (e.g. did:dht:web5/api/0.0.1)
+ * @param context pre-defined argument required for the resolve hook
+ * @param defaultResolve pre-defined argument required for the resolve hook
+ * @returns a promise that resolves to a Resolution object
+ */
 export async function resolve(
   specifier: string,
   context: ResolveContext,
   defaultResolve: Function
 ): Promise<Resolution> {
-  if (specifier.startsWith('did:dht:')) {
-    return { url: DMItoDRL(specifier.split('/')), shortCircuit: true };
+  if (specifier && specifier.startsWith('did:dht:')) {
+    console.log('DMI detected', specifier);
+    const [did, packageName, version] = specifier.split('/') ?? [];
+    console.log('did, packageName, version', did, packageName, version);
+    if(!(did && packageName && version)) {
+      throw new Error('DMI resolution failed: invalid DMI format' + specifier);
+    }
+    const drl = `https://dweb/did:dht:sjqxjhiw6q7s6m4z34erj43e5w8dxztf6h9gdmtk767wpwt4a5ky/read/records/package?filter.tags.name="${packageName}"&filter.tags.version="${version}"`;
+    console.log('DRL created', drl);
+    const data = await fetchResource(did, drl, specifier);
+    console.log('DPM resolved DMI to DWN record', data);
   }
   return defaultResolve(specifier, context, defaultResolve);
 }
 
-function DMItoDRL(pathParts: string[]) {
-  return `file:///dweb/${pathParts?.[0]}/read/protocols/dpm/package?filter.tags.name="${pathParts?.[1]}"&filter.tags.version="${pathParts?.[2]}"`;
+// TODO: Implement the encodeURI function
+export function encodeURI(url: string, queryParams: { [key: string]: string }) {
+  const baseUrl = `${url}/did:dht:sjqxjhiw6q7s6m4z34erj43e5w8dxztf6h9gdmtk767wpwt4a5ky/query`;
+  // const queryString = `filter.tags.name=${encodeURIComponent(queryParams.name)}&filter.tags.version=${encodeURIComponent(filterTags.version)}`;
+  // const encodedUrl = `${baseUrl}?${queryString}`;
+  // console.log(encodedUrl);
+  return baseUrl;
 }
 
-export function load(url: string, context: any, defaultLoad: Function) {
-  console.log('function load ~~');
-  console.log('url', url);
-  console.log('context', context);
-  console.log('defaultLoad', defaultLoad);
-
+export async function load(url: string, context: any, defaultLoad: Function) {
+  if (url.startsWith('https://dweb/')) {
+    console.log('DRL detected', url);
+    const did = url.match(didUrlRegex)?.[1];
+    if(!did) {
+      throw new Error('DRL parsing failed: invalid DRL format - no DID present' + url);
+    }
+    console.log('DID parsed', did);
+  }
   return defaultLoad(url, context, defaultLoad);
 }

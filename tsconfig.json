@@ -19,6 +19,7 @@
   ],
   "exclude": [
     "eslint.config.cjs",
+    "src/utils.ts",
     "node_modules"
   ]
 }

@@ -11,10 +11,12 @@
   },
   "scripts": {
     "clean:tests": "rimraf tests/compiled",
-    "build:tests": "npm tsc -p tests/tsconfig.json",
+    "build:tests": "npm run clean:tests && tsc -p tests/tsconfig.json",
     "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha",
-    "build": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
-    "start": "npm run build; node --experimental-loader ./dist/esm/dpm.js dist/esm/index.js"
+    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
+    "build:cjs": "rimraf dist/cjs && node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
+    "build": "npm run build:esm && npm run build:cjs",
+    "start": "npm run build; node --import ./dist/esm/register.js dist/esm/test.js"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -70,6 +72,7 @@
     "@typescript-eslint/parser": "^8.5.0",
     "c8": "^10.1.2",
     "chai": "^5.1.1",
+    "esbuild": "^0.23.1",
     "eslint-plugin-mocha": "^10.5.0",
     "globals": "^15.9.0",
     "mocha": "^10.7.3",
