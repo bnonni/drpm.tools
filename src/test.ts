@@ -1,3 +1,3 @@
-import * as Web5 from 'did:dht:1xdggo5czjw16wyj9u6wzkecpyq3w7ywfoxf963kt1pb9d4xhb3y/api/0.0.1';
+import * as Web5 from 'did:dht:sjqxjhiw6q7s6m4z34erj43e5w8dxztf6h9gdmtk767wpwt4a5ky/tool5/1.0.2';
 
 console.log(Web5);

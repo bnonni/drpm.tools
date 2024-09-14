@@ -23,7 +23,7 @@ export async function resolve(
     if(!(did && packageName && version)) {
       throw new Error('DMI resolution failed: invalid DMI format' + specifier);
     }
-    const drl = `https://dweb/${did}/read/records/dpm/package?filter.tags.name="${packageName}"&filter.tags.version="${version}"`;
+    const drl = `https://dweb/${did}/read/records/package?filter.tags.name="${packageName}"&filter.tags.version="${version}"`;
     console.log('DRL created', drl);
     const data = await fetchResource(did, drl, specifier);
     console.log('DPM resolved DMI to DWN record', data);

@@ -1,5 +1,5 @@
 export default {
-  $id        : 'https://dpm.software/protocol/schemas/dpm/package',
+  $id        : 'https://dpm.software/schemas/dpm/package',
   $schema    : 'http://json-schema.org/draft-07/schema#',
   title      : 'DPM Software Package Schema',
   type       : 'object',
@@ -17,17 +17,18 @@ export default {
           description : 'package name',
         },
       },
-      integrity : {
-        type        : 'string',
-        description : 'sha512 hash of the package contents',
-      },
-      code : {
-        type        : 'string',
-        description : 'the actual package code to be downloaded',
-        dataFormat  : 'application/octet-stream',
-      },
       additionalProperties : false,
-      required             : ['version', 'name', 'integrity'],
+      required             : ['version', 'name'],
+    },
+    integrity : {
+      type        : 'string',
+      description : 'sha512 hash of the package contents',
+    },
+    code : {
+      type        : 'buffer',
+      description : 'the actual package code to be downloaded',
     },
   },
+  additionalProperties : false,
+  required             : ['tags', 'integrity', 'code'],
 };
