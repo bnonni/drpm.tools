@@ -31,15 +31,13 @@ export async function resolve(
   return defaultResolve(specifier, context, defaultResolve);
 }
 
-export function encodeURI(url: string) {
-  const baseUrl = 'https://dwn.nonni.org/did:dht:sjqxjhiw6q7s6m4z34erj43e5w8dxztf6h9gdmtk767wpwt4a5ky/query';
-  const filterTags = {
-    name    : 'tool5',
-    version : '1.0.2'
-  };
-  const queryString = `filter.tags.name=${encodeURIComponent(filterTags.name)}&filter.tags.version=${encodeURIComponent(filterTags.version)}`;
-  const encodedUrl = `${baseUrl}?${queryString}`;
-  console.log(encodedUrl);
+// TODO: Implement the encodeURI function
+export function encodeURI(url: string, queryParams: { [key: string]: string }) {
+  const baseUrl = `${url}/did:dht:sjqxjhiw6q7s6m4z34erj43e5w8dxztf6h9gdmtk767wpwt4a5ky/query`;
+  // const queryString = `filter.tags.name=${encodeURIComponent(queryParams.name)}&filter.tags.version=${encodeURIComponent(filterTags.version)}`;
+  // const encodedUrl = `${baseUrl}?${queryString}`;
+  // console.log(encodedUrl);
+  return baseUrl;
 }
 
 export async function load(url: string, context: any, defaultLoad: Function) {
