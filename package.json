@@ -10,11 +10,11 @@
     "doc": "docs"
   },
   "scripts": {
-    "clean:tests": "rimraf tests/compiled",
-    "build:tests": "npm run clean:tests && tsc -p tests/tsconfig.json",
-    "test": "npm run clean:tests && npm run build:tests && NODE_ENV=test npm c8 mocha",
-    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.json",
-    "build:cjs": "rimraf dist/cjs && node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
+    "clean": "rimraf dist coverage tests/compiled",
+    "build:tests": "npm run clean && tsc -p tests/tsconfig.json",
+    "test": "npm run clean && npm run build:tests && NODE_ENV=test npm c8 mocha",
+    "build:esm": "npm run clean && dist/types && tsc -p tsconfig.json",
+    "build:cjs": "npm run clean && node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build": "npm run build:esm && npm run build:cjs",
     "start": "npm run build; node --import ./dist/esm/register.js dist/esm/test.js"
   },
