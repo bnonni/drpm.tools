@@ -2,54 +2,49 @@
 
 <img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
 
-Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN).
-
-## Goal
-
-The goal of DPM is to ensure reliability and eliminate broken links by pointing to immutable sources. Instead of relying on centralized repositories like npm or Bun, DPM converts Decentralized Module Import (DMI) statements into Decentralized Resource Locators (DRLs) using a pre-defined convention and resolves the DRL to the location of the software on the DWeb.
+Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb in Decentralized Web Node (DWN) records.
 
 ## Summary
 
-Npmjs packages are published under users and/or organizations. Users publish package names directly to npmjs while organizations can have a list of packages that roll up under the org umbrella.
+The goal of DPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DPM, publishers write code to their DWNs and list it on [explorer.dpm.software](explorer.dpm.software).
 
-* User: <npmjs.com/~bnonni>
-* Organization: <npmjs.com/org/web5>
-* Package: <npmjs.com/package/tool5>
+Developers can discover packages here just like npmjs.com, except explorer.dpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.
 
-On DPM, Users and Organizations are represented by their DID supporting DHT method. The `did:dht` resolves to the did document where the dwn endpoint should be present as a "service". DPM uses the DMI to build the DRL resolving the DID to get the DWN and query for the package record
+Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
-* Packages are stored in the publisher's DWN using the DPM protocol
-* DRLs are resolved using <https://github.com/TBD54566975/web5-js/blob/main/packages/api/src/web-features.ts>
+* NPMJS User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
+* Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
+* Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
+
+In DPM, packages are published and listed under DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves `did:dht` to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.
 
 ## Decentralized Module Import (DMI)
 
-* DRL resolution can be done in the browser context using [polyfills](https://github.com/TBD54566975/web5-js/blob/main/packages/api/src/web-features.ts).
-* DMI resolution will be done by way of a loader script executioning some assumptions defined by a DMI-Resolver spec (Coming Soon!)
-* DMI code reference
+* DMIs are used in the codebase to import code from DWNs
+* At install time, DPM uses the node `--import` CLI flag to intercept the module loading and query for the code
+* The interception is done by adding `--import /path/to/register-dpm-hooks.js` to the global `NODE_OPTIONS` env var
+* DPM installs the code from the DWN to the local `node_modules` folder
+* Devs reference this code normal esm imports referencing the did of the publisher in the path, e.g.
 
 ```ts
-import * as Web5 from 'did:dht:@web5/package/api/0.0.1'
-import * as Web5 from 'did:dht:@web5/package/api/0.0.1?hash=AIjFIKRllrhcb48dqUNAAZl0ig9'
+import * as Web5Api from 'did:dht:@web5/api/0.0.1';
+const web5Api = require('did:dht:@web5/api/0.0.1');
 ```
-
-## Decentralized Resource Locators (DRL)
-
-![drls](./docs/img/drls.png)
 
 ## DPM Loader
 
-Coming Soon!
+Check out [dpm.ts](/src/dpm.ts) and [register.ts](/src/register.ts).
 
-## DPM Lockfile
+## Lockfile
 
-The dpm.lock file contains the DRL@hashed-dwn-record-content to ensure the integrity of the software being installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.
+DPM uses the `package-lock.json` file contains the `DRL@hashed-dwn-record-content` to ensure the integrity of the software being installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.
 
-* After install, dpm will produce a file called `dpm.lock`
-* The lockfile functions like a packge-lock.json: it locks each particular package to the specified version
-* It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version
-* The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query
-* This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path
-* E.g. `DMI` => `DRL` :: `did:dht:web5/package/api/0.0.1` => `http://dweb/did:dht:web5/protocols/dpm/package/api/0.0.1`
+* After install, dpm will produce a file called `dpm.lock`.
+* The lockfile functions like a packge-lock.json: it locks each particular package to the specified version.
+* It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version.
+* The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query.
+* This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path.
+* E.g. `DMI` => `did:dht:web5/package/api/0.0.1` => `http://dweb/did:dht:web5/protocols/dpm/package/api/0.0.1`
 
 ```ts
 {
