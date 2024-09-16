@@ -11,6 +11,17 @@ export default {
   },
   structure : {
     package : {
+      $tags : {
+        name    : {
+          type : 'string',
+        },
+        version : {
+          type : 'string',
+        },
+        integrity : {
+          type : 'string',
+        },
+      },
       $actions : [
         {
           who : 'anyone',
