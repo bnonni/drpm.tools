@@ -1,18 +1,18 @@
 import packageSchema from './schema/package.js';
 
 export default {
-  protocol  : 'https://dpm.software/protocols/dpm',
+  protocol  : 'https://test.dpm.software/protocol',
   published : true,
   types     : {
     package : {
       schema      : packageSchema.$id,
-      dataFormats : ['application/json', 'application/octet-stream'],
+      dataFormats : ['application/gzip'],
     },
   },
   structure : {
     package : {
       $tags : {
-        name    : {
+        name : {
           type : 'string',
         },
         version : {
@@ -21,6 +21,7 @@ export default {
         integrity : {
           type : 'string',
         },
+        $requiredTags : ['name', 'version', 'integrity'],
       },
       $actions : [
         {
