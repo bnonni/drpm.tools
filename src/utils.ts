@@ -44,7 +44,7 @@ export async function fetchResource(did: string, packageName: string, version: s
   for (const endpoint of endpoints) {
     console.log('fetchResource for endpoint', endpoint);
     try {
-      const url = `${endpoint}/${encodeURIComponent(did)}/query?${encodeURIQueryFilters({ packageName, version })}`;
+      const url = `${endpoint}/${did}/query?filter.tags.name=${packageName}&filter.tags.version=${version}`;
       console.log('fetchResource from:', url);
       const response = await fetch(url);
       console.log('fetchResource response', response);

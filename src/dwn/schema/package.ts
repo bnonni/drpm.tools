@@ -1,20 +1,18 @@
 export default {
-  $id        : 'https://dpm.software/schemas/dpm/package',
+  $id        : 'https://test.dpm.software/schema/package',
   $schema    : 'http://json-schema.org/draft-07/schema#',
   title      : 'DPM Software Package Schema',
   type       : 'object',
   properties : {
     type       : 'object',
-    properties : {
-      version : {
-        type        : 'string',
-        description : 'semantic version',
-        pattern     : '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$'
-      },
-      name    : {
-        type        : 'string',
-        description : 'package name',
-      },
+    version : {
+      type        : 'string',
+      description : 'semantic version',
+      pattern     : '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$'
+    },
+    name    : {
+      type        : 'string',
+      description : 'package name',
     },
     integrity : {
       type        : 'string',
