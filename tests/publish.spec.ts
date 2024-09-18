@@ -2,15 +2,14 @@ import { Web5 } from '@web5/api';
 import { createHash } from 'crypto';
 import { readFile } from 'fs/promises';
 import path from 'path';
+
+const sync = '30s';
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
-const {
-  web5,
-  did
-} = await Web5.connect({
-  sync             : '30s',
+
+const { web5, did } = await Web5.connect({
+  sync,
   password,
-  recoveryPhrase   : 'civil receive talk very company liquid tuna price brand salad ladder tail',
   techPreview      : { dwnEndpoints },
   didCreateOptions : { dwnEndpoints }
 });
@@ -51,7 +50,6 @@ const dpm = {
 };
 
 const { status: configure, protocol } = await web5.dwn.protocols.configure({ message: { definition: dpm }});
-
 console.log('configure', configure);
 
 if (!protocol) {

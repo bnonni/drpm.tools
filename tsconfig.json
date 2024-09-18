@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
+    "lib": [
+      "ES2022",
+    ],
     "declarationDir": "dist/types",
     "outDir": "dist/esm",
-    "target": "ES2020",
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "allowJs": false,
+    "allowJs": true,
     "strict": true,
     "declaration": true,
     "declarationMap": true,
@@ -19,7 +22,6 @@
   ],
   "exclude": [
     "eslint.config.cjs",
-    "src/utils.ts",
     "node_modules"
   ]
 }

@@ -1,0 +1,76 @@
+<h1>Decentralized Package Manager (DPM)</h1>
+<img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
+
+<p>Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb in Decentralized Web Node (DWN) records.</p>
+<h2>Summary</h2>
+<p>The goal of DPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DPM, publishers write code to their DWNs and list it on <a href="explorer.dpm.software">explorer.dpm.software</a>.</p>
+<p>Developers can discover packages here just like npmjs.com, except explorer.dpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.</p>
+<p>Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as <code>@web5</code>) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.</p>
+<ul>
+<li>NPMJS User <a href="https://npmjs.com/~bnonni">npmjs.com/~bnonni</a></li>
+<li>Organization: <a href="https://npmjs.com/org/web5">npmjs.com/org/web5</a></li>
+<li>Package: <a href="npmjs.com/package/tool5">npmjs.com/package/tool5</a></li>
+</ul>
+<p>In DPM, packages are published and listed under DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves <code>did:dht</code> to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.</p>
+<h2>Decentralized Module Import (DMI)</h2>
+<ul>
+<li>DMIs are used in the codebase to import code from DWNs</li>
+<li>At install time, DPM uses the node <code>--import</code> CLI flag to intercept the module loading and query for the code</li>
+<li>The interception is done by adding <code>--import /path/to/register-dpm-hooks.js</code> to the global <code>NODE_OPTIONS</code> env var</li>
+<li>DPM installs the code from the DWN to the local <code>node_modules</code> folder</li>
+<li>Devs reference this code normal esm imports referencing the did of the publisher in the path, e.g.</li>
+</ul>
+<pre><code class="language-ts">import * as Web5Api from &#39;did:dht:@web5/api/0.0.1&#39;;
+const web5Api = require(&#39;did:dht:@web5/api/0.0.1&#39;);
+</code></pre>
+<h2>DPM Loader</h2>
+<p>Check out <a href="/src/dpm.ts">dpm.ts</a> and <a href="/src/register.ts">register.ts</a>.</p>
+<h2>Lockfile</h2>
+<p>DPM uses the <code>package-lock.json</code> file contains the <code>DRL@hashed-dwn-record-content</code> to ensure the integrity of the software being installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.</p>
+<ul>
+<li>After install, dpm will produce a file called <code>dpm.lock</code>.</li>
+<li>The lockfile functions like a packge-lock.json: it locks each particular package to the specified version.</li>
+<li>It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version.</li>
+<li>The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query.</li>
+<li>This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path.</li>
+<li>E.g. <code>DMI</code> =&gt; <code>did:dht:web5/package/api/0.0.1</code> =&gt; <code>https://dwn.nonni.org/did:dht:web5/protocols/dpm/package/api/0.0.1</code></li>
+</ul>
+<pre><code class="language-ts">{
+    &quot;did:dht:bnonni/package/dpm/0.0.1&quot;: {
+        &quot;version&quot;: &quot;0.0.1&quot;,
+        &quot;resolved&quot;: &quot;https://dwn.nonni.org/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1&quot;,
+        &quot;integrity&quot;: &quot;sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==&quot;,
+        &quot;license&quot;: &quot;Apache-2.0&quot;
+    }
+}
+</code></pre>
+<h2>Project Resources</h2>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="./CODEOWNERS">CODEOWNERS</a></td>
+<td>Outlines the project lead(s)</td>
+</tr>
+<tr>
+<td><a href="./CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a></td>
+<td>Expected behavior for project contributors, promoting a welcoming environment</td>
+</tr>
+<tr>
+<td><a href="./CONTRIBUTING.md">CONTRIBUTING.md</a></td>
+<td>Developer guide to build, test, run, access CI, chat, discuss, file issues</td>
+</tr>
+<tr>
+<td><a href="./GOVERNANCE.md">GOVERNANCE.md</a></td>
+<td>Project governance</td>
+</tr>
+<tr>
+<td><a href="./LICENSE">LICENSE</a></td>
+<td><a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="Apache License 2.0"></a></td>
+</tr>
+</tbody></table>
+

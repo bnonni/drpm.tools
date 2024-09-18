@@ -1,5 +1,5 @@
-import { Resolution, ResolveContext } from './types.js';
-import { fetchResource } from './utils.js';
+import { Resolution, ResolveContext } from './utils/types.js';
+import { fetchResource } from './utils/utils.js';
 
 /**
  * resolve is a built-in hook that allows you to intercept and modify the resolution of a module specifier.
