@@ -62,12 +62,12 @@ export async function fetchResource(did: string, name: string, version: string):
     Logger.log('fetchResource => dpack', dpack);
     const dpackdata = new Blob([Convert.base64Url(dpack?.encodedData).toUint8Array()], { type: dpack.dataFormat });
     Logger.log('fetchResource => dpackdata', dpackdata);
-    const DMIpath = `file://${execDir}/node_modules/${did}/${name}/${version}`;
+    const DMIpath = `file://${execDir}/node_modules/@${did}/${name}/${version}`;
     // const dpackage = await entries?.[0]?.data?.stream();
     // TODO: Add integrity check
     // TODO: Compute sha512 of package and compare to hash in lockfile
     Logger.log(`Writing DPK to DMI path ${DMIpath}`);
-    await writeNodeModule(did, name, version, dpackdata);
+    await writeNodeModule(`@${did}`, name, version, dpackdata);
     Logger.log(`Successfully extracted to ${DMIpath}`);
     return DMIpath;
   }
@@ -81,7 +81,7 @@ export async function writeNodeModule(did: string, name: string, version: string
   const buffer = Buffer.from(arrayBuffer);
   const decompressedBuffer = gunzipSync(buffer);
   Logger.log('records => record unzipped', decompressedBuffer);
-  const dpmDir = `${execDir}/node_modules/@${did}/${name}/${version}`;
+  const dpmDir = `${execDir}/node_modules/${did}/${name}/${version}`;
   await mkdir(dpmDir, { recursive: true });
   const readStream = createReadStream(Buffer.from(decompressedBuffer));
   return new Promise((resolve, reject) => {
