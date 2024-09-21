@@ -12,12 +12,12 @@
   "scripts": {
     "postcommit": "marked README.md > docs/index.html",
     "clean": "rimraf dist coverage tests/compiled",
-    "build:tests": "npm run clean && tsc -p tests/tsconfig.json",
-    "test": "npm run clean && npm run build:tests && NODE_ENV=test npm c8 mocha",
+    "build:tests": "npm run build && tsc -p tests/tsconfig.json",
+    "test": "npm run build && npm run build:tests && NODE_ENV=test npm c8 mocha",
     "build:esm": "tsc -p tsconfig.json",
     "build:cjs": "node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
-    "start": "npm run build && node --import ./dist/esm/register.js dist/esm/test.js"
+    "start": ""
   },
   "homepage": "https://dpm.software",
   "bugs": {
