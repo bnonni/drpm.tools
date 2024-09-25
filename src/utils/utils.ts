@@ -2,15 +2,15 @@ import { DidDht, DidWeb, UniversalResolver } from '@web5/dids';
 import { gunzipSync } from 'zlib';
 import { extract } from 'tar';
 import { Logger } from './logger.js';
-import { writeFile, mkdir } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 import { Record } from '@web5/api';
-import { Convert } from '@web5/common';
+// import { Convert } from '@web5/common';
 import { createReadStream } from 'fs';
 
 const execDir = process.cwd();
 const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 const trailingSlashRegex = /\/$/;
-type QueryFilters = { name: string; version: string; [key: string]: string }
+type QueryFilters = { name: string; version: string;[key: string]: string }
 type DwnFetchEntry = Record & { encodedData: string }
 type DwnFetchResponse = { status: { code: 200, detail: 'OK' }, entries: DwnFetchEntry[] }
 
@@ -45,23 +45,25 @@ export async function fetchResource(did: string, name: string, version: string):
 
   for (const endpoint of endpoints) {
     Logger.log('fetchResource => endpoint', endpoint);
-    const url = `${endpoint}/${did}/query?filter.tags.name=${name}&filter.tags.version=${version}`;
-    Logger.log('fetchResource => url', url);
-    const response: Response = await fetch(url);
-    Logger.log('fetchResource => response', response);
-    if (!response.ok) {
-      Logger.log(`DWN endpoint error: ${response.status}`);
+    const queryUrl = `${endpoint}/${did}/query?filter.tags.name=${name}&filter.tags.version=${version}`;
+    Logger.log('fetchResource => queryUrl', queryUrl);
+    const query: Response = await fetch(queryUrl);
+    Logger.log('fetchResource => query', query);
+    if (!query.ok) {
+      Logger.log(`DWN endpoint error: ${query.status}`);
       continue;
     }
-    const data = await response.json() as DwnFetchResponse;
+    const { status: qStatus, entries: qEntries } = await query.json() as DwnFetchResponse;
+    Logger.log('fetchResource => qStatus', qStatus);
+    Logger.log('fetchResource => qEntries', qEntries);
+    const recordId = qEntries?.[0].id;
+    // TODO: Add fetch(/read/recordId)
+    const read: Response = await fetch(`${endpoint}/${did}/read/records/${recordId}`);
+    Logger.log('fetchResource => read', read);
+    const data = await read.json();
     Logger.log('fetchResource => data', data);
-    const { status, entries }: DwnFetchResponse = data;
-    Logger.log('fetchResource => status', status);
-    Logger.log('fetchResource => entries', entries);
-    const dpack = entries?.[0];
-    Logger.log('fetchResource => dpack', dpack);
-    const dpackdata = new Blob([Convert.base64Url(dpack?.encodedData).toUint8Array()], { type: dpack.dataFormat });
-    Logger.log('fetchResource => dpackdata', dpackdata);
+    // const dpackdata = new Blob([Convert.base64Url(dpack?.encodedData).toUint8Array()], { type: dpack.dataFormat });
+    // Logger.log('fetchResource => dpackdata', dpackdata);
     const DMIpath = `file://${execDir}/node_modules/@${did}/${name}/${version}`;
     // const dpackage = await entries?.[0]?.data?.stream();
     // TODO: Add integrity check
@@ -86,7 +88,7 @@ export async function writeNodeModule(did: string, name: string, version: string
   const readStream = createReadStream(Buffer.from(decompressedBuffer));
   return new Promise((resolve, reject) => {
     readStream
-      .pipe(extract({cwd: dpmDir, strip: 1}))
+      .pipe(extract({ cwd: dpmDir, strip: 1 }))
       .on('finish', resolve)
       .on('error', reject);
   });
