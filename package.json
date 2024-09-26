@@ -13,7 +13,7 @@
     "postcommit": "marked README.md > docs/index.html",
     "clean": "rimraf dist coverage tests/compiled",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
-    "test": "npm run build:tests; node --import tests/compiled/src/register.js tests/compiled/tests/dpm.spec.js",
+    "test:register-hooks": "npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
     "build:esm": "tsc -p tsconfig.json",
     "build:cjs": "node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
