@@ -1,5 +1,6 @@
-import { Resolution, ResolveContext } from './types.js';
-import { fetchResource } from './utils.js';
+import { Logger } from './utils/logger.js';
+import { Resolution, ResolveContext } from './utils/types.js';
+import { fetchResource, findEntryPoint } from './utils/utils.js';
 
 /**
  * resolve is a built-in hook that allows you to intercept and modify the resolution of a module specifier.
@@ -14,31 +15,31 @@ export async function resolve(
   context: ResolveContext,
   defaultResolve: Function
 ): Promise<Resolution> {
-  if (specifier && specifier.startsWith('did:dht:')) {
-    console.log('DMI detected! Resolving', specifier);
-    const [did, packageName, version] = specifier.split('/') ?? [];
-    console.log('DMI: did', did);
-    console.log('DMI: packageName', packageName);
-    console.log('DMI: version', version);
-    if(!(did && packageName && version)) {
+  if (specifier && specifier.includes('did:')) {
+    Logger.log('DMI detected! Resolving', specifier);
+    const [did, name, version] = specifier.split('/') ?? [];
+    Logger.log('DMI: did', did);
+    Logger.log('DMI: name', name);
+    Logger.log('DMI: version', version);
+    if (!(did && name && version)) {
       throw new Error('DMI resolution failed: invalid DMI format' + specifier);
     }
-    console.log('did, packageName, version', did, packageName, version);
-    const url = await fetchResource(did, packageName, version);
-    console.log('DPM resolved DMI to DWN record');
-    return {
-      url          : `file:///${url}`,
-      shortCircuit : true,
-      context,
-      defaultResolve,
-    };
+    Logger.log('did, name, version', did, name, version);
+    await fetchResource(did.replace('@', ''), name, version);
+    Logger.log('resolve => fetchResource => specifier', specifier);
+
+    const entryPoint = await findEntryPoint(specifier);
+    Logger.log('resolve => findEntryPoint => Entry point found!', entryPoint);
+    specifier = `${specifier}/${entryPoint}`;
+    Logger.log('resolve => specifier', entryPoint);
   }
+  console.log('resolve => specifier, context, defaultResolve', specifier, context, defaultResolve);
   return defaultResolve(specifier, context, defaultResolve);
 }
 
 export async function load(url: string, context: any, defaultLoad: Function) {
   if (url.includes('did:dht')) {
-    console.log('DMI detected! Loading', url);
+    Logger.log('DMI detected! Loading', url);
   }
   return defaultLoad(url, context, defaultLoad);
 }

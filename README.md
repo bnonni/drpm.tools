@@ -44,13 +44,13 @@ DPM uses the `package-lock.json` file contains the `DRL@hashed-dwn-record-conten
 * It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version.
 * The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query.
 * This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path.
-* E.g. `DMI` => `did:dht:web5/package/api/0.0.1` => `http://dweb/did:dht:web5/protocols/dpm/package/api/0.0.1`
+* E.g. `DMI` => `did:dht:web5/package/api/0.0.1` => `https://dwn.nonni.org/did:dht:web5/protocols/dpm/package/api/0.0.1`
 
 ```ts
 {
     "did:dht:bnonni/package/dpm/0.0.1": {
         "version": "0.0.1",
-        "resolved": "http://dweb/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1",
+        "resolved": "https://dwn.nonni.org/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1",
         "integrity": "sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==",
         "license": "Apache-2.0"
     }
