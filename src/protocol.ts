@@ -1,11 +1,9 @@
-import packageSchema from './schema/package.js';
-
 export default {
-  protocol  : 'https://test.dpm.software/protocol',
+  protocol  : 'https://dpm.software/.well-known/protocol',
   published : true,
   types     : {
     package : {
-      schema      : packageSchema.$id,
+      schema      : 'https://dpm.software/.well-known/protocol',
       dataFormats : ['application/gzip'],
     },
   },
@@ -19,6 +17,9 @@ export default {
           type : 'string',
         },
         integrity : {
+          type : 'string',
+        },
+        description : {
           type : 'string',
         },
         $requiredTags : ['name', 'version', 'integrity'],

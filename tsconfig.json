@@ -18,7 +18,8 @@
     "skipLibCheck": true
   },
   "include": [
-    "src"
+    "src",
+    "bin"
   ],
   "exclude": [
     "eslint.config.cjs",

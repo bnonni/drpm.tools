@@ -2,9 +2,11 @@
 
 <img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
 
-Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb in Decentralized Web Node (DWN) records.
+Decentralized Package Manager (DPM) - a package manager for the dWeb - like npm but decentralized.
 
 ## Summary
+
+DPM is a package manager for interacting with decentralized packages (DPKs) published to Decentralized Web Nodes (DWNs). It leverages decentralized identifiers (DIDs) to lookup the DWN endpoint associated with that DID document and query DPKs stored at the `dpm` protocol path.
 
 The goal of DPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DPM, publishers write code to their DWNs and list it on [explorer.dpm.software](explorer.dpm.software).
 

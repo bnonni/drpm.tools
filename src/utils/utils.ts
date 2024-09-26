@@ -14,52 +14,18 @@ type DwnRecordDescriptor = DwnMessageDescriptor[DwnInterface.RecordsWrite] | Dwn
 type DRLResponseEntry = DwnRecordDescriptor & { recordId: string; contextId: string; encodedData: string }
 type DRLResponse = { status: { code: 200, detail: 'OK' }, entries: DRLResponseEntry[] }
 
-async function determinePossibleEntryPoints(): Promise<string[]> {
-  const packageJsonPath = join(execDir, 'package.json');
-  let isESModule = false;
-  Logger.log('determinePossibleEntryPoints => packageJsonPath', packageJsonPath);
-  try {
-    // Read package.json to check the "type" field
-    const packageJsonContent = await readFile(packageJsonPath, 'utf8');
-    const packageJson = JSON.parse(packageJsonContent);
-    isESModule = packageJson.type === 'module';
-    Logger.log('determinePossibleEntryPoints => isESModule', isESModule);
-  } catch {
-    throw new Error(`Failed to read package.json at ${packageJsonPath}`);
-  }
-  return isESModule
-    ? [
-      'index.mjs',
-      'dist/esm/index.js',
-      'dist/index.js',
-    ] : [
-      'index.js',
-      'index.cjs',
-      'dist/cjs/index.js',
-      'dist/index.js',
-    ];
-}
-
 export async function findEntryPoint(modulePath: string): Promise<string> {
-  const possibleEntryPoints = await determinePossibleEntryPoints();
-  Logger.log('findEntryPoint => possibleEntryPoints', possibleEntryPoints);
-
-  // Iterate over possible entry points to find an existing one
-  for (const entryPoint of possibleEntryPoints) {
-    const fullPath = join('node_modules', modulePath, entryPoint);
-    Logger.log('findEntryPoint => fullPath', fullPath);
-    try {
-      await access(fullPath); // Check if the file exists
-      Logger.log('Found entry point', fullPath);
-      return entryPoint;
-    } catch {
-      Logger.log('Continue to the next potential entry point');
-    }
-  }
-
-  throw new Error(`No suitable entry point found for module at ${modulePath}`);
+  Logger.log('findEntryPoint => modulePath', modulePath);
+  const packageJsonPath = join('node_modules', modulePath, 'package.json');
+  Logger.log('findEntryPoint => packageJsonPath', packageJsonPath);
+  const packageJsonContent = await readFile(packageJsonPath, 'utf8');
+  Logger.log('findEntryPoint => packageJsonContent', packageJsonContent);
+  const packageJson = JSON.parse(packageJsonContent);
+  Logger.log('findEntryPoint => packageJson', packageJson);
+  const entryPoint = (packageJson.type === 'module' ? packageJson.module : packageJson.main) ?? packageJson.main;
+  Logger.log('findEntryPoint => entryPoint', entryPoint);
+  return entryPoint;
 }
-
 
 // TODO: Refactor to be more dynamic and generic for handling all possible query filters
 export function encodeURIQueryFilters(queryFilters: QueryFilters) {

@@ -1,0 +1,43 @@
+{
+  "protocol": "https://dpm.software/protocol",
+  "published": true,
+  "types": {
+    "package": {
+      "schema": "https://dpm.software/protocol/types/package/schema",
+      "dataFormats": [
+        "application/gzip"
+      ]
+    }
+  },
+  "structure": {
+    "package": {
+      "$tags": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "integrity": {
+          "type": "string"
+        },
+        "$requiredTags": [
+          "name",
+          "version",
+          "integrity"
+        ]
+      },
+      "$actions": [
+        {
+          "who": "anyone",
+          "can": [
+            "read"
+          ]
+        }
+      ]
+    }
+  }
+}

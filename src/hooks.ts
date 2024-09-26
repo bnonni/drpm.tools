@@ -24,6 +24,7 @@ export async function resolve(
     if (!(did && name && version)) {
       throw new Error('DMI resolution failed: invalid DMI format' + specifier);
     }
+    // Look at each DPK in package.json to determine module vs. cjs and entry point
     Logger.log('did, name, version', did, name, version);
     await fetchResource(did.replace('@', ''), name, version);
     Logger.log('resolve => fetchResource => specifier', specifier);
