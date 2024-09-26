@@ -62,9 +62,11 @@
     "access": "public"
   },
   "dependencies": {
+    "@types/fs-extra": "^11.0.4",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",
+    "fs-extra": "^11.2.0",
     "tar": "^7.4.3"
   },
   "devDependencies": {
