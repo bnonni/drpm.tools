@@ -1,6 +1,6 @@
 import { Logger } from './utils/logger.js';
 import { Resolution, ResolveContext } from './utils/types.js';
-import { fetchResource } from './utils/utils.js';
+import { fetchResource, findEntryPoint } from './utils/utils.js';
 
 /**
  * resolve is a built-in hook that allows you to intercept and modify the resolution of a module specifier.
@@ -15,19 +15,23 @@ export async function resolve(
   context: ResolveContext,
   defaultResolve: Function
 ): Promise<Resolution> {
-  if (specifier && specifier.startsWith('@did:dht:')) {
+  if (specifier && specifier.includes('did:')) {
     Logger.log('DMI detected! Resolving', specifier);
     const [did, name, version] = specifier.split('/') ?? [];
     Logger.log('DMI: did', did);
     Logger.log('DMI: name', name);
     Logger.log('DMI: version', version);
-    if(!(did && name && version)) {
+    if (!(did && name && version)) {
       throw new Error('DMI resolution failed: invalid DMI format' + specifier);
     }
     Logger.log('did, name, version', did, name, version);
     await fetchResource(did.replace('@', ''), name, version);
-    Logger.log('DPM resolved DMI => specifier', specifier);
-    // index.js
+    Logger.log('resolve => fetchResource => specifier', specifier);
+
+    const entryPoint = await findEntryPoint(specifier);
+    Logger.log('resolve => findEntryPoint => Entry point found!', entryPoint);
+    specifier = `${specifier}/${entryPoint}`;
+    Logger.log('resolve => specifier', entryPoint);
   }
   console.log('resolve => specifier, context, defaultResolve', specifier, context, defaultResolve);
   return defaultResolve(specifier, context, defaultResolve);
