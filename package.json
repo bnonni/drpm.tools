@@ -3,11 +3,24 @@
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "module": "./dist/esm/src/index.js",
   "types": "./dist/types/index.d.ts",
   "description": "Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
   "directories": {
     "doc": "docs"
+  },
+  "bin": {
+    "dpm": "./dist/cjs/dpm.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./dpm": {
+      "import": "./dist/esm/dpm.js",
+      "require": "./dist/cjs/dpm.js"
+    }
   },
   "scripts": {
     "postcommit": "marked README.md > docs/index.html",
@@ -32,18 +45,16 @@
     {
       "name": "Bryan Nonni",
       "url": "https://github.com/bnonni"
+    },
+    {
+      "name": "Daniel Buchner",
+      "url": "https://github.com/csuwildcat"
     }
   ],
   "files": [
     "dist",
     "src"
   ],
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js"
-    }
-  },
   "keywords": [
     "decentralized",
     "decentralized-applications",
