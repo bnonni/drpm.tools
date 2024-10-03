@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import { program } from 'commander';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { fetchDPK, DecentralizedPackageHash as DPH, Logger } from '../index.js';
+import { fetchDPK, Logger } from '../index.js';
 const packageJsonPath = join(process.cwd(), 'package.json');
 const packageLockJsonPath = join(process.cwd(), 'package-lock.json');
 
@@ -82,9 +82,9 @@ async function dpmInstall(packages: string[], args: string[]) {
         Logger.error(`Failed to install NPK ${npk}:`, error);
       }
     });
+  } else {
+    runNpmCommand('install');
   }
-
-  runNpmCommand('install');
 }
 
 // Install command
