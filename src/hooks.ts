@@ -1,33 +1,42 @@
 import { Logger } from './utils/logger.js';
-import { Resolution, ResolveContext } from './utils/types.js';
-import { fetchResource, findEntryPoint } from './utils/utils.js';
+import { fetchDPK, findEntryPoint } from './utils/dpk.js';
 
+type Function = (...args: any[]) => any;
+type ResolveContext = {
+  conditions: string[];
+  importAttributes: {};
+  parentURL: string;
+};
+type ResolveResponse = {
+  [key: string]: any;
+  shortCircuit?: boolean
+};
 /**
- * resolve is a built-in hook that allows you to intercept and modify the resolution of a module specifier.
+ * resolve is a built-in hook that allows you to intercept and modify the ResolveResponse of a module specifier.
  * Function that takes in a  (i.e. an import path) and detects a DMI, converts to a DRL and fetches the resource.
  * @param specifier either normal code import or DMI (e.g. did:dht:web5/api/0.0.1)
  * @param context pre-defined argument required for the resolve hook
  * @param defaultResolve pre-defined argument required for the resolve hook
- * @returns a promise that resolves to a Resolution object
+ * @returns a promise that resolves to a ResolveResponse object
  */
 export async function resolve(
   specifier: string,
   context: ResolveContext,
   defaultResolve: Function
-): Promise<Resolution> {
-  if (specifier && specifier.includes('did:')) {
+): Promise<ResolveResponse> {
+  if (specifier.match(/did:(dht|web):.*/gi)) {
     Logger.log('DMI detected! Resolving', specifier);
     const [did, name, version] = specifier.split('/') ?? [];
     Logger.log('DMI: did', did);
     Logger.log('DMI: name', name);
     Logger.log('DMI: version', version);
     if (!(did && name && version)) {
-      throw new Error('DMI resolution failed: invalid DMI format' + specifier);
+      throw new Error('DMI ResolveResponse failed: invalid DMI format' + specifier);
     }
     // Look at each DPK in package.json to determine module vs. cjs and entry point
     Logger.log('did, name, version', did, name, version);
-    await fetchResource(did.replace('@', ''), name, version);
-    Logger.log('resolve => fetchResource => specifier', specifier);
+    await fetchDPK(did.replace('@', ''), name, version);
+    Logger.log('resolve => fetchDPK => specifier', specifier);
 
     const entryPoint = await findEntryPoint(specifier);
     Logger.log('resolve => findEntryPoint => Entry point found!', entryPoint);
