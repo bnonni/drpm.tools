@@ -90,10 +90,10 @@ async function dpmInstall(packages: string[], args: string[]) {
 // Install command
 program
   .command('install [packages...]')
+  .command('i [packages...]')
   .description('Install dpm and npm packages. You can pass any npm install flags.')
   .allowUnknownOption() // Allows passing unknown options like --save, --save-dev, etc.
   .action((args) => {
-    Logger.log('args', args);
     const packages: string[] = [];
     const flags: string[] = [];
     args.filter((arg: string) => (arg.startsWith('-') || arg.startsWith('--'))
@@ -101,67 +101,3 @@ program
       : packages.push(arg));
     dpmInstall(packages, flags);
   });
-
-// Custom logic for uninstalling dpackages
-function dpmUninstall(packages: string[]) {
-  Logger.log(`Uninstalling dpackages: ${packages.join(', ')}`);
-
-  // Placeholder for custom uninstall logic
-  packages.forEach(pkg => {
-    Logger.log(`Processing dpackage: ${pkg}`);
-    // Custom logic for removing the dpackage
-    // ...
-  });
-
-  // After all custom uninstall logic, run top-level npm uninstall
-  Logger.log('Running npm uninstall at the top level...');
-  runNpmCommand('uninstall', packages.join(' '));
-}
-
-// Uninstall command
-program
-  .command('uninstall [packages...npm flags]')
-  .description('Uninstall dpm and npm packages. You can pass any npm uninstall flags.')
-  .allowUnknownOption()
-  .action((packages, options, command) => {
-    const extraArgs = command.parent.args.slice(1).join(' ');
-    if (options.npm) {
-      // Pass all flags and packages to npm uninstall
-      runNpmCommand('uninstall', `${packages.join(' ')} ${extraArgs}`);
-    } else {
-      // Execute custom uninstall logic
-      dpmUninstall(packages);
-    }
-  });
-
-// Custom logic for publishing dpackages
-function dpmPublish() {
-  Logger.log('Executing custom publish logic...');
-  // Placeholder for custom publish logic
-  // ...
-}
-
-// Publish command
-program
-  .command('publish')
-  .description('Publish the dpackage')
-  .allowUnknownOption() // Allows passing unknown options
-  .option('-n, --npm', 'Run npm publish instead of custom logic')
-  .option('-b, --both', 'Run custom logic and then npm publish')
-  .action((options, command) => {
-    const extraArgs = command.parent.args.slice(1).join(' ');
-
-    if (options.npm) {
-      // Run npm publish with flags
-      runNpmCommand('publish', extraArgs);
-    } else if (options.both) {
-      // Run custom logic and then npm publish
-      dpmPublish();
-      runNpmCommand('publish', extraArgs);
-    } else {
-      // Execute only custom publish logic
-      dpmPublish();
-    }
-  });
-
-program.parse();

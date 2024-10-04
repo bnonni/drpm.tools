@@ -27,6 +27,11 @@
     "postinstall": "sh ./scripts/postinstall.sh",
     "prepare": "npm run build && chmod +x ./dist/esm/cli/dpm.js"
   },
+  "dpm": {
+    "dwnEndpoints": [
+      "https://dwn.dpm.software"
+    ]
+  },
   "homepage": "https://dpm.software",
   "bugs": {
     "url": "https://github.com/bnonni/dpm/issues"
