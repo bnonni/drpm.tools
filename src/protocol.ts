@@ -1,9 +1,9 @@
 export default {
-  protocol  : 'https://dpm.software/.well-known/protocol',
+  protocol  : 'https://dpm.software/docs/protocol.json',
   published : true,
   types     : {
     package : {
-      schema      : 'https://dpm.software/.well-known/protocol',
+      schema      : 'https://www.rfc-editor.org/rfc/rfc1952.html',
       dataFormats : ['application/gzip'],
     },
   },

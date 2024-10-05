@@ -3,7 +3,7 @@
   "published": true,
   "types": {
     "package": {
-      "schema": "https://dpm.software/protocol/types/package/schema",
+      "schema": "https://www.rfc-editor.org/rfc/rfc1952.html",
       "dataFormats": [
         "application/gzip"
       ]
