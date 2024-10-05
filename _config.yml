@@ -1,3 +1,5 @@
 title: Decentralized Package Manager (DPM)
 logo: /docs/img/logo/tan/profile.jpg
 description: A package manager for the dWeb, like npm but decentralized.
+include:
+  - .well-known

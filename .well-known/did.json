@@ -1,0 +1,14 @@
+{
+    "id": "did:web:dpm.software",
+    "service": [
+        {
+            "id": "did:web:dpm.software",
+            "type": "DecentralizedWebNode",
+            "serviceEndpoint": [
+                "https://dwn.dpm.software/"
+            ],
+            "enc": "#enc",
+            "sig": "#sig"
+        }
+    ]
+}
