@@ -79,7 +79,7 @@
     "commander": "^12.1.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "tool5": "1.1.2"
+    "@did:dht:ye5npxumksht178d6jiporgm71bjxbezg71cu8i4685zua1fgb3y/tool5": "1.1.2"
   },
   "devDependencies": {
     "@types/eslint": "^9.6.1",
