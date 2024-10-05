@@ -9,6 +9,13 @@
             ],
             "enc": "#enc",
             "sig": "#sig"
+        },
+        {
+            "id": "DPKRegistry",
+            "type": "DPKRegistry",
+            "serviceEndpoint": [
+                "https://registry.dpm.software/"
+            ]
         }
     ]
 }
