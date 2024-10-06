@@ -24,8 +24,9 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-    "postinstall": "sh ./scripts/postinstall.sh",
-    "prepare": "npm run build && chmod +x ./dist/esm/cli/dpm.js"
+    "postinstall": "sh ./scripts/postinstall.sh && nohup npm run start-registry &",
+    "start-registry": "npx tsx ./dist/esm/registry.js",
+    "prepare": "npm run build"
   },
   "dpm": {
     "dwnEndpoints": [
@@ -76,13 +77,16 @@
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",
+    "body-parser": "^1.20.3",
     "commander": "^12.1.0",
+    "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3",
-    "@did:dht:ye5npxumksht178d6jiporgm71bjxbezg71cu8i4685zua1fgb3y/tool5": "1.1.2"
+    "tar": "^7.4.3"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.5",
     "@types/eslint": "^9.6.1",
+    "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.5.4",

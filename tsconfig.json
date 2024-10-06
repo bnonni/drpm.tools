@@ -16,6 +16,12 @@
   "exclude": [
     "eslint.config.cjs",
     "node_modules",
-    "tests"
+    "tests",
+    "lib",
+    "docs",
+    ".well-known",
+    "dist",
+    "protocols",
+    "scripts"
   ]
 }

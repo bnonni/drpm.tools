@@ -22,3 +22,6 @@ npm-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+
+nohup.out
+.npmrc

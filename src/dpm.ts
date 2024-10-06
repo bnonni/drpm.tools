@@ -3,8 +3,8 @@ import { mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import { extract } from 'tar';
-import { Logger } from './logger.js';
-import { DwnResponse, QueryFilters } from './types.js';
+import { Logger } from './utils/logger.js';
+import { DwnResponse, QueryFilters } from './utils/types.js';
 
 const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 const trailingSlashRegex = /\/$/;
@@ -41,7 +41,7 @@ export async function getDwnEndpoints(did: string) {
   return serviceEndpoints.map(endpoint => endpoint.replace(trailingSlashRegex, ''));
 }
 
-export async function fetchDPK(did: string, name: string, version: string): Promise<{ dmi: string; drl: string; dph: string }> {
+export async function fetchDPK(did: string, name: string, version: string): Promise<any> {
   Logger.debug('fetchDPK => did, name, version', did, name, version);
   const endpoints = await getDwnEndpoints(did);
   Logger.debug('fetchDPK => endpoints', endpoints);
@@ -80,6 +80,7 @@ export async function fetchDPK(did: string, name: string, version: string): Prom
     const { recordId, descriptor } = entry ?? {};
     const drl = `${baseDRL}/read/records/${recordId}`;
     Logger.info(`Reading from DRL ${drl} ...`);
+    Logger.log('fetchDPK => descriptor', descriptor);
     const read: Response = await fetch(drl);
     if (!read.ok) {
       Logger.error(`DWeb Node response error: ${read.status}`);
@@ -92,16 +93,7 @@ export async function fetchDPK(did: string, name: string, version: string): Prom
       Logger.error('DWeb Node request failed: no record data returned from read');
       continue;
     }
-    Logger.debug('fetchDPK => dpk', dpk);
-
-    const dmi = `node_modules/${name}`;
-    Logger.info(`Writing DPK to DMI path ${dmi}`);
-    await mkdir(dmi, { recursive: true });
-    await pipeline(dpk, extract({ C: dmi, strip: 1 }));
-
-    Logger.info(`Successfully read DPK from DRL ${drl}`);
-    Logger.info(`Successfully extracted DPK to DMI ${dmi}`);
-    return { drl, dmi, dph: descriptor.tags.integrity };
+    return dpk;
   }
   Logger.error('DWeb Node request failed: no valid response from any endpoint.');
   throw new Error('DWeb Node request failed: no valid response from any endpoint.');
