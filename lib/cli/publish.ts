@@ -1,22 +1,26 @@
 import { Web5 } from '@web5/api';
 import { createHash } from 'crypto';
 import { readFile } from 'fs/promises';
-import path from 'path';
-import { Logger } from '../../src/utils/logger.js';
 import dpm from '../../src/protocol.js';
+import { Logger } from '../../src/utils/logger.js';
 
 const sync = '30s';
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
-
-const { web5, did } = await Web5.connect({
+const connectOpts = {
   sync,
   password,
   techPreview      : { dwnEndpoints },
   didCreateOptions : { dwnEndpoints }
-});
-
+};
+Logger.log('connectOpts', connectOpts);
+const { web5, did } = await Web5.connect(connectOpts);
 Logger.debug('did', did);
+
+const name = 'tool5';
+const version = '5.0.0';
+const filePath = '/Users/bryan/Projects/TBD/bnonni/tool5/tool5-5.0.0.tgz';
+Logger.log('filePath', filePath);
 
 const { status: configure, protocol } = await web5.dwn.protocols.configure({ message: { definition: dpm }});
 Logger.log('configure', configure);
@@ -27,11 +31,6 @@ if (!protocol) {
 
 const { status: sendProto } = await protocol.send(did);
 Logger.log('sendProto', sendProto);
-
-const name = 'tool5';
-const version = '5.0.0';
-const filePath = '/Users/bryan/Projects/TBD/bnonni/tool5/tool5-5.0.0.tgz';
-Logger.log('filePath', filePath);
 
 const tgzFile = await readFile(filePath);
 Logger.log('tgzFile', tgzFile);

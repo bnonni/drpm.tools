@@ -67,7 +67,7 @@ export default {
           }
         ]
       },
-      'logo' : {
+      'icon' : {
         '$actions' : [
           {
             'who' : 'author',

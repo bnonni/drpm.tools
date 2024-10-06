@@ -11,6 +11,7 @@ const packagesDir = join(process.cwd(), 'packages'); // Directory to store packa
 
 app.use(express.json());
 app.get('/', (req: Request, res: Response) => {
+  console.log('app.get(/)');
   res.status(200).send({'ok': true});
 });
 // app.post('/registry', async (req: Request, res: Response) => {
@@ -27,6 +28,7 @@ app.get('/', (req: Request, res: Response) => {
 //   }
 // });
 app.get('/:scope/:name', async (req: Request, res: Response) => {
+  console.log('app.get(/:scope/:name)');
   const { scope, name } = req.params;
 
   try {
@@ -50,7 +52,7 @@ app.get('/:scope/:name', async (req: Request, res: Response) => {
 // Serve package tarball
 app.get('/:scope/:name/-/:name-:version.tgz', async (req: Request, res: Response) => {
   const { scope, name, version } = req.params;
-
+  console.log('app.get(/:scope/:name/-/:name-:version.tgz)');
   try {
     const tarballPath = join(packagesDir, `@${scope}`, name, `${name}-${version}.tgz`);
 
@@ -74,6 +76,7 @@ app.get('/:scope/:name/-/:name-:version.tgz', async (req: Request, res: Response
 
 // POST /registry endpoint to manually fetch and cache a package
 app.post('/registry', async (req: Request, res: Response) => {
+  console.log('app.post(/registry)');
   const { dpk } = req.body;
 
   if (typeof dpk !== 'string') {
@@ -92,14 +95,14 @@ app.post('/registry', async (req: Request, res: Response) => {
 
 // Helper function to fetch and cache the package using fetchDPK
 async function fetchAndCachePackage(dpk: string) {
-  const [did, nameVersion] = dpk.split('/');
+  const [_, did, nameVersion] = dpk.split('/');
   const [name, version = 'latest'] = nameVersion.split('@');
 
   // Fetch the package tarball stream
-  const dpkStream = await fetchDPK(did.replace('@did', ''), name, version);
+  const dpkStream = await fetchDPK(did, name, version);
 
   // Store tarball in the packages directory
-  const packageDir = join(packagesDir, `@${did}`, name);
+  const packageDir = join(packagesDir, '@dpk', did, name);
   mkdirSync(packageDir, { recursive: true });
   const tarballPath = join(packageDir, `${name}-${version}.tgz`);
   await pipeline(dpkStream, createWriteStream(tarballPath));

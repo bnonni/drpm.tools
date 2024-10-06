@@ -42,7 +42,7 @@ const dpm = {
 };
 
 async function web5Connect() {
-  return await Web5.connect({ password, sync: '30s', techPreview: { dwnEndpoints }, didCreateOptions: { dwnEndpoints } });
+  return await Web5.connect({ password, sync: 'off', techPreview: { dwnEndpoints }, didCreateOptions: { dwnEndpoints } });
 }
 
 async function configureDpmProtocol(web5: Web5, did: string) {
