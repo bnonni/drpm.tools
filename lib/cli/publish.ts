@@ -2,7 +2,8 @@ import { Web5 } from '@web5/api';
 import { createHash } from 'crypto';
 import { readFile } from 'fs/promises';
 import path from 'path';
-import { Logger } from '../utils/logger.js';
+import { Logger } from '../../src/utils/logger.js';
+import dpm from '../../src/protocol.js';
 
 const sync = '30s';
 const password = 'correct horse battery staple';
@@ -17,38 +18,6 @@ const { web5, did } = await Web5.connect({
 
 Logger.debug('did', did);
 
-const dpm = {
-  protocol  : 'https://test.dpm.software/protocol',
-  published : true,
-  types     : {
-    package : {
-      schema      : 'https://test.dpm.software/schema/package',
-      dataFormats : ['application/json', 'application/octet-stream'],
-    },
-  },
-  structure : {
-    package : {
-      $tags : {
-        name : {
-          type : 'string',
-        },
-        version : {
-          type : 'string',
-        },
-        integrity : {
-          type : 'string',
-        },
-      },
-      $actions : [
-        {
-          who : 'anyone',
-          can : ['read'],
-        },
-      ],
-    },
-  },
-};
-
 const { status: configure, protocol } = await web5.dwn.protocols.configure({ message: { definition: dpm }});
 Logger.log('configure', configure);
 
@@ -60,8 +29,8 @@ const { status: sendProto } = await protocol.send(did);
 Logger.log('sendProto', sendProto);
 
 const name = 'tool5';
-const version = '1.0.2';
-const filePath = path.resolve(process.cwd() + `/${name}-${version}.tgz`);
+const version = '5.0.0';
+const filePath = '/Users/bryan/Projects/TBD/bnonni/tool5/tool5-5.0.0.tgz';
 Logger.log('filePath', filePath);
 
 const tgzFile = await readFile(filePath);
@@ -84,8 +53,8 @@ const { record, status: create } = await web5.dwn.records.create({
   data    : { package: tgzFile },
   message : {
     dataFormat   : 'application/json',
-    schema       : dpm.types.package.schema,
-    protocolPath : 'package',
+    schema       : dpm.types.release.schema,
+    protocolPath : 'release',
     protocol     : dpm.protocol,
     tags         : {
       name,
@@ -102,30 +71,30 @@ if(!record) {
   throw new Error('Failed to create record');
 }
 
-const { status: sendRecord } = await record.send(did);
-Logger.log('sendRecord', sendRecord);
+// const { status: sendRecord } = await record.send(did);
+// Logger.log('sendRecord', sendRecord);
 
-const { status: stat, records: recs = [] } = await web5.dwn.records.query({
-  from    : did,
-  message : {
-    filter : {
-      schema       : dpm.types.package.schema,
-      protocolPath : 'package',
-      dataFormat   : 'application/json',
-      protocol     : dpm.protocol,
-      tags         : {
-        name    : 'tool5',
-        version : '1.0.2',
-      },
-    },
-  },
-});
-Logger.log('query => status', stat);
-Logger.log('query => records', recs);
-if (!recs.length) {
-  throw new Error('Failed to query record');
-}
-const reads = await Promise.all(recs.map(async (rec) => {
-  return await rec.data.json();
-}));
-Logger.log('query => records => reads', reads);
+// const { status: stat, records: recs = [] } = await web5.dwn.records.query({
+//   from    : did,
+//   message : {
+//     filter : {
+//       dataFormat   : 'application/json',
+//       schema       : dpm.types.release.schema,
+//       protocolPath : 'release',
+//       protocol     : dpm.protocol,
+//       tags         : {
+//         name    : 'tool5',
+//         version : '1.0.2',
+//       },
+//     },
+//   },
+// });
+// Logger.log('query => status', stat);
+// Logger.log('query => records', recs);
+// if (!recs.length) {
+//   throw new Error('Failed to query record');
+// }
+// const reads = await Promise.all(recs.map(async (rec) => {
+//   return await rec.data.json();
+// }));
+// Logger.log('query => records => reads', reads);
