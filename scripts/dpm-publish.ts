@@ -1,39 +1,39 @@
 import { Web5 } from '@web5/api';
 import { createHash } from 'crypto';
 import { readFile } from 'fs/promises';
-// import dpm from '../src/protocol.js';
-const dpm = {
-  protocol  : 'https://dpm.software/protocol',
-  published : true,
-  types     : {
-    package : {
-      schema      : 'https://dpm.software/schema/package',
-      dataFormats : ['application/gzip'],
-    },
-  },
-  structure : {
-    package : {
-      $tags : {
-        name : {
-          type : 'string',
-        },
-        version : {
-          type : 'string',
-        },
-        integrity : {
-          type : 'string',
-        },
-        $requiredTags : ['name', 'version', 'integrity'],
-      },
-      $actions : [
-        {
-          who : 'anyone',
-          can : ['read'],
-        },
-      ],
-    },
-  },
-};
+import dpm from '../src/protocol.js';
+// const dpm = {
+//   protocol  : 'https://dpm.software/protocol',
+//   published : true,
+//   types     : {
+//     package : {
+//       schema      : 'https://dpm.software/schema/package',
+//       dataFormats : ['application/gzip'],
+//     },
+//   },
+//   structure : {
+//     package : {
+//       $tags : {
+//         name : {
+//           type : 'string',
+//         },
+//         version : {
+//           type : 'string',
+//         },
+//         integrity : {
+//           type : 'string',
+//         },
+//         $requiredTags : ['name', 'version', 'integrity'],
+//       },
+//       $actions : [
+//         {
+//           who : 'anyone',
+//           can : ['read'],
+//         },
+//       ],
+//     },
+//   },
+// };
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
 const name = 'tool5';
@@ -57,18 +57,15 @@ async function createDpmRecord({ web5, did, name, version, dpk, integrity }: {
 }) {
   const { record, status } = await web5.dwn.records.create({
     store   : true,
-    data    : dpk,
+    data    : { name },
     message : {
       published    : true,
-      dataFormat   : 'application/gzip',
-      schema       : dpm.types.package.schema,
-      protocolPath : 'package',
+      dataFormat   : 'application/json',
+      schema       : dpm.types.admin.schema,
+      protocolPath : 'release',
       protocol     : dpm.protocol,
-      tags         : {
-        name,
-        version,
-        integrity,
-      },
+      tags         : { name },
+      recipient    : 'did:dht:adminuser'
     },
   });
   console.log('createDpmRecord => record', record);

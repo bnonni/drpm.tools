@@ -19,19 +19,17 @@
   },
   "scripts": {
     "clean": "rimraf dist coverage tests/compiled",
+    "wipe": "rimraf node_modules package-lock.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
     "test:register-hooks": "npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-    "postinstall": "sh ./scripts/postinstall.sh && nohup npm run start-registry &",
-    "start-registry": "npx tsx ./dist/esm/registry.js",
-    "prepare": "npm run build"
-  },
-  "dpm": {
-    "dwnEndpoints": [
-      "https://dwn.dpm.software"
-    ]
+    "postinstall": "sh ./scripts/postinstall.sh",
+    "registry": "node ./dist/esm/registry/bin/www.js",
+    "registry:nohup": "nohup node ./dist/esm/registry/bin/www.js > registry.nohup.out 2>&1 &",
+    "prepare": "npm run build",
+    "dev": "nodemon"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -42,6 +40,15 @@
     "url": "git+ssh://git@github.com/bnonni/dpm.git"
   },
   "license": "Apache-2.0",
+  "author": {
+    "name": "Bryan Nonni",
+    "dpm": {
+      "dwnEndpoints": [
+        "https://dwn.nonni.org/"
+      ],
+      "did": "did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo"
+    }
+  },
   "contributors": [
     {
       "name": "Bryan Nonni",
@@ -85,6 +92,7 @@
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
+    "@types/debug": "^4.1.12",
     "@types/eslint": "^9.6.1",
     "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
@@ -101,6 +109,7 @@
     "globals": "^15.9.0",
     "marked": "^14.1.2",
     "mocha": "^10.7.3",
+    "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.5.0"

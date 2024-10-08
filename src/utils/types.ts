@@ -1,5 +1,11 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 
+export type DPKResponse = {
+    ok: boolean;
+    status: number;
+    statusText: string;
+    message: any
+};
 export type QueryFilters = {
     name: string;
     version: string;

@@ -67,7 +67,7 @@
                     }
                 ]
             },
-            "logo": {
+            "icon": {
                 "$actions": [
                     {
                         "who": "author",

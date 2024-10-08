@@ -21,6 +21,7 @@ export default {
       ]
     },
     'admin' : {
+      'schema'      : 'https://dpm.software/protocols/schema/admin',
       'dataFormats' : [
         'application/json'
       ]

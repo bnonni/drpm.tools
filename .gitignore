@@ -23,5 +23,6 @@ npm-debug.log*
 .env.production.local
 .env.local
 
-nohup.out
-.npmrc
+*.out
+.registry
+*.tgz

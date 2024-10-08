@@ -1,10 +1,8 @@
 import { DidDht, DidWeb, UniversalResolver } from '@web5/dids';
-import { mkdir, readFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { pipeline } from 'stream/promises';
-import { extract } from 'tar';
 import { Logger } from './utils/logger.js';
-import { DwnResponse, QueryFilters } from './utils/types.js';
+import { DPKResponse, DwnResponse, QueryFilters } from './utils/types.js';
 
 const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 const trailingSlashRegex = /\/$/;
@@ -35,66 +33,57 @@ export async function getDwnEndpoints(did: string) {
   const { didDocument } = await DidResolver.resolve(did);
   Logger.debug('getDwnEndpoints => didDocument', JSON.stringify(didDocument, null, 2));
   const services = didDocument?.service;
-  const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? ['https://dwn.dpm.softare'];
+  const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? ['https://dwn.dpkm.dev/'];
   const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
   Logger.debug('getDwnEndpoints => serviceEndpoints', serviceEndpoints);
   return serviceEndpoints.map(endpoint => endpoint.replace(trailingSlashRegex, ''));
 }
 
-export async function fetchDPK(did: string, name: string, version: string): Promise<any> {
-  Logger.debug('fetchDPK => did, name, version', did, name, version);
-  const endpoints = await getDwnEndpoints(did);
-  Logger.debug('fetchDPK => endpoints', endpoints);
+export async function fetchDPK(did: string, name: string, version: string): Promise<DPKResponse> {
+  try {
+    for (const endpoint of await getDwnEndpoints(did)) {
+      const baseDRL = `${endpoint}/${did}`;
+      Logger.debug(`Fetching endpoint ${endpoint} with baseDRL ${baseDRL} ...`);
 
-  if (!endpoints?.length) {
-    Logger.error('DWeb Node resolution error: no valid endpoints found');
-    throw new Error('DWeb Node resolution failed: no valid endpoints found.');
+      const queryDRL = `${baseDRL}/query?filter.tags.name=${name}&filter.tags.version=${version}`;
+      Logger.debug(`Querying DRL ${queryDRL} ...`);
+      const query: Response = await fetch(queryDRL);
+      if (!query || !query.ok) {
+        Logger.error(`DWeb Node response error: ${query.status}`);
+        continue;
+      }
+      const { status, entries } = await query.json() as DwnResponse;
+      Logger.debug('fetchDPK => status', status);
+      if (entries.length > 1) {
+        Logger.error('DWeb Node response error: expected one record entry, received multiple');
+        continue;
+      }
+
+      const entry = entries.shift();
+      Logger.debug('fetchDPK => entry', entry);
+      if (!entry) {
+        Logger.error('DWeb Node response error: no record entry returned from query');
+        continue;
+      }
+      const { recordId } = entry ?? {};
+      const drl = `${baseDRL}/read/records/${recordId}`;
+      Logger.info(`Reading from DRL ${drl} ...`);
+
+      const read: Response = await fetch(drl);
+      if (!read || !read.ok) {
+        Logger.error(`DWeb Node response error: ${read.status}`);
+        continue;
+      }
+
+      if (!read.body) {
+        Logger.error('DWeb Node request failed: no record data returned from read');
+        continue;
+      }
+      return { ok: true, status: 200, statusText: 'Ok', message: read };
+    }
+    return { ok: false, status: 404, statusText: 'Not found', message: '' };
+  } catch(error: any) {
+    Logger.error('DWeb Node request failed:', error);
+    return { ok: false, status: 500, statusText: 'Server error', message: error.message };
   }
-
-  for (const endpoint of endpoints) {
-    Logger.debug('fetchDPK => endpoint', endpoint);
-
-    const baseDRL = `${endpoint}/${did}`;
-    // Query endpoint for record
-    const queryDRL = `${baseDRL}/query?filter.tags.name=${name}&filter.tags.version=${version}`;
-    const query: Response = await fetch(queryDRL);
-    Logger.debug(`Querying from DRL ${queryDRL} ...`);
-    if (!query.ok) {
-      Logger.error(`DWeb Node response error: ${query.status}`);
-      continue;
-    }
-    const { status, entries } = await query.json() as DwnResponse;
-    Logger.debug('fetchDPK => status', status);
-    Logger.debug('fetchDPK => entries', entries);
-    if (entries.length > 1) {
-      Logger.error('DWeb Node response error: expected one record entry, received multiple');
-      continue;
-    }
-
-    const entry = entries.shift();
-    Logger.debug('fetchDPK => entry', entry);
-    if (!entry) {
-      Logger.error('DWeb Node response error: no record entry returned from query');
-      continue;
-    }
-    const { recordId, descriptor } = entry ?? {};
-    const drl = `${baseDRL}/read/records/${recordId}`;
-    Logger.info(`Reading from DRL ${drl} ...`);
-    Logger.log('fetchDPK => descriptor', descriptor);
-    const read: Response = await fetch(drl);
-    if (!read.ok) {
-      Logger.error(`DWeb Node response error: ${read.status}`);
-      continue;
-    }
-    Logger.debug('fetchDPK => read, typeof read', read, typeof read);
-
-    const dpk = read.body as ReadableStream<Uint8Array>;
-    if (!dpk) {
-      Logger.error('DWeb Node request failed: no record data returned from read');
-      continue;
-    }
-    return dpk;
-  }
-  Logger.error('DWeb Node request failed: no valid response from any endpoint.');
-  throw new Error('DWeb Node request failed: no valid response from any endpoint.');
 }
