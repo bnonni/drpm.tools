@@ -3,7 +3,7 @@
 import express, { Request, Response } from 'express';
 import { createWriteStream } from 'fs';
 import { ensureDir } from 'fs-extra';
-import { readdir, writeFile } from 'fs/promises';
+import { access, readdir, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { pipeline } from 'stream/promises';
 import { fetchDPK } from '../dpm.js';
@@ -13,20 +13,21 @@ const app = express();
 const REGISTRY_DPM_SOFTWARE = join(process.cwd(), '.registry');
 
 // Helper to get package metadata path
-const getPackageMetadataPath = (path: string): string => {
+function getPackageMetadataPath (path: string): string {
   return join(REGISTRY_DPM_SOFTWARE, path, 'package.json');
 };
 
 // Helper to get package tarball path
-const getPackageTarballPath = (path: string): string => {
+function getPackageTarballPath (path: string): string {
   return join(REGISTRY_DPM_SOFTWARE, path, 'package.tgz');
 };
 
 // Check if package exists locally
-const packageExists = async (path: string): Promise<boolean> => {
-  const metadataPath = getPackageMetadataPath(path);
+async function packageExists (path: string): Promise<boolean> {
+  Logger.log('packageExists => path', path);
   try {
-    await readdir(metadataPath);
+    const files = await access(path);
+    Logger.log('packageExists => files', files);
     return true;
   } catch {
     return false;
@@ -49,9 +50,9 @@ app.get('/@:scope%2f:dpk', async (req: Request, res: Response) => {
     const [_, method, id, name, version] = dpk.split('_');
     Logger.log('[registry] 1. GET /@:scope/:dpk => method, id, name, version', method, id, name, version);
 
-    if (await packageExists(dpk)) {
-      return res.redirect(`/${scope}%2f${dpk}`);
-    }
+    // if (await packageExists(dpk)) {
+    //   return res.redirect(`/${scope}%2f${dpk}`);
+    // }
 
     // Fetch the package tarball using the custom fetchDPK function
     // Fetch the package tarball using the custom fetchDPK function
@@ -60,49 +61,50 @@ app.get('/@:scope%2f:dpk', async (req: Request, res: Response) => {
       Logger.error('[registry] Error fetching DPK:', message);
       throw new Error(message);
     }
-    Logger.log('[registry] 1. GET /@:scope/:dpk => fetchDPK => ok, status, statusText, message', ok, status, statusText, message);
+    Logger.log('[registry] 1. GET /@:scope/:dpk => fetchDPK => ok', ok);
+    Logger.log('[registry] 1. GET /@:scope/:dpk => fetchDPK => status', status);
+    Logger.log('[registry] 1. GET /@:scope/:dpk => fetchDPK =>statusText', statusText);
     const dpkStream = message.body as ReadableStream<Uint8Array>;
+    Logger.log('[registry] 1. GET /@:scope/:dpk => dpkStream', dpkStream);
     const tarballPath = getPackageTarballPath(dpk);
+    Logger.log('[registry] 1. GET /@:scope/:dpk => tarballPath', tarballPath);
     const metadataPath = getPackageMetadataPath(dpk);
-
+    Logger.log('[registry] 1. GET /@:scope/:dpk => metadataPath', metadataPath);
+    const tarballPathExists = await packageExists(tarballPath);
+    Logger.log('[registry] 1. GET /@:scope/:dpk => tarballPathExists', tarballPathExists);
     // Ensure local registry directories
-    await ensureDir(dirname(tarballPath));
+    if(!tarballPathExists) {
+      Logger.log('[registry] 1. GET /@:scope/:dpk => creating dir => tarballPath', tarballPath);
+      await ensureDir(dirname(tarballPath));
+    }
 
     // Save tarball and metadata locally
-    await pipeline(dpkStream, createWriteStream(tarballPath));
-    await writeFile(metadataPath, JSON.stringify({ name: name, version }));
+    if(!await packageExists(metadataPath)) {
+      Logger.log('[registry] 1. GET /@:scope/:dpk => pipeline => dpkStream', dpkStream);
+      await pipeline(dpkStream, createWriteStream(tarballPath));
+      Logger.log('[registry] 1. GET /@:scope/:dpk => writeFile => metadataPath', metadataPath);
+      await writeFile(metadataPath, JSON.stringify({ name: name, version, dist: {tarball: `http://localhost:3000/${scope}/${dpk}/package.tgz`} }));
+    }
 
-    // Redirect to serve the package metadata
-    res.redirect(`/${scope}/${dpk}`);
+    if (tarballPathExists) {
+      Logger.log('[registry] 1. GET /@:scope/:dpk => tarballPathExists', tarballPathExists);
+      // res.sendFile(metadataPath);
+      const rUrl = `/${scope}/${dpk}/package.json`;
+      Logger.log('[registry] 1. GET /@:scope/:dpk => redirect => rUrl', rUrl);
+      // res.redirect(rUrl);
+      res.sendFile(metadataPath);
+    } else {
+      console.log(`1. GET  /${scope}/${dpk} => catch`);
+      res.status(404).json({ error: 'Package not found in local registry' });
+    }
   } catch (error) {
     Logger.error('[registry] Error fetching DPK:', error);
     res.status(500).json({ error: 'Failed to fetch and store package' });
   }
 });
 
-// Serve package metadata
-app.get('/:scope%2f:dpk', async (req: Request, res: Response) => {
-  try {
-    console.log('1. GET /:scope/:dpk');
-    const scope = decodeURIComponent(req.params.scope);
-    console.log('1. GET /:scope/:dpk => scope', scope);
-    const dpk = decodeURIComponent(req.params.dpk);
-    console.log('1. GET /:scope/:dpk => dpk', dpk);
-    const metadataPath = getPackageMetadataPath(dpk);
-    if (await packageExists(dpk)) {
-      res.sendFile(metadataPath);
-    } else {
-      console.log(`1. GET /:scope/:dpk => res.redirect  /${scope}/${dpk}`);
-      res.status(404).json({ error: 'Package not found in local registry' });
-    }
-  } catch (error) {
-    Logger.error('[registry] Error fetching DPK:', error);
-    res.status(500).json({ error: '[registry] Failed to fetch and store package' });
-  }
-});
-
 // Serve package tarball
-app.get('/:scope%2f:dpk/-/:tarball', async (req: Request, res: Response) => {
+app.get('/:scope/:dpk/:tarball', async (req: Request, res: Response) => {
   try {
     Logger.log('[registry] 2. GET /:scope/:dpk/-/:tarball');
     const scope = decodeURIComponent(req.params.scope);
@@ -111,8 +113,8 @@ app.get('/:scope%2f:dpk/-/:tarball', async (req: Request, res: Response) => {
     Logger.log('[registry] 2. GET /:scope/:dpk/-/:tarball => dpk', dpk);
     const tarballPath = getPackageTarballPath(dpk);
 
-    if (await packageExists(dpk)) {
-      res.sendFile(tarballPath);
+    if (await packageExists(tarballPath)) {
+      res.status(200).sendFile(tarballPath);
     } else {
       res.status(404).json({ error: 'Tarball not found in local registry' });
     }

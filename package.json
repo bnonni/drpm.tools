@@ -83,6 +83,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@dpm/did_dht_8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo_tool5_5.0.0": "npm:@dpm/did_dht_8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo_tool5@^2.0.0",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",

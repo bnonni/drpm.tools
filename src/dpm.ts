@@ -33,7 +33,7 @@ export async function getDwnEndpoints(did: string) {
   const { didDocument } = await DidResolver.resolve(did);
   Logger.debug('getDwnEndpoints => didDocument', JSON.stringify(didDocument, null, 2));
   const services = didDocument?.service;
-  const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? ['https://dwn.dpkm.dev/'];
+  const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? ['http://localhost:3000/'];
   const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
   Logger.debug('getDwnEndpoints => serviceEndpoints', serviceEndpoints);
   return serviceEndpoints.map(endpoint => endpoint.replace(trailingSlashRegex, ''));
