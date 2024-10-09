@@ -25,12 +25,12 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-    "postinstall": "sh ./scripts/postinstall.sh",
     "start:registry": "node ./dist/esm/registry/bin/www.js",
     "nohup:registry": "sh scripts/registry.nohup.sh",
     "pid:registry": "sh scripts/registry.pid.sh",
     "kill:registry": "sh scripts/registry.kill.sh",
     "prepare": "npm run build",
+    "postinstall": "sh ./scripts/postinstall.sh",
     "dev": "nodemon"
   },
   "homepage": "https://dpm.software",
@@ -83,18 +83,19 @@
     "access": "public"
   },
   "dependencies": {
-    "@dpm/did_dht_8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo_tool5_5.0.0": "npm:@dpm/did_dht_8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo_tool5@^2.0.0",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",
     "body-parser": "^1.20.3",
     "commander": "^12.1.0",
+    "cors": "^2.8.5",
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
     "@types/debug": "^4.1.12",
     "@types/eslint": "^9.6.1",
     "@types/express": "^5.0.0",

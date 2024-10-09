@@ -2,19 +2,24 @@
 
 set -e
 
+REGISTRY_PID=0
 REGISTRY_PID_FILE="registry.pid"
-REGISTRY_PID="$(cat \"$REGISTRY_PID_FILE\" 2>/dev/null || echo 0)"
 
+# If build missing, run build
 if [[ ! -d "dist" ]]; then
     echo "Building registry ..."
     npm run build
 fi
 
-if [[ $REGISTRY_PID -eq 0 ]]; then
-    echo "Starting registry ..."
+# If registry.pid file exists, read pid and set var
+if [[ -f "$REGISTRY_PID_FILE" ]]; then
+    echo "Found registry.pid file"
+    REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null)"
+else
+    echo "No registry.pid file found, starting registry ..."
     nohup node ./dist/esm/registry/bin/www.js > registry.nohup.out 2>&1 &
-    echo "$!" > registry.pid
-    export REGISTRY_PID="$(cat \"$REGISTRY_PID_FILE\" 2>/dev/null || pgrep -f \"registry.dpm.software\" || lsof -i :2902 || ps aux | grep "registry.dpm.software" | awk '{print $2}' || echo 0)"
+    REGISTRY_PID=`echo $!`
+    echo "$REGISTRY_PID" > "registry.pid"
 fi
 echo "Registry running on process id $REGISTRY_PID"
 exit 1

@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-process.title = 'registry.dpm.software';
+import DPM_CONFIG from '../config.js';
+const { DPM_PORT, REGISTRY_PROCESS_NAME } = DPM_CONFIG;
+
+process.title = REGISTRY_PROCESS_NAME;
 
 /**
  * Module dependencies.
@@ -10,7 +13,7 @@ import http from 'http';
 /**
  * Get port from environment and store in Express.
  */
-const port = normalizePort(process.env.PORT || '2092');
+const port = normalizePort(DPM_PORT.toString());
 app.set('port', port);
 
 /**
