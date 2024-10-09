@@ -11,21 +11,35 @@ import { fetchDPK } from '../dpm.js';
 import { Logger } from '../utils/logger.js';
 import DPM_CONFIG from './config.js';
 
-const { DPM_PORT, REGISTRY_PROCESS_NAME } = DPM_CONFIG;
 const app = express();
+const { DPM_PORT, REGISTRY_PROCESS_NAME, REGISTRY_DIR } = DPM_CONFIG;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.raw({ type: 'application/octet-stream', limit: '10gb' }));
+
+await ensureDir(REGISTRY_DIR).catch(err => Logger.error('Error ensuring registry directory:', err));
 
 // Helper to get package metadata path
-function getPackageMetadataPath(path: string): string {
-  return join(REGISTRY_PROCESS_NAME, path, 'package.json');
+function getPackageMetadataPath(packageName: string): string {
+  return join(REGISTRY_PROCESS_NAME, `${packageName}.json`);
 };
 
 // Helper to get package tarball path
-function getPackageTarballPath(path: string): string {
-  return join(REGISTRY_PROCESS_NAME, path, 'package.tgz');
+function getPackageTarballPath(packageName: string, version: string): string {
+  return join(REGISTRY_PROCESS_NAME, `${packageName}-${version}.tgz`);
+};
+
+async function loadPackageMetadata(packageName: string): Promise<any> {
+  const metadataPath = getPackageMetadataPath(packageName);
+  try {
+    await access(metadataPath);
+    const metadata = require(metadataPath);
+    return metadata;
+  } catch {
+    return null;
+  }
 };
 
 // Check if package exists locally
@@ -47,7 +61,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Mock package metadata endpoint
-app.get('/:packageName', (req, res) => {
+app.get('/dpm/:packageName', (req, res) => {
   // @dpm/tool5
   const packageName = req.params.packageName;
   console.log(`Intercepted request for package: ${packageName}`);

@@ -1,6 +1,6 @@
 # Decentralized Package Manager (DPM)
 
-<img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
+<img src="/assets/img/animal/spider.webp" height=250 width=250 />
 
 Decentralized Package Manager (DPM) - a package manager for the dWeb - like npm but decentralized.
 
