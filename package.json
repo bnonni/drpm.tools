@@ -42,15 +42,6 @@
     "url": "git+ssh://git@github.com/bnonni/dpm.git"
   },
   "license": "Apache-2.0",
-  "author": {
-    "name": "Bryan Nonni",
-    "dpm": {
-      "dwnEndpoints": [
-        "https://dwn.nonni.org/"
-      ],
-      "did": "did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo"
-    }
-  },
   "contributors": [
     {
       "name": "Bryan Nonni",
@@ -91,7 +82,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "@dpm/tool5": "http://@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

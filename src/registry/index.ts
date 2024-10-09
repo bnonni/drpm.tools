@@ -65,7 +65,6 @@ app.get('/dpm/:packageName', (req, res) => {
   // @dpm/tool5
   const packageName = req.params.packageName;
   console.log(`Intercepted request for package: ${packageName}`);
-  // "dpm/tool5": "http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0"
 
   // Simulate package metadata (as NPM would return)
   const mockPackageMetadata = {

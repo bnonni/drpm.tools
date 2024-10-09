@@ -1,5 +1,5 @@
 export default {
-  'protocol'  : 'https://dpm.software/protocols/dpm',
+  protocol  : 'https://dpm.software/protocols/dpm',
   'published' : true,
   'types'     : {
     'package' : {
@@ -8,6 +8,7 @@ export default {
       ]
     },
     'icon' : {
+      'schema'      : 'https://areweweb5yet.com/schemas/icon',
       'dataFormats' : [
         'image/gif',
         'image/png',
@@ -21,7 +22,7 @@ export default {
       ]
     },
     'admin' : {
-      'schema'      : 'https://dpm.software/protocols/schema/admin',
+      'schema'      : 'https://areweweb5yet.com/schemas/admin',
       'dataFormats' : [
         'application/json'
       ]
@@ -40,7 +41,7 @@ export default {
       '$actions' : [
         {
           'who' : 'author',
-          'of'  : 'package',
+          of  : 'package',
           'can' : [
             'create',
             'update',
@@ -49,7 +50,7 @@ export default {
         },
         {
           'role' : 'package/admin',
-          'can'  : [
+          can  : [
             'co-update'
           ]
         }
@@ -59,7 +60,7 @@ export default {
         '$actions' : [
           {
             'who' : 'author',
-            'of'  : 'package',
+            of  : 'package',
             'can' : [
               'create',
               'update',
@@ -72,7 +73,7 @@ export default {
         '$actions' : [
           {
             'who' : 'author',
-            'of'  : 'package',
+            of  : 'package',
             'can' : [
               'create',
               'update',
@@ -83,7 +84,7 @@ export default {
           },
           {
             'role' : 'package/admin',
-            'can'  : [
+            can  : [
               'create',
               'update',
               'delete',
@@ -109,7 +110,7 @@ export default {
         '$actions' : [
           {
             'who' : 'author',
-            'of'  : 'package',
+            of  : 'package',
             'can' : [
               'create',
               'update',
@@ -118,7 +119,7 @@ export default {
           },
           {
             'role' : 'package/admin',
-            'can'  : [
+            can  : [
               'create',
               'update',
               'delete'
