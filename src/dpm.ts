@@ -38,20 +38,23 @@ export async function getDwnEndpoints(did: string) {
   Logger.debug('getDwnEndpoints => serviceEndpoints', serviceEndpoints);
   return serviceEndpoints.map(endpoint => endpoint.replace(trailingSlashRegex, ''));
 }
-
-export async function fetchDPK(did: string, name: string, version: string): Promise<DPKResponse> {
+type DPKParams = {did: string, dpk: {name?: string; integrity?: string; version?: string;}}
+export async function fetchDPK({ did, dpk: { name, version, integrity }}: DPKParams): Promise<DPKResponse> {
   try {
     for (const endpoint of await getDwnEndpoints(did)) {
       const baseDRL = `${endpoint}/${did}`;
-      Logger.debug(`Fetching endpoint ${endpoint} with baseDRL ${baseDRL} ...`);
+      // may have to encode name bc of @
+      const queryDRL = name
+        ? `${baseDRL}/query?filter.tags.name=${name}`
+        : `${baseDRL}/query?filter.protocolPath=package/release&filter.tags.version=${version}&filter.tags.integrity=${integrity}`;
 
-      const queryDRL = `${baseDRL}/query?filter.tags.name=${name}&filter.tags.version=${version}`;
       Logger.debug(`Querying DRL ${queryDRL} ...`);
       const query: Response = await fetch(queryDRL);
       if (!query || !query.ok) {
         Logger.error(`DWeb Node response error: ${query.status}`);
         continue;
       }
+
       const { status, entries } = await query.json() as DwnResponse;
       Logger.debug('fetchDPK => status', status);
       if (entries.length > 1) {
@@ -65,7 +68,7 @@ export async function fetchDPK(did: string, name: string, version: string): Prom
         Logger.error('DWeb Node response error: no record entry returned from query');
         continue;
       }
-      const { recordId } = entry ?? {};
+      const { recordId, descriptor: { dataFormat } } = entry ?? {};
       const drl = `${baseDRL}/read/records/${recordId}`;
       Logger.info(`Reading from DRL ${drl} ...`);
 
@@ -74,14 +77,14 @@ export async function fetchDPK(did: string, name: string, version: string): Prom
         Logger.error(`DWeb Node response error: ${read.status}`);
         continue;
       }
-
-      if (!read.body) {
+      const data = dataFormat === 'application/json' ? await read.json() : read.body as ReadableStream<Uint8Array>;
+      if (!data) {
         Logger.error('DWeb Node request failed: no record data returned from read');
         continue;
       }
-      return { ok: true, status: 200, statusText: 'Ok', message: read };
+      return { ok: true, status: 200, statusText: 'Ok', message: data };
     }
-    return { ok: false, status: 404, statusText: 'Not found', message: '' };
+    return { ok: false, status: 404, statusText: 'Not found', message: {} };
   } catch(error: any) {
     Logger.error('DWeb Node request failed:', error);
     return { ok: false, status: 500, statusText: 'Server error', message: error.message };

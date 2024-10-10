@@ -7,8 +7,8 @@ process.title = REGISTRY_PROCESS_NAME;
 /**
  * Module dependencies.
  */
-import app from '../index.js';
 import http from 'http';
+import app from '../index.js';
 
 /**
  * Get port from environment and store in Express.

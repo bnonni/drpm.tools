@@ -1,16 +1,16 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
-const CWD = process.cwd();
-const HOME = process.env.HOME;
-const DPM_PORT = process.env.PORT || 2092;
+export const CWD = process.cwd();
+export const HOME = process.env.HOME;
+export const DPM_PORT = process.env.PORT || 2092;
 
-const REGISTRY_DIR_NAME = '.registry';
-const REGISTRY_DIR = join(CWD, REGISTRY_DIR_NAME);
+export const REGISTRY_DIR_NAME = '.registry';
+export const REGISTRY_DIR = join(CWD, REGISTRY_DIR_NAME);
 
-const REGISTRY_PROCESS_NAME = 'registry.dpm.software';
-const REGISTRY_PID_FILE = 'registry.pid';
-const REGISTRY_PID = await readFile(join(CWD, REGISTRY_PID_FILE), 'utf8') ?? process.pid ?? 0;
+export const REGISTRY_PROCESS_NAME = 'registry.dpm.software';
+export const REGISTRY_PID_FILE = 'registry.pid';
+export const REGISTRY_PID = await readFile(join(CWD, REGISTRY_PID_FILE), 'utf8') ?? process.pid ?? 0;
 
 export default {
   CWD,

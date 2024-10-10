@@ -4,7 +4,7 @@ export type DPKResponse = {
     ok: boolean;
     status: number;
     statusText: string;
-    message: any
+    message: { [key: string]: string } | ReadableStream<Uint8Array>;
 };
 export type QueryFilters = {
     name: string;

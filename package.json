@@ -2,7 +2,7 @@
   "name": "dpm",
   "version": "0.1.0",
   "type": "module",
-  "description": "Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
+  "description": "Decentralized Package Manager (DPM)(디피엠) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
   "directories": {
     "doc": "docs"
   },
@@ -30,8 +30,10 @@
     "pid:registry": "sh scripts/registry.pid.sh",
     "kill:registry": "sh scripts/registry.kill.sh",
     "prepare": "npm run build",
-    "postinstall": "sh ./scripts/postinstall.sh",
-    "dev": "nodemon"
+    "postinstall": "sudo sh ./scripts/postinstall.sh",
+    "dev": "nodemon",
+    "docker:build": "docker build -t dpm-registry .",
+    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -74,6 +76,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@ngrok/ngrok": "^1.4.1",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",
@@ -83,7 +86,7 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "@dpm/tool5": "http://@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0"
+    "@dpm/tool5": "http://localhost:2092/@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
@@ -101,6 +104,7 @@
     "chai": "^5.1.1",
     "esbuild": "^0.23.1",
     "eslint-plugin-mocha": "^10.5.0",
+    "express-http-proxy": "^2.1.1",
     "global-dirs": "^3.0.1",
     "globals": "^15.9.0",
     "marked": "^14.1.2",

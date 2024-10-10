@@ -122,6 +122,17 @@ start_registry() {
     fi
 }
 
+setup_localhost() {
+    CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
+    read -p "Please enter your password: " -s PASSWORD
+    if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
+        echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
+        echo "Custom domain added to /etc/hosts"
+    else
+        echo "Custom domain already present in /etc/hosts"
+    fi
+}
+
 setup_env() {
     case "$SHELL" in
         */zsh)

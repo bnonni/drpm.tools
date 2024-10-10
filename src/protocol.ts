@@ -1,67 +1,68 @@
 export default {
   protocol  : 'https://dpm.software/protocols/dpm',
-  'published' : true,
-  'types'     : {
-    'package' : {
-      'dataFormats' : [
+  published : true,
+  types     : {
+    package : {
+      schema      : 'https://dpm.software/schemas/package',
+      dataFormats : [
         'application/json'
       ]
     },
-    'icon' : {
-      'schema'      : 'https://areweweb5yet.com/schemas/icon',
-      'dataFormats' : [
+    icon : {
+      schema      : 'https://areweweb5yet.com/schemas/icon',
+      dataFormats : [
         'image/gif',
         'image/png',
         'image/jpeg'
       ]
     },
-    'release' : {
-      'schema'      : 'https://www.rfc-editor.org/rfc/rfc1952.html',
-      'dataFormats' : [
+    release : {
+      schema      : 'https://www.rfc-editor.org/rfc/rfc1952.html',
+      dataFormats : [
         'application/gzip'
       ]
     },
-    'admin' : {
-      'schema'      : 'https://areweweb5yet.com/schemas/admin',
-      'dataFormats' : [
+    admin : {
+      schema      : 'https://areweweb5yet.com/schemas/admin',
+      dataFormats : [
         'application/json'
       ]
     }
   },
-  'structure' : {
-    'package' : {
-      '$tags' : {
-        'name' : {
-          'type' : 'string'
+  structure : {
+    package : {
+      $tags : {
+        name : {
+          type : 'string'
         },
-        '$requiredTags' : [
+        $requiredTags : [
           'name'
         ]
       },
-      '$actions' : [
+      $actions : [
         {
-          'who' : 'author',
-          of  : 'package',
-          'can' : [
+          who : 'author',
+          of    : 'package',
+          can : [
             'create',
             'update',
             'delete'
           ]
         },
         {
-          'role' : 'package/admin',
-          can  : [
+          role : 'package/admin',
+          can    : [
             'co-update'
           ]
         }
       ],
-      'admin' : {
-        '$role'    : true,
-        '$actions' : [
+      admin : {
+        $role    : true,
+        $actions : [
           {
-            'who' : 'author',
-            of  : 'package',
-            'can' : [
+            who   : 'author',
+            of    : 'package',
+            can : [
               'create',
               'update',
               'delete'
@@ -69,12 +70,12 @@ export default {
           }
         ]
       },
-      'icon' : {
-        '$actions' : [
+      icon : {
+        $actions : [
           {
-            'who' : 'author',
-            of  : 'package',
-            'can' : [
+            who : 'author',
+            of    : 'package',
+            can : [
               'create',
               'update',
               'delete',
@@ -83,8 +84,8 @@ export default {
             ]
           },
           {
-            'role' : 'package/admin',
-            can  : [
+            role : 'package/admin',
+            can    : [
               'create',
               'update',
               'delete',
@@ -94,32 +95,32 @@ export default {
           }
         ]
       },
-      'release' : {
-        '$tags' : {
-          'version' : {
-            'type' : 'string'
+      release : {
+        $tags : {
+          version : {
+            type : 'string'
           },
-          'integrity' : {
-            'type' : 'string'
+          integrity : {
+            type : 'string'
           },
-          '$requiredTags' : [
+          $requiredTags : [
             'version',
             'integrity'
           ]
         },
-        '$actions' : [
+        $actions : [
           {
-            'who' : 'author',
-            of  : 'package',
-            'can' : [
+            who : 'author',
+            of    : 'package',
+            can : [
               'create',
               'update',
               'delete'
             ]
           },
           {
-            'role' : 'package/admin',
-            can  : [
+            role : 'package/admin',
+            can    : [
               'create',
               'update',
               'delete'

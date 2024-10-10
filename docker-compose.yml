@@ -1,0 +1,15 @@
+version: '3'
+services:
+  dpm-registry:
+    build: .
+    container_name: dpm-registry-container
+    ports:
+      - "2092:2092"
+    networks:
+      - dpm_network
+    environment:
+      - VIRTUAL_HOST=registry.dpm.software.local
+
+networks:
+  dpm_network:
+    driver: bridge
