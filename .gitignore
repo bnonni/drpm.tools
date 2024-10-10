@@ -22,3 +22,11 @@ npm-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+
+# OS generated files
+*.out
+*.tgz
+*.pid
+
+# DPM generated files
+.registry

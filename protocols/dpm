@@ -8,6 +8,7 @@
             ]
         },
         "icon": {
+            "schema": "https://areweweb5yet.com/schemas/icon",
             "dataFormats": [
                 "image/gif",
                 "image/png",
@@ -21,6 +22,7 @@
             ]
         },
         "admin": {
+            "schema": "https://areweweb5yet.com/schemas/admin",
             "dataFormats": [
                 "application/json"
             ]
@@ -67,7 +69,7 @@
                     }
                 ]
             },
-            "logo": {
+            "icon": {
                 "$actions": [
                     {
                         "who": "author",

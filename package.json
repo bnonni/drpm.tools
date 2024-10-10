@@ -1,23 +1,39 @@
 {
   "name": "dpm",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "description": "Decentralized Package Manager (DPM) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
+  "description": "Decentralized Package Manager (DPM)(디피엠) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
   "directories": {
     "doc": "docs"
   },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "bin": "./dist/esm/cli/dpm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "postcommit": "marked README.md > docs/index.html",
     "clean": "rimraf dist coverage tests/compiled",
+    "wipe": "rimraf node_modules package-lock.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
     "test:register-hooks": "npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build:esm": "tsc -p tsconfig.json",
-    "build:cjs": "node build/cjs-bundle.js && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
-    "build": "npm run clean && npm run build:esm && npm run build:cjs",
-    "start": ""
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
+    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
+    "start:registry": "node ./dist/esm/registry/bin/www.js",
+    "nohup:registry": "sh scripts/registry.nohup.sh",
+    "pid:registry": "sh scripts/registry.pid.sh",
+    "kill:registry": "sh scripts/registry.kill.sh",
+    "prepare": "npm run build",
+    "postinstall": "sudo sh ./scripts/postinstall.sh",
+    "dev": "nodemon",
+    "docker:build": "docker build -t dpm-registry .",
+    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -32,27 +48,25 @@
     {
       "name": "Bryan Nonni",
       "url": "https://github.com/bnonni"
+    },
+    {
+      "name": "Daniel Buchner",
+      "url": "https://github.com/csuwildcat"
     }
   ],
   "files": [
     "dist",
     "src"
   ],
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js"
-    }
-  },
   "keywords": [
     "decentralized",
     "decentralized-applications",
     "decentralized-identity",
     "decentralized-web",
     "web5",
+    "decentralized package manager",
     "dpm",
     "package manager",
-    "decentralized package manager",
     "dwn",
     "dweb node",
     "decentralized web node",
@@ -62,15 +76,25 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/fs-extra": "^11.0.4",
+    "@ngrok/ngrok": "^1.4.1",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
     "@web5/dids": "^1.1.4",
+    "body-parser": "^1.20.3",
+    "commander": "^12.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "@dpm/tool5": "http://localhost:2092/@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
+    "@types/debug": "^4.1.12",
     "@types/eslint": "^9.6.1",
+    "@types/express": "^5.0.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.5.4",
     "@types/npm": "^7.19.3",
@@ -80,11 +104,12 @@
     "chai": "^5.1.1",
     "esbuild": "^0.23.1",
     "eslint-plugin-mocha": "^10.5.0",
+    "express-http-proxy": "^2.1.1",
     "global-dirs": "^3.0.1",
     "globals": "^15.9.0",
     "marked": "^14.1.2",
     "mocha": "^10.7.3",
-    "npm": "^10.8.3",
+    "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.5.0"

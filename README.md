@@ -1,6 +1,6 @@
 # Decentralized Package Manager (DPM)
 
-<img src="/docs/img/logo/tan/profile.webp" height=250 width=250 />
+<img src="/assets/img/animal/spider.webp" height=250 width=250 />
 
 Decentralized Package Manager (DPM) - a package manager for the dWeb - like npm but decentralized.
 
@@ -14,45 +14,70 @@ Developers can discover packages here just like npmjs.com, except explorer.dpm.s
 
 Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
-* NPMJS User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
+### NPM Namespace
+
+* User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
 * Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
 * Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
 
-In DPM, packages are published and listed under DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves `did:dht` to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.
+In DPM, packages are published to DWNs referenced by DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves `did:dht` to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.
+
+### DPM Namespac
+
+* dUser [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
+* dOrganization [did:web:dpm.software](https://dpm.software/.well-known/did.json)
+* dPackage [http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
 
 ## Decentralized Module Import (DMI)
 
-* DMIs are used in the codebase to import code from DWNs
-* At install time, DPM uses the node `--import` CLI flag to intercept the module loading and query for the code
-* The interception is done by adding `--import /path/to/register-dpm-hooks.js` to the global `NODE_OPTIONS` env var
-* DPM installs the code from the DWN to the local `node_modules` folder
-* Devs reference this code normal esm imports referencing the did of the publisher in the path, e.g.
+* DMIs are used to import code from locally installed DPKs
+* DPM diverts `npm install` to grab the dpk from the DWN and install it to the local `node_modules` folder
+* Devs reference dpks like normal esm imports
 
 ```ts
-import * as Web5Api from 'did:dht:@web5/api/0.0.1';
-const web5Api = require('did:dht:@web5/api/0.0.1');
+import * as MyDPK from '@dpm/my-dpk';
+const myDPK = require('@dpm/my-dpk');
 ```
 
-## DPM Loader
+## DPM Hook & Register
 
-Check out [dpm.ts](/src/dpm.ts) and [register.ts](/src/register.ts).
+The DPM hook and register paradigm can be used to run one-off scripts without downloading the dpk into the node_modules folder. Check out [hooks.ts](/lib/hooks.ts) and [register.ts](/lib/register.ts).
 
-## Lockfile
+```shell
+npm run build
+node --import ./dist/esm/src/register.js ./path/to/your/script.js
+```
 
-DPM uses the `package-lock.json` file contains the `DRL@hashed-dwn-record-content` to ensure the integrity of the software being installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.
+## DPM CLI
 
-* After install, dpm will produce a file called `dpm.lock`.
-* The lockfile functions like a packge-lock.json: it locks each particular package to the specified version.
-* It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version.
-* The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query.
-* This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path.
-* E.g. `DMI` => `did:dht:web5/package/api/0.0.1` => `https://dwn.nonni.org/did:dht:web5/protocols/dpm/package/api/0.0.1`
+TODO
+
+## DPM Dependencies
+
+DPM reuses the `package.json` and `package-lock.json` files for easy integration of dpm to a dev workflow. The same principals apply: the entries in each will ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.
+
+* Dependency entries for dpks in `package.json`
+
+```json
+{
+    "dependencies": {
+        "@dpm/my-dpk": "http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0"
+    }
+}
+```
+
+* With dpm installed and dpks listed in dependencies, `npm install` will divert the execution to a custom dpm registry running on `localhost:2092` to construct the DRL, query the DID doc, parse the DWN endpoints and request the dpk from the DWN
+* To see the custom registry server, check out [/src/registry/index.ts](/src/registry/index.ts)
+*
+* Integrity hashes are produces using the dpk.tgz content.
+* Integrity hashes ensure the publisher cannot swap out code under a specific verion in the protocol path.
+* Once a release is published, it cannot be changed.
 
 ```ts
 {
-    "did:dht:bnonni/package/dpm/0.0.1": {
-        "version": "0.0.1",
-        "resolved": "https://dwn.nonni.org/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1",
+    "@dpm/my-dpk": {
+        "version": "0.1.0",
+        "resolved": "http://@dpm/my-dpk/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^0.1.0"
         "integrity": "sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==",
         "license": "Apache-2.0"
     }
