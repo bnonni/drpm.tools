@@ -24,14 +24,14 @@ async function configureProtocol() {
   return await protocol.send(did);
 };
 
-async function releaseDPK({ version, dpk, integrity, parentContextId }) {
+async function releaseDPK({ version, dpk, integrity, parentId }) {
   const { record, status } = await web5.dwn.records.create({
     store   : true,
     data    : dpk,
     message : {
-      parentContextId,
+      parentContextId : parentId,
       published       : true,
-      dataFormat      : 'application/gzip',
+      dataFormat      : 'application/octet-stream',
       schema          : dpm.types.release.schema,
       protocolPath    : 'package/release',
       protocol        : dpm.protocol,
@@ -46,7 +46,8 @@ async function releaseDPK({ version, dpk, integrity, parentContextId }) {
   }
   console.log('DPK published => releaseDPK => status', status);
   console.log('DPK published => createDPK => recordId', record.id);
-  return await record.send(did);
+  const { status: send } = await record.send(did);
+  return {status: send, record};
 }
 
 async function createDPK({ name }: { name: string; }) {
@@ -67,7 +68,8 @@ async function createDPK({ name }: { name: string; }) {
   }
   console.log('DPK published => createDPK => status', status);
   console.log('DPK published => createDPK => recordId', record.id);
-  return await record.send(did);
+  const { status: send } = await record.send(did);
+  return {status: send, record};
 }
 
 async function queryPackages({name}) {
@@ -91,11 +93,12 @@ async function queryPackages({name}) {
   return { status, records, reads };
 }
 
-async function queryReleases({ version, integrity }) {
+async function queryReleases({ version, integrity, parentId }) {
   const { status, records = [] } = await web5.dwn.records.query({
     from    : did,
     message : {
       filter : {
+        parentId,
         dataFormat   : 'application/json',
         schema       : dpm.types.release.schema,
         protocolPath : 'package/release',
@@ -117,45 +120,45 @@ async function queryReleases({ version, integrity }) {
 
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
-const tgzs = [
-  {
-    name            : 'tool5',
-    version         : '5.0.1',
-    tgz             : 'tool5-5.0.1.tgz',
-    parentContextId : 'bafyreiaaahzdkuxtxxiey5ur64qffehz2lbx3uucxbgo7fubrl2kcc2txu'
-  },
-  {
+const data = {
+  name     : '@dpm/tool5',
+  version  : '5.0.1',
+  tgz      : 'dpm-tool5-5.0.1.tgz',
+  parentId : ''
+};
+
+/*
+ {
     name            : '@dcx-protocol/applicant',
     version         : '7.0.0',
     tgz             : 'dcx-protocol-applicant-7.0.0.tgz',
-    parentContextId : 'bafyreibgb3peq7edu4ar5omeqg6d4k5h4yyfosw5moiqds3af4hbhsppca'
+    parentContextId : ''
   },
   {
     name            : '@dcx-protocol/common',
     version         : '7.0.0',
     tgz             : 'dcx-protocol-common-7.0.0.tgz',
-    parentContextId : 'bafyreigbldjnm5enltui6btv5hoojixu53w2kwh2xiya5qodfycdpbhmp4'
+    parentContextId : ''
   },
   {
     name            : '@dcx-protocol/issuer',
     version         : '7.0.0',
     tgz             : 'dcx-protocol-issuer-7.0.0.tgz',
-    parentContextId : 'bafyreiewey4udfjqkequtm2xwarhrbbo6yajl3hjzrthbgjefdjqwoblty'
+    parentContextId : ''
   },
   {
     name            : '@dcx-protocol/root',
     version         : '7.0.1',
     tgz             : 'dcx-protocol-root-7.0.1.tgz',
-    parentContextId : 'bafyreie5zwazqcvi5aj62v4cugjghugpwc2vr5fmu45ynirbvqewhshnxy'
+    parentContextId : ''
   },
   {
     name            : '@dcx-protocol/server',
     version         : '7.0.1',
     tgz             : 'dcx-protocol-server-7.0.1.tgz',
-    parentContextId : 'bafyreiguwab6hcpddrkqvp67jdlfvz3fnyy43x2z6yclc7yl56gdxdj5j4'
+    parentContextId : ''
   }
-];
-
+*/
 const { web5, did } = await Web5.connect({
   password,
   sync             : '30s',
@@ -167,30 +170,26 @@ console.log('web5Connect => did', did);
 const { status: configStatus } = await configureProtocol();
 console.log('Configured DPM protocol => configStatus', configStatus);
 
-const dpkMeta: {name: string; version: string; integrity: string}[] = [];
+const { name, version, tgz } = data;
+const tgzPath = join(`${process.cwd()}/scripts/dpks`, tgz);
+console.log(`DPK name, version, tgz, tgzPath =>`, name, version, tgz, tgzPath);
 
-await Promise.all(tgzs.map(async ({name, version, tgz, parentContextId}) => {
-  const tgzPath = join(`${process.cwd()}/scripts/dpks`, tgz);
-  console.log(`DPK name, version, tgz, tgzPath =>`, name, version, tgz, tgzPath);
+const integrity = await sha512Integrity(tgzPath);
+console.log(`Computed integrity hash =>`, integrity);
 
-  const integrity = await sha512Integrity(tgzPath);
-  console.log(`Computed integrity hash =>`, integrity);
+const { status: dpkStatus, record } = await createDPK({ name });
+console.log('Created dpk package => dpkStatus', dpkStatus);
+console.log('Created dpk package => record.id', record.id );
 
-  dpkMeta.push({ name, version, integrity });
+const dpk = await readFile(tgzPath);
+console.log('Created dpk release => dpk', dpk);
+const releaseStatus = await releaseDPK({ version, dpk, integrity, parentId: record.id });
+console.log('Created dpk release => releaseStatus', releaseStatus);
 
-  // const { status: packageStatus } = await createDPK({ name });
-  // console.log('Created dpk package => packageStatus', packageStatus);
-
-  const dpk = await readFile(tgzPath);
-  console.log('Created dpk release => dpk', dpk);
-  const releaseStatus = await releaseDPK({ version, dpk, integrity, parentContextId });
-  console.log('Created dpk release => releaseStatus', releaseStatus);
-
-  const {reads} = await queryReleases({ version, integrity });
-  for(let read of reads) {
-    console.log('Read package record', read);
-  }
-}));
+const {reads} = await queryReleases({ version, integrity, parentId: record.id });
+for(let read of reads) {
+  console.log('Read package record', read);
+}
 
 // const {reads} = await queryPackages({ name });
 // console.log('Read package records query');

@@ -7,5 +7,5 @@
         "src/**/*.test.ts",
         "node_modules"
     ],
-    "exec": "npm run build:esm && node ./dist/esm/registry/bin/www.js"
+    "exec": "npm run build:esm && npm run start:registry"
 }

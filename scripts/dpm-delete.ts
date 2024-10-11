@@ -3,12 +3,8 @@ import { Web5 } from '@web5/api';
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
 const recordIds = [
-  'bafyreihw5fhgeyzbp43xftv74sdymlf2y73cbjvflzlzuqfk7tzm4soju4',
-  'bafyreiawphshjotzyr6cqjf4pcsb67fzwdiwm447mwpo4pjkg5vijqt6rq',
-  'bafyreib3ktthhum777m2wjmldut2xapxqbimwoxbh2qituykgjx5itfatu',
-  'bafyreig6dof5gd76jsrk7c5evlhwasr5eqn7tlr7cdxiwp7rbo2mk6hkei',
-  'bafyreig6pbgyzkcrjw6ycgckjmcjcqcbh6cttmwct2mgubqc5xq6std7ei',
-  'bafyreifz5b6nzx5sigztjxogsj3w6judbd37aprbgweefpcm3xy6ixgntq',
+  'bafyreidhrty4m56da2gsiocldgxxwtxgprkg3v3nwn73cufmm776te4s7i',
+  'bafyreigffu5zjcgomwoc5kria6lme3lthfnwxlcv7v2neup73fvoelqnsm'
 ];
 const { web5, did } = await Web5.connect({
   password,

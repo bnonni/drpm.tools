@@ -47,7 +47,6 @@ export default {
       'bugs'    : {
         'url' : 'https://github.com/bnonni/tool5/issues'
       },
-      'homepage'     : 'https://github.com/bnonni/tool5#readme',
       'dependencies' : {
         '@web5/agent'       : '^0.6.1',
         '@web5/api'         : '^0.10.0',
@@ -110,9 +109,10 @@ export default {
     }
   },
   'time' : {
-    'created'  : '2024-10-09T22:57:17.406Z',
-    'modified' : '2024-10-09T22:57:17.406Z',
-    '5.0.1'    : '2024-10-09T22:57:17.406Z'
+    'created'  : '2024-09-13T23:37:40.897Z',
+    'modified' : '2024-10-09T22:57:17.600Z',
+
+    '5.0.1' : '2024-10-09T22:57:17.406Z'
   },
   'bugs' : {
     'url' : 'https://github.com/bnonni/tool5/issues'
@@ -122,7 +122,6 @@ export default {
     'url'  : 'https://github.com/bnonni'
   },
   'license'    : 'ISC',
-  'homepage'   : 'https://github.com/bnonni/tool5#readme',
   'repository' : {
     'type' : 'git',
     'url'  : 'git+ssh://git@github.com/bnonni/tool5.git'

@@ -19,7 +19,7 @@ export default {
     release : {
       schema      : 'https://www.rfc-editor.org/rfc/rfc1952.html',
       dataFormats : [
-        'application/gzip'
+        'application/octet-stream'
       ]
     },
     admin : {
