@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
+# Install app dependencies
+RUN npm run build
+
 # Bundle app source
 COPY . .
 
@@ -17,4 +20,4 @@ COPY . .
 EXPOSE 2092
 
 # Define the command to run your server
-CMD [ "node", "./dist/index.js" ]
+CMD [ "node", "./dist/esm/registry/bin/www.js" ]

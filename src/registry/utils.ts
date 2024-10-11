@@ -1,11 +1,12 @@
 import { Request } from 'express';
-import { ensureDir } from 'fs-extra';
+import { ensureDir, exists } from 'fs-extra';
 import { createWriteStream } from 'fs';
 import { access, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { REGISTRY_DIR } from './config.js';
 import { pipeline } from 'stream/promises';
 import { createHash } from 'crypto';
+import { Logger } from '../utils/logger.js';
 
 export async function sha512Integrity(tgzFilepath: string): Promise<string> {
   const fileBuffer = await readFile(tgzFilepath);
@@ -26,14 +27,17 @@ export function getRegistryPackagePath(name: string, version: string): string {
   return join(REGISTRY_DIR, name, version);
 };
 
-export async function loadPackageMetadata(name: string, version: string): Promise<any> {
-  const metadataFilePath = getPackageMetadataFilePath(name, version);
+export async function loadPackageMetadata(metadataFilePath: string): Promise<any> {
   try {
+    if(!await exists(metadataFilePath)) {
+      return null;
+    }
     await access(metadataFilePath);
-    const metadata = require(metadataFilePath);
+    const metadata = JSON.parse(await readFile(metadataFilePath, 'utf8'));
     return metadata;
-  } catch {
-    return null;
+  } catch (error: any) {
+    Logger.error('Failed to load package metadata', error);
+    throw error;
   }
 };
 

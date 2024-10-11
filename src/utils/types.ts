@@ -1,10 +1,19 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 
-export type DPKResponse = {
+export type Dpk = {
+    name?: string;
+    integrity?: string;
+    version?: string;
+}
+export type DpkRequest = {
+    did: string;
+    dpk: Dpk;
+};
+export type DpkResponse = {
     ok: boolean;
-    status: number;
-    statusText: string;
-    message: { [key: string]: string } | ReadableStream<Uint8Array>;
+    code: number;
+    status: string;
+    message?: { [key: string]: string } | ReadableStream<Uint8Array>;
 };
 export type QueryFilters = {
     name: string;
@@ -35,10 +44,7 @@ export type DwnResponseEntry = DwnRecordDescriptor & {
     };
     encodedData: string;
 };
-export type DwnResponse = {
-    status: DwnResponseStatus;
-    entries: DwnResponseEntry[]
-};
+export type DwnResponse = DwnResponseStatus & { entries: DwnResponseEntry[] };
 export type DwnRecordDescriptor =
     | DwnMessageDescriptor[DwnInterface.RecordsWrite]
     | DwnMessageDescriptor[DwnInterface.RecordsDelete];
