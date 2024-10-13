@@ -25,9 +25,6 @@ REGISTRY_PID=0
 PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
 MISSING_PREFIXES=()
 
-# Create the DPM home directory if it doesn't exist
-[[ ! -d "$DPM_HOME" ]] && mkdir "$DPM_HOME" || echo "Skipping mkdir DPM_HOME ($DPM_HOME) ..."
-
 # Function to handle unsupported OS and exit
 unsupported_os() {
     echo "Unsupported OS: $1"
@@ -119,6 +116,8 @@ prompt_global_npmrc_install() {
 
 # Function to add missing prefixes to an `.npmrc` file
 add_prefixes_to_npmrc() {
+    # npm config set @my-scope:registry http://localhost:4873
+
     local NPMRC_FILE="$1"
     shift
     local PREFIXES_TO_ADD=("$@")
@@ -221,6 +220,10 @@ setup_dpm_env_vars() {
         echo "Please run 'source $SHELL_RC' or open a new terminal session to apply changes"
     fi
 }
+
+
+# Create the DPM home directory if it doesn't exist
+[[ ! -d "$DPM_HOME" ]] && mkdir "$DPM_HOME" || echo "DRPM installed per DPM_HOME ($DPM_HOME), exiting ..." && exit 0
 
 # Main logic
 # Parse command line arguments
