@@ -29,6 +29,12 @@ REGISTRY_PID=0
 PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
 MISSING_PREFIXES=()
 
+# Function to output cleaner info
+roomy_echo() {
+    echo ""
+    echo "$1"
+}
+
 # Function to handle unsupported OS and exit
 unsupported_os() {
     echo "Unsupported OS: $1"
@@ -40,7 +46,7 @@ setup_nginx() {
     local OS="$1"
     case "$OS" in
         Darwin)
-            echo "Setting up Nginx for macOS (Darwin)..."
+            roomy_echo "Setting up Nginx for macOS (Darwin)..."
             # Install nginx using Homebrew if not installed
             if ! brew ls --versions nginx > /dev/null; then
                 echo "Nginx not found. Installing..."
@@ -57,7 +63,7 @@ setup_nginx() {
             ;;
         # NOTE: This is not specific enough. For example, Arch users won't have apt-get.
         Linux)
-            echo "Setting up Nginx for Linux..."
+            roomy_echo "Setting up Nginx for Linux..."
             # Install nginx if not installed
             if ! command -v nginx > /dev/null; then
                 echo "Nginx not found. Installing..."
@@ -84,7 +90,7 @@ backup_file() {
     local FILE_TO_BAK="$1"
     if [[ -f "$FILE_TO_BAK" ]]; then
         BAK_FILE="$DPM_HOME/$(basename "$FILE_TO_BAK").bak"
-        echo "Backing up $FILE_TO_BAK to $BAK_FILE"
+        roomy_echo "Backing up $FILE_TO_BAK to $BAK_FILE"
         cp "$FILE_TO_BAK" "$BAK_FILE"
     fi
 }
@@ -93,10 +99,10 @@ backup_file() {
 ensure_npmrc_exists() {
     local NPMRC_FILE="$1"
     if [[ ! -f "$NPMRC_FILE" ]]; then
-        echo "Creating .npmrc ..."
+        roomy_echo "Creating .npmrc ..."
         touch "$NPMRC_FILE"
     else
-        echo ".npmrc exists"
+        roomy_echo ".npmrc exists"
     fi
 }
 
@@ -114,8 +120,9 @@ find_missing_prefixes() {
 
 # Function to prompt for global installation
 prompt_global_npmrc_install() {
+    echo ""
     read -rp "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
-    [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true
+    [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true || return 0
 }
 
 # Function to add missing prefixes to an `.npmrc` file
@@ -130,7 +137,7 @@ add_prefixes_to_npmrc() {
     [[ -s "$NPMRC_FILE" && $(tail -c1 "$NPMRC_FILE" | wc -l) -eq 0 ]] && echo >> "$NPMRC_FILE"
 
     if [[ "${#PREFIXES_TO_ADD[@]}" -gt 0 ]]; then
-        echo "Adding prefixes to $NPMRC_FILE ..."
+        roomy_echo "Adding prefixes to $NPMRC_FILE ..."
         for PREFIX in "${PREFIXES_TO_ADD[@]}"; do
             echo "$PREFIX" >> "$NPMRC_FILE"
             echo "Added $PREFIX to $NPMRC_FILE"
@@ -160,36 +167,54 @@ do_check_and_install_npmrc() {
 
 # Function to start the DPM registry if not running
 start_dpm_registry() {
-    # shellcheck disable=SC2009
-    REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || pgrep -f $REGISTRY_PROCESS_NAME || ps aux | grep $REGISTRY_PROCESS_NAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
-    if [[ -z "$REGISTRY_PID" ]]; then
-        echo "Starting registry ..."
-        sh scripts/registry.nohup.sh
+    if docker version >/dev/null 2>&1; then
+        sh ./scripts/registry.docker.sh
     else
-        read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
-        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-            echo "Restarting registry process (pid=$REGISTRY_PID) ..."
-            kill -9 "$REGISTRY_PID"
-            sh scripts/registry.nohup.sh
-            echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
+        # shellcheck disable=SC2009
+        REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || \
+            pgrep -f $REGISTRY_PROCESS_NAME \
+            || ps aux | grep $REGISTRY_PROCESS_NAME | grep -v grep | awk '{print $2}' \
+            || lsof -i :2092 | grep node | awk '{print $2}')"
+
+        if [[ -z "$REGISTRY_PID" ]]; then
+            roomy_echo "Starting registry ..."
+            sh ./scripts/registry.nohup.sh
         else
-            echo "Registry still running, continuing ..."
+            echo ""
+            read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
+            if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+                echo "Restarting registry process (pid=$REGISTRY_PID) ..."
+                kill -9 "$REGISTRY_PID"
+                sh scripts/registry.nohup.sh
+                echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
+            else
+                echo "Registry still running, continuing ..."
+            fi
         fi
     fi
-    edit_hosts
 }
 
 # NOTE: I really don't think we should be touching people's /etc/hosts file.
 # Perhaps suggest it to them, but that's pretty "invasive" IMO
 # Function to edit /etc/hosts
 edit_hosts() {
-    CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
-    if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
+    local CUSTOM_DOMAINS="127.0.0.1 registry.dpm.software.local"
+
+    echo ""
+    read -rp "Some hosts need to be added to your local hosts file. Should we add them for you? [y/N] " ANSWER
+    if [[ "$ANSWER" =~ ^[yY]$ ]]; then
         read -rp "Please enter your password: " -s PASSWORD
-        echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
-        echo "Custom domain added to /etc/hosts"
+        if ! grep -q "$CUSTOM_DOMAINS" /etc/hosts; then
+            echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAINS\" >> /etc/hosts"
+            echo "Custom domain added to /etc/hosts"
+        else
+            echo "Custom domain already present in /etc/hosts"
+        fi
     else
-        echo "Custom domain already present in /etc/hosts"
+        for VAR in "${CUSTOM_DOMAINS[@]}"; do
+            roomy_echo "Add the following hosts to your /etc/hosts file."
+            echo "$VAR"
+        done
     fi
 }
 
@@ -230,7 +255,7 @@ setup_dpm_env_vars() {
             echo "Please run 'source $SHELL_RC' or open a new terminal session to apply changes"
         fi
     else
-        echo "Please add the following variables to your shell."
+        roomy_echo "Please add the following variables to your shell."
         for VAR in "${VARS_TO_EXPORT[@]}"; do
             echo "$VAR"
         done
@@ -239,7 +264,8 @@ setup_dpm_env_vars() {
 
 
 # Create the DPM home directory if it doesn't exist
-[[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME" || echo "DRPM installed per DPM_HOME ($DPM_HOME), exiting ..." && exit 0
+[[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME"
+roomy_echo "DRPM installed per DPM_HOME ($DPM_HOME)."
 
 # Main logic
 # Parse command line arguments
@@ -266,7 +292,11 @@ else
     $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
 fi
 
-$NGINX_FLAG && setup_nginx "$OS" || echo "Skipping Nginx setup ..."
+if $NGINX_FLAG; then
+    setup_nginx "$OS"
+else
+    roomy_echo "Skipping Nginx setup ..."
+fi
 
 edit_hosts
 start_dpm_registry
