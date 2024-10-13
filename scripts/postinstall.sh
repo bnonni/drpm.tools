@@ -31,49 +31,6 @@ unsupported_os() {
     exit 1
 }
 
-# Function to set up Nginx
-setup_nginx() {
-    local OS="$1"
-    case "$OS" in
-        Darwin)
-            echo "Setting up Nginx for macOS (Darwin)..."
-            # Install nginx using Homebrew if not installed
-            if ! brew ls --versions nginx > /dev/null; then
-                echo "Nginx not found. Installing..."
-                brew install nginx
-            else
-                echo "Nginx is already installed."
-            fi
-            # Copy custom macOS config and replace the existing nginx.conf
-            echo "Copying custom macOS nginx.conf..."
-            cp "$NGINX_DIR/mac.conf" /usr/local/etc/nginx/nginx.conf
-            # Start Nginx as a brew service
-            echo "Starting Nginx via brew services..."
-            brew services start nginx
-            ;;
-        Linux)
-            echo "Setting up Nginx for Linux..."
-            # Install nginx if not installed
-            if ! command -v nginx > /dev/null; then
-                echo "Nginx not found. Installing..."
-                sudo apt-get update && sudo apt-get install -y nginx
-            else
-                echo "Nginx is already installed."
-            fi
-            # Copy custom Linux config and replace the existing nginx.conf
-            echo "Copying custom Linux nginx.conf..."
-            sudo cp "$NGINX_DIR/linux.conf" /etc/nginx/nginx.conf
-            # Start Nginx service
-            echo "Starting Nginx service..."
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-            ;;
-        *)
-            unsupported_os "$OS"
-            ;;
-    esac
-}
-
 
 # Function to back up a file if it exists
 backup_file() {
@@ -154,38 +111,6 @@ do_check_and_install_npmrc() {
     add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
 }
 
-# Function to start the DPM registry if not running
-start_dpm_registry() {
-    REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || pgrep -f $REGISTRY_PROCESS_NAME || ps aux | grep $REGISTRY_PROCESS_NAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
-    if [[ -z "$REGISTRY_PID" ]]; then
-        echo "Starting registry ..."
-        sh scripts/registry.nohup.sh
-    else
-        read -p "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
-        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-            echo "Restarting registry process (pid=$REGISTRY_PID) ..."
-            kill -9 "$REGISTRY_PID"
-            sh scripts/registry.nohup.sh
-            echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
-        else
-            echo "Registry still running, continuing ..."
-        fi
-    fi
-    edit_hosts
-}
-
-# Function to edit /etc/hosts
-edit_hosts() {
-    CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
-    read -p "Please enter your password: " -s PASSWORD
-    if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
-        echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
-        echo "Custom domain added to /etc/hosts"
-    else
-        echo "Custom domain already present in /etc/hosts"
-    fi
-}
-
 # Function to set up environment variables
 setup_dpm_env_vars() {
     case "$SHELL" in
@@ -221,8 +146,108 @@ setup_dpm_env_vars() {
     fi
 }
 
+# Function to start the DPM registry if not running
+start_dpm_registry() {
+    REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || pgrep -f $REGISTRY_PROCESS_NAME || ps aux | grep $REGISTRY_PROCESS_NAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
+    if [[ -z "$REGISTRY_PID" ]]; then
+        echo "Starting registry ..."
+        sh scripts/registry.nohup.sh
+    else
+        read -p "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
+        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+            echo "Restarting registry process (pid=$REGISTRY_PID) ..."
+            kill -9 "$REGISTRY_PID"
+            sh scripts/registry.nohup.sh
+            echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
+        else
+            echo "Registry still running, continuing ..."
+        fi
+    fi
+}
+
+# Function to set up Nginx
+setup_nginx() {
+    local OS="$1"
+    if ! $NGINX_FLAG || pgrep -f "nginx" > /dev/null; then
+        echo "Nginx running"
+        echo "------------------------------------------------"
+        ps aux | grep "nginx"
+        echo "Skipping Nginx setup ..."    
+        return 0
+    fi
+    case "$OS" in
+        Darwin)
+            echo "Setting up Nginx for macOS (Darwin)..."
+            # Install nginx using Homebrew if not installed
+            if ! brew ls --versions nginx > /dev/null; then
+                echo "Nginx not found. Installing..."
+                brew install nginx
+            else
+                echo "Nginx is already installed."
+            fi
+            # Copy custom macOS config and replace the existing nginx.conf
+            echo "Copying custom macOS nginx.conf..."
+            cp "$NGINX_DIR/mac.conf" /usr/local/etc/nginx/nginx.conf
+            # Start Nginx as a brew service
+            echo "Starting Nginx via brew services..."
+            brew services start nginx
+            ;;
+        Linux)
+            echo "Setting up Nginx for Linux..."
+            # Install nginx if not installed
+            if ! command -v nginx > /dev/null; then
+                echo "Nginx not found. Installing..."
+                sudo apt-get update && sudo apt-get install -y nginx
+            else
+                echo "Nginx is already installed."
+            fi
+            # Copy custom Linux config and replace the existing nginx.conf
+            echo "Copying custom Linux nginx.conf..."
+            sudo cp "$NGINX_DIR/linux.conf" /etc/nginx/nginx.conf
+            # Start Nginx service
+            echo "Starting Nginx service..."
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
+            ;;
+        *)
+            unsupported_os "$OS"
+            ;;
+    esac
+}
+
+# Function to edit /etc/hosts
+edit_hosts() {
+    CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
+    read -p "Please enter your password: " -s PASSWORD
+    if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
+        echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
+        echo "Custom domain added to /etc/hosts"
+    else
+        echo "Custom domain already present in /etc/hosts"
+    fi
+}
+
+npmrc_main() {
+    do_check_and_install_npmrc "$LOCAL_NPMRC"
+    if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
+        echo "Global installation detected ..."
+        do_check_and_install_npmrc "$GLOBAL_NPMRC"
+    else
+        prompt_global_npmrc_install
+        $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
+    fi
+}
+
+main() {
+    npmrc_main
+    edit_hosts
+    setup_nginx "$OS"
+    start_dpm_registry
+    setup_dpm_env_vars
+}
 
 # Create the DPM home directory if it doesn't exist
+# TODO: make this check more robust by checking for each thing this script installs
 [[ ! -d "$DPM_HOME" ]] && mkdir "$DPM_HOME" || echo "DRPM installed per DPM_HOME ($DPM_HOME), exiting ..." && exit 0
 
 # Main logic
@@ -238,20 +263,5 @@ if [[ "$#" -gt 0 ]]; then
     done
 fi
 
-# Check for Nginx directory
-do_check_and_install_npmrc "$LOCAL_NPMRC"
-
-if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
-    echo "Global installation detected ..."
-    do_check_and_install_npmrc "$GLOBAL_NPMRC"
-else
-    prompt_global_npmrc_install
-    $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
-fi
-
-$NGINX_FLAG && setup_nginx "$OS" || echo "Skipping Nginx setup ..."
-
-edit_hosts
-start_dpm_registry
-setup_dpm_env_vars
+main
 exit 0
