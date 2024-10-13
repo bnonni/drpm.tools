@@ -14,8 +14,12 @@ NGINX_DIR="$BUILD_DIR/nginx"
 NPMRC=".npmrc"
 GLOBAL_NPMRC="$HOME/$NPMRC"
 LOCAL_NPMRC="$PWD/$NPMRC"
-NPMRC_FILES=("$GLOBAL_NPMRC" "$LOCAL_NPMRC")
-DPM_HOME="$HOME/.dpm"
+
+if [[ -n "$XDG_CONFIG_HOME" ]]; then
+    DPM_HOME="$XDG_CONFIG_HOME/dpm"
+else
+    DPM_HOME="$HOME/.dpm"
+fi
 
 # Initialize global dpm variables
 REGISTRY_URL="http://localhost:2092"
@@ -51,6 +55,7 @@ setup_nginx() {
             echo "Starting Nginx via brew services..."
             brew services start nginx
             ;;
+        # NOTE: This is not specific enough. For example, Arch users won't have apt-get.
         Linux)
             echo "Setting up Nginx for Linux..."
             # Install nginx if not installed
@@ -73,7 +78,6 @@ setup_nginx() {
             ;;
     esac
 }
-
 
 # Function to back up a file if it exists
 backup_file() {
@@ -110,7 +114,7 @@ find_missing_prefixes() {
 
 # Function to prompt for global installation
 prompt_global_npmrc_install() {
-    read -p "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
+    read -rp "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
     [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true
 }
 
@@ -121,7 +125,7 @@ add_prefixes_to_npmrc() {
     local NPMRC_FILE="$1"
     shift
     local PREFIXES_TO_ADD=("$@")
-    
+
     # Ensure file ends with a newline before appending
     [[ -s "$NPMRC_FILE" && $(tail -c1 "$NPMRC_FILE" | wc -l) -eq 0 ]] && echo >> "$NPMRC_FILE"
 
@@ -138,30 +142,31 @@ add_prefixes_to_npmrc() {
 do_check_and_install_npmrc() {
     local NPMRC_FILE="$1"
     ensure_npmrc_exists "$NPMRC_FILE"
-    
+
     find_missing_prefixes "$NPMRC_FILE"
-    
+
     if [[ "${#MISSING_PREFIXES[@]}" -eq 0 ]]; then
         echo "No missing prefixes in $NPMRC_FILE."
-        
+
         if ! $FORCE; then
             echo "Use --force (-f) to override and update the file"
         else
             backup_file "$NPMRC_FILE"
         fi
     fi
-    
+
     add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
 }
 
 # Function to start the DPM registry if not running
 start_dpm_registry() {
+    # shellcheck disable=SC2009
     REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || pgrep -f $REGISTRY_PROCESS_NAME || ps aux | grep $REGISTRY_PROCESS_NAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
     if [[ -z "$REGISTRY_PID" ]]; then
         echo "Starting registry ..."
         sh scripts/registry.nohup.sh
     else
-        read -p "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
+        read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
         if [[ "$ANSWER" =~ ^[yY]$ ]]; then
             echo "Restarting registry process (pid=$REGISTRY_PID) ..."
             kill -9 "$REGISTRY_PID"
@@ -174,11 +179,13 @@ start_dpm_registry() {
     edit_hosts
 }
 
+# NOTE: I really don't think we should be touching people's /etc/hosts file.
+# Perhaps suggest it to them, but that's pretty "invasive" IMO
 # Function to edit /etc/hosts
 edit_hosts() {
     CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
-    read -p "Please enter your password: " -s PASSWORD
     if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
+        read -rp "Please enter your password: " -s PASSWORD
         echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
         echo "Custom domain added to /etc/hosts"
     else
@@ -200,30 +207,39 @@ setup_dpm_env_vars() {
             ;;
     esac
 
-    echo "Found $SHELL_RC file, adding env vars ..."
-    [[ -s "$SHELL_RC" && $(tail -c1 "$SHELL_RC" | wc -l) -eq 0 ]] && echo >> "$SHELL_RC"
-
     local VARS_TO_EXPORT=("DPM_HOME=\"$DPM_HOME\"" "REGISTRY_URL=\"$REGISTRY_URL\"" "REGISTRY_PID_FILE=\"$REGISTRY_PID_FILE\"" "REGISTRY_PROCESS_NAME=\"$REGISTRY_PROCESS_NAME\"" "PATH=\"$DPM_HOME:$PATH\"")
 
-    for VAR in "${VARS_TO_EXPORT[@]}"; do
-        if ! grep -q "$VAR" "$SHELL_RC"; then
-            echo "export $VAR" >> "$SHELL_RC"
+    read -rp "Some environment variables need to be set. Should we set them for you? [y/N] " ANSWER
+    if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+        echo "Found $SHELL_RC file, adding env vars ..."
+        [[ -s "$SHELL_RC" && $(tail -c1 "$SHELL_RC" | wc -l) -eq 0 ]] && echo >> "$SHELL_RC"
+
+        for VAR in "${VARS_TO_EXPORT[@]}"; do
+            if ! grep -q "$VAR" "$SHELL_RC"; then
+                echo "export $VAR" >> "$SHELL_RC"
+            fi
+        done
+
+        echo "DPM env vars added to $SHELL_RC"
+
+        if [[ "$0" != "${BASH_SOURCE[0]}" ]]; then
+            echo "Attempting to source $SHELL_RC ..."
+            # shellcheck disable=SC1090
+            . "$SHELL_RC"
+        else
+            echo "Please run 'source $SHELL_RC' or open a new terminal session to apply changes"
         fi
-    done
-
-    echo "DPM env vars added to $SHELL_RC"
-
-    if [[ "$0" != "$BASH_SOURCE" ]]; then
-        echo "Attempting to source $SHELL_RC ..."
-        . "$SHELL_RC"
     else
-        echo "Please run 'source $SHELL_RC' or open a new terminal session to apply changes"
+        echo "Please add the following variables to your shell."
+        for VAR in "${VARS_TO_EXPORT[@]}"; do
+            echo "$VAR"
+        done
     fi
 }
 
 
 # Create the DPM home directory if it doesn't exist
-[[ ! -d "$DPM_HOME" ]] && mkdir "$DPM_HOME" || echo "DRPM installed per DPM_HOME ($DPM_HOME), exiting ..." && exit 0
+[[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME" || echo "DRPM installed per DPM_HOME ($DPM_HOME), exiting ..." && exit 0
 
 # Main logic
 # Parse command line arguments
@@ -241,6 +257,7 @@ fi
 # Check for Nginx directory
 do_check_and_install_npmrc "$LOCAL_NPMRC"
 
+# shellcheck disable=SC2154
 if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
     echo "Global installation detected ..."
     do_check_and_install_npmrc "$GLOBAL_NPMRC"
