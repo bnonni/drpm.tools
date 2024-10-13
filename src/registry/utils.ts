@@ -23,50 +23,55 @@ export async function ensureRegistryPackageDir(packageDirPath: string): Promise<
   }
 };
 
-export function getRegistryPackagePath(name: string, version: string): string {
+export function getRegistryPath(name: string, version: string): string {
   return join(REGISTRY_DIR, name, version);
 };
 
-export async function loadPackageMetadata(metadataFilePath: string): Promise<any> {
+export async function accessMetadata(metadataPath: string): Promise<any> {
   try {
-    if(!await exists(metadataFilePath)) {
+    if(!await exists(metadataPath)) {
       return null;
     }
-    await access(metadataFilePath);
-    const metadata = JSON.parse(await readFile(metadataFilePath, 'utf8'));
+    await access(metadataPath);
+    const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
     return metadata;
   } catch (error: any) {
-    Logger.error('Failed to load package metadata', error);
+    Logger.error(`metadata.json does not exist at path ${metadataPath}`, error);
     throw error;
   }
 };
 
-export async function accessPackageTarball(tarballPath: string): Promise<any> {
+export async function accessTarball(tarballPath: string): Promise<any> {
   try {
+    if(!await exists(tarballPath)) {
+      return null;
+    }
     await access(tarballPath);
     return tarballPath;
-  } catch {
-    return null;
+  } catch (error: any) {
+    Logger.error(`tgz files does not exist at path ${tarballPath}`, error);
+    throw error;
   }
 };
 
-export function getPackageMetadataFilePath(name: string, version: string): string {
-  return join(getRegistryPackagePath(name, version), 'metadata.json');
+export function getMetadataPath(name: string, version: string): string {
+  return join(getRegistryPath(name, version), 'metadata.json');
 };
 
-export function getPackageTarballFilePath(name: string, version: string): string {
-  return join(getRegistryPackagePath(name, version), `${name}-${version}.tgz`);
+export function getTarballPath(name: string, version: string): string {
+  return join(getRegistryPath(name, version), `${name}-${version}.tgz`);
 };
 
-export async function savePackageTarball(tarball: ReadableStream<Uint8Array>, tarballPath: string): Promise<void> {
+export async function saveTarball(tarball: ReadableStream<Uint8Array>, tarballPath: string): Promise<void> {
+  Logger.log(`Saving tarball to ${tarballPath} ...`);
   await pipeline(tarball, createWriteStream(tarballPath));
 }
 
-export async function savePackageMetadata(name: string, version: string, metadata: any): Promise<void> {
-  const packagePath = getRegistryPackagePath(name, version);
+export async function saveMetadata(name: string, version: string, metadata: any): Promise<void> {
+  const packagePath = getRegistryPath(name, version);
   await ensureRegistryPackageDir(packagePath);
-  const metadataFilePath = getPackageMetadataFilePath(name, version);
-  await writeFile(metadataFilePath, JSON.stringify(metadata, null, 2));
+  const metadataPath = getMetadataPath(name, version);
+  await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
 };
 
 export async function getTarballUrl(req: Request, name: string, version: string): Promise<string> {
