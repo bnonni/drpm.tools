@@ -1,1 +1,0 @@
-NODE_OPTIONS='--require $PWD/dist/esm/register.js'

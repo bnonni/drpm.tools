@@ -2,8 +2,9 @@ import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/age
 
 export type Dpk = {
     name?: string;
-    integrity?: string;
+    parentId?: string;
     version?: string;
+    protocolPath?: string;
 }
 export type DpkRequest = {
     did: string;
@@ -13,7 +14,7 @@ export type DpkResponse = {
     ok: boolean;
     code: number;
     status: string;
-    message?: { [key: string]: string } | ReadableStream<Uint8Array>;
+    message?: any | ReadableStream<Uint8Array>;
 };
 export type QueryFilters = {
     name: string;

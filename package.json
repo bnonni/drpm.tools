@@ -30,7 +30,7 @@
     "pid:registry": "sh scripts/registry.pid.sh",
     "kill:registry": "sh scripts/registry.kill.sh",
     "prepare": "npm run build",
-    "postinstall": "sudo sh ./scripts/postinstall.sh",
+    "postinstall": "sh ./scripts/postinstall.sh",
     "dev": "nodemon",
     "docker:build": "docker build -t dpm-registry .",
     "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"

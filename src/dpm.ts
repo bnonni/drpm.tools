@@ -1,23 +1,20 @@
 import { DidDht, DidWeb, UniversalResolver } from '@web5/dids';
+import { createWriteStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { pipeline } from 'stream/promises';
+import { REGISTRY_DIR } from './registry/config.js';
 import { Logger } from './utils/logger.js';
-import { DpkRequest, DpkResponse, DwnResponse, QueryFilters } from './utils/types.js';
-import { ResponseUtils } from './utils/dwn.js';
+import { DpkRequest, DpkResponse, QueryFilters } from './utils/types.js';
 
 const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 const trailingSlashRegex = /\/$/;
 
 export async function findEntryPoint(modulePath: string): Promise<string> {
-  // Logger.debug('findEntryPoint => modulePath', modulePath);
   const packageJsonPath = join('node_modules', modulePath, 'package.json');
-  // Logger.debug('findEntryPoint => packageJsonPath', packageJsonPath);
   const packageJsonContent = await readFile(packageJsonPath, 'utf8');
-  // Logger.debug('findEntryPoint => packageJsonContent', packageJsonContent);
   const packageJson = JSON.parse(packageJsonContent);
-  // Logger.debug('findEntryPoint => packageJson', packageJson);
   const entryPoint = (packageJson.type === 'module' ? packageJson.module : packageJson.main) ?? packageJson.main;
-  // Logger.debug('findEntryPoint => entryPoint', entryPoint);
   return entryPoint;
 }
 
@@ -30,61 +27,45 @@ export function encodeURIQueryFilters(queryFilters: QueryFilters): string {
 }
 
 export async function getDwnEndpoints(did: string) {
-  // Logger.debug('getDwnEndpoints => did', did);
   const { didDocument } = await DidResolver.resolve(did);
-  // Logger.debug('getDwnEndpoints => didDocument', JSON.stringify(didDocument, null, 2));
   const services = didDocument?.service;
   const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? ['http://localhost:3000/'];
   const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
-  // Logger.debug('getDwnEndpoints => serviceEndpoints', serviceEndpoints);
   return serviceEndpoints.map(endpoint => endpoint.replace(trailingSlashRegex, ''));
 }
 
-export async function fetchDPK({ did, dpk: { name, version, integrity }}: DpkRequest): Promise<DpkResponse> {
+export async function fetchDPK({ did, dpk: { name, version, protocolPath }}: DpkRequest): Promise<DpkResponse> {
   try {
     for (const endpoint of await getDwnEndpoints(did)) {
-      const baseDRL = `${endpoint}/${did}`;
-      // may have to encode name bc of @
-      const queryDRL = name
-        ? `${baseDRL}/query?filter.tags.name=${name}`
-        : `${baseDRL}/query?filter.protocolPath=package/release&filter.tags.version=${version}&filter.tags.integrity=${integrity}`;
-
+      const baseDRL = `${endpoint}/${did}/read/protocols/aHR0cHM6Ly9kcG0uc29mdHdhcmUvcHJvdG9jb2xzL2RwbQ`;
+      const queryDRL = protocolPath === 'package'
+        ? `${baseDRL}/${protocolPath}?filter.tags.name=${name}`
+        : `${baseDRL}/${protocolPath}?filter.tags.version=${version}`;
       Logger.debug(`Querying DRL ${queryDRL} ...`);
       const query: Response = await fetch(queryDRL);
       if (!query || !query.ok) {
         Logger.error(`DWeb Node response error: ${query.status}`);
         continue;
       }
-
-      const { status: {code, detail: status}, entries } = await query.json() as DwnResponse;
-      Logger.debug('fetchDPK => status', status);
-      if(ResponseUtils.dwnFail({code, status})) {
-        Logger.error(`DWeb Node response error: failing DwnResponseStatus code=${code} detail=${status}`);
-        continue;
-      } else if (entries.length > 1) {
-        Logger.error(`DWeb Node response error: entries.length should be 1, received ${entries.length}`, entries);
-        continue;
-      }
-
-      const entry = entries.shift();
-      if (!entry) {
-        Logger.error('DWeb Node response error: no record entry returned from query');
-        continue;
-      }
-      const { recordId, descriptor: { dataFormat } } = entry ?? {};
-      const drl = `${baseDRL}/read/records/${recordId}`;
-      // Logger.info(`Reading from DRL ${drl} ...`);
-
-      const read: Response = await fetch(drl);
-      if (!read || !read.ok) {
-        Logger.error(`DWeb Node response error: ${read.status}`);
-        continue;
-      }
-      const data = dataFormat === 'application/json' ? await read.json() : read.body as ReadableStream<Uint8Array>;
+      const octetStream = query.headers.get('content-type') === 'application/octet-stream';
+      const data = octetStream ? query : await query.json();
+      Logger.debug('fetchDPK => data', data);
       if (!data) {
         Logger.error('DWeb Node request failed: no record data returned from read');
         continue;
       }
+      // Handle the response based on content-type
+      if (octetStream) {
+        Logger.debug('Handling octet-stream tarball response');
+        // Create a temporary tarball path
+        const tarballPath = `${REGISTRY_DIR}/${name}/${version}/${name}-${version}.tgz`;
+        // Pipe the octet-stream to a local file
+        const fileStream = createWriteStream(tarballPath);
+        await pipeline(query.body as ReadableStream<Uint8Array>, fileStream);
+        Logger.debug('Tarball successfully saved to', tarballPath);
+        return { ok: true, code: 200, status: 'OK', message: tarballPath };
+      }
+
       return { ok: true, code: 200, status: 'OK', message: data };
     }
     return { ok: false, code: 404, status: 'Not found' };
