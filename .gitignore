@@ -29,4 +29,5 @@ npm-debug.log*
 *.pid
 
 # DPM generated files
-.registry
+.registryd
+.postinstall

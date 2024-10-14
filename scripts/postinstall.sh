@@ -2,6 +2,21 @@
 
 set -e # Exit on error
 
+
+if [[ -n "$XDG_CONFIG_HOME" ]]; then
+    DPM_HOME="$XDG_CONFIG_HOME/dpm"
+else
+    DPM_HOME="$HOME/.dpm"
+fi
+
+POSTINSTALL_COMPLETE_GLOBAL="$DPM_HOME/.postinstall"
+POSTINSTALL_COMPLETE_LOCAL="$PWD/.postinstall"
+# Check if either global or local postinstall has already completed
+if [[ -f "$POSTINSTALL_COMPLETE_GLOBAL" || -f "$POSTINSTALL_COMPLETE_LOCAL" ]]; then
+    echo "Postinstall script has already run (global or local). Skipping..."
+    exit 0
+fi
+
 # Initialize flags
 FORCE=false
 GLOBAL_FLAG=false
@@ -15,12 +30,6 @@ NPMRC=".npmrc"
 GLOBAL_NPMRC="$HOME/$NPMRC"
 LOCAL_NPMRC="$PWD/$NPMRC"
 
-if [[ -n "$XDG_CONFIG_HOME" ]]; then
-    DPM_HOME="$XDG_CONFIG_HOME/dpm"
-else
-    DPM_HOME="$HOME/.dpm"
-fi
-
 # Initialize global dpm variables
 REGISTRY_URL="http://localhost:2092"
 REGISTRY_PID_FILE="registry.pid"
@@ -28,6 +37,7 @@ REGISTRY_PROCESS_NAME="registry.dpm.software"
 REGISTRY_PID=0
 PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
 MISSING_PREFIXES=()
+SCRIPTS_DIR="$PWD/scripts"
 
 # Function to output cleaner info
 roomy_echo() {
@@ -75,13 +85,6 @@ find_missing_prefixes() {
     done
 }
 
-# Function to prompt for global installation
-prompt_global_npmrc_install() {
-    echo ""
-    read -rp "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
-    [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true || return 0
-}
-
 # Function to add missing prefixes to an `.npmrc` file
 add_prefixes_to_npmrc() {
     # npm config set @my-scope:registry http://localhost:4873
@@ -112,20 +115,19 @@ do_check_and_install_npmrc() {
     if [[ "${#MISSING_PREFIXES[@]}" -eq 0 ]]; then
         echo "No missing prefixes in $NPMRC_FILE."
 
-        if ! $FORCE; then
-            echo "Use --force (-f) to override and update the file"
-        else
+        if $FORCE; then
             backup_file "$NPMRC_FILE"
+            add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
         fi
+    else
+        add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
     fi
-
-    add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
 }
 
 # Function to start the DPM registry if not running
 start_dpm_registry() {
     if docker version >/dev/null 2>&1; then
-        sh ./scripts/registry.docker.sh
+        sh $SCRIPTS_DIR/registry.docker.sh
     else
         # shellcheck disable=SC2009
         REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || \
@@ -135,14 +137,14 @@ start_dpm_registry() {
 
         if [[ -z "$REGISTRY_PID" ]]; then
             roomy_echo "Starting registry ..."
-            sh ./scripts/registry.nohup.sh
+            sh $SCRIPTS_DIR/registry.nohup.sh
         else
             echo ""
             read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
             if [[ "$ANSWER" =~ ^[yY]$ ]]; then
                 echo "Restarting registry process (pid=$REGISTRY_PID) ..."
                 kill -9 "$REGISTRY_PID"
-                sh scripts/registry.nohup.sh
+                sh $SCRIPTS_DIR/registry.nohup.sh
                 echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
             else
                 echo "Registry still running, continuing ..."
@@ -155,23 +157,23 @@ start_dpm_registry() {
 # Perhaps suggest it to them, but that's pretty "invasive" IMO
 # Function to edit /etc/hosts
 edit_hosts() {
-    local CUSTOM_DOMAINS="127.0.0.1 registry.dpm.software.local"
-
-    echo ""
-    read -rp "Some hosts need to be added to your local hosts file. Should we add them for you? [y/N] " ANSWER
-    if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-        read -rp "Please enter your password: " -s PASSWORD
-        if ! grep -q "$CUSTOM_DOMAINS" /etc/hosts; then
-            echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAINS\" >> /etc/hosts"
-            echo "Custom domain added to /etc/hosts"
+    local DRG_CUSTOM_LOCAL="127.0.0.1 registry.dpm.software.local"
+    if ! grep -q "$DRG_CUSTOM_LOCAL" /etc/hosts; then
+        echo ""
+        read -rp "The DRG localhost ($DRG_CUSTOM_LOCAL) needs to be added to /etc/hosts. This requires sudo privileges. Can we add this for you? [y/n] " ANSWER
+        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+            roomy_echo "Backing up /etc/hosts to $DPM_HOME/hosts.bak ..."
+            cp /etc/hosts $DPM_HOME/hosts.bak
+            roomy_read "Please enter your password: " -s PASSWORD
+            echo "$PASSWORD" | sudo -S sh -c "echo \"$DRG_CUSTOM_LOCAL\" >> /etc/hosts"
+            echo "Added $DRG_CUSTOM_LOCAL to /etc/hosts"
         else
-            echo "Custom domain already present in /etc/hosts"
+            roomy_echo "Add the following hosts to your /etc/hosts file."
+            echo "$DRG_CUSTOM_LOCAL"
+            exit 0
         fi
     else
-        for VAR in "${CUSTOM_DOMAINS[@]}"; do
-            roomy_echo "Add the following hosts to your /etc/hosts file."
-            echo "$VAR"
-        done
+        echo "DRG custom local domain $DRG_CUSTOM_LOCAL already present in /etc/hosts"
     fi
 }
 
@@ -297,36 +299,37 @@ edit_hosts() {
 }
 
 npmrc_main() {
+    # Do global install
+    do_check_and_install_npmrc "$GLOBAL_NPMRC"
+    touch "$POSTINSTALL_COMPLETE_GLOBAL"
+    # Do local install as backup
     do_check_and_install_npmrc "$LOCAL_NPMRC"
-    if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
-        echo "Global installation detected ..."
-        do_check_and_install_npmrc "$GLOBAL_NPMRC"
-    else
-        prompt_global_npmrc_install
-        $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
-    fi
-}
-
-main() {
-    npmrc_main
-    edit_hosts
-    setup_nginx "$OS"
-    start_dpm_registry
-    setup_dpm_env_vars
+    touch "$POSTINSTALL_COMPLETE_LOCAL"
 }
 
 # Main logic
+main() {
+    # Run the npmrc check and install for global and local
+    npmrc_main
+    # Run editing hosts file
+    edit_hosts
+    # Run Nginx setup
+    setup_nginx "$OS"
+    # Start the DPM registry
+    start_dpm_registry
+    # Set up environment variables
+    setup_dpm_env_vars
+}
+
 # Parse command line arguments
-if [[ "$#" -gt 0 ]]; then
-    while [[ "$#" -gt 0 ]]; do
-        case "$1" in
-            -f|--force) FORCE=true; shift ;;
-            -g|--global) GLOBAL_FLAG=true; shift ;;
-            -n|--nginx) NGINX_FLAG=true; shift ;;
-            *) echo "Unknown option: $1"; shift ;;
-        esac
-    done
-fi
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -f|--force) FORCE=true; shift ;;
+        -g|--global) GLOBAL_FLAG=true; shift ;;
+        -n|--nginx) NGINX_FLAG=true; shift ;;
+        *) echo "Unknown option: $1"; shift ;;
+    esac
+done
 
 # Create the DPM home directory if it doesn't exist
 [[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME"
