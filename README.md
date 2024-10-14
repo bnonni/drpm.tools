@@ -1,8 +1,19 @@
 # Decentralized Package Manager (DPM)
 
-<img src="/assets/img/animal/spider.webp" height=250 width=250 />
+<img src="/assets/img/animal/wolf.webp" height=250 width=250 />
 
 Decentralized Package Manager (DPM) - a package manager for the dWeb - like npm but decentralized.
+
+## MONOREPO COMING SOON
+
+Thanks to name squatters on npmjs.org, we are forced to rename our project to DRPM and move our upcoming monorepo setup to [@bnonni/drpm][drpm-monorepo]. Keep an eye on that repo for the latest codebase. For now, we will be actively developing and updating this repo. Once this repo is stable, all code will be moved to @bnonni/drpm and will be restructured as a monorepo. Check out [drpm.tools](https://drpm.tools) for the landing page.
+
+This monorepo contains 4 different developer tools; each providing distinct and important functionality:
+
+- [/packages/dpm](/packages/dpm/README.md) = an easy-to use CLI for performing certain actions that fall outside the capabilities of npm
+- [/packages/dpk](/packages/dpk/README.md) = core primitive providing the ability to install and manage DPKs, use DPIs & build and publish DPKs
+- [/packages/drg](/packages/drg/README.md) = new primitive to leverage dpk by running a local DRG for interacting with DIDs, DWNs & DPKs
+- [/packages/common](/packages/common/README.md) = a library of utilities used by dpm, dpk and drg
 
 ## Summary
 
@@ -16,26 +27,26 @@ Npmjs packages are published under usernames or organization names. Devs can pub
 
 ### NPM Namespace
 
-* User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
-* Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
-* Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
+- User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
+- Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
+- Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
 
 In DPM, packages are published to DWNs referenced by DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves `did:dht` to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.
 
-### DPM Namespac
+### DPM Namespace
 
-* dUser [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
-* dOrganization [did:web:dpm.software](https://dpm.software/.well-known/did.json)
-* dPackage [http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
+- dUser [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
+- dOrganization [did:web:dpm.software](https://dpm.software/.well-known/did.json)
+- dPackage [http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
 
 ## Decentralized Module Import (DMI)
 
-* DMIs are used to import code from locally installed DPKs
-* DPM diverts `npm install` to grab the dpk from the DWN and install it to the local `node_modules` folder
-* Devs reference dpks like normal esm imports
+- DMIs are used to import code from locally installed DPKs
+- DPM diverts `npm install` to grab the dpk from the DWN and install it to the local `node_modules` folder
+- Devs reference dpks like normal esm imports
 
 ```ts
-import * as MyDPK from '@dpm/my-dpk';
+import myDPK from '@dpm/my-dpk';
 const myDPK = require('@dpm/my-dpk');
 ```
 
@@ -56,7 +67,7 @@ TODO
 
 DPM reuses the `package.json` and `package-lock.json` files for easy integration of dpm to a dev workflow. The same principals apply: the entries in each will ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.
 
-* Dependency entries for dpks in `package.json`
+- Dependency entries for dpks in `package.json`
 
 ```json
 {
@@ -66,12 +77,12 @@ DPM reuses the `package.json` and `package-lock.json` files for easy integration
 }
 ```
 
-* With dpm installed and dpks listed in dependencies, `npm install` will divert the execution to a custom dpm registry running on `localhost:2092` to construct the DRL, query the DID doc, parse the DWN endpoints and request the dpk from the DWN
-* To see the custom registry server, check out [/src/registry/index.ts](/src/registry/index.ts)
-*
-* Integrity hashes are produces using the dpk.tgz content.
-* Integrity hashes ensure the publisher cannot swap out code under a specific verion in the protocol path.
-* Once a release is published, it cannot be changed.
+- With dpm installed and dpks listed in dependencies, `npm install` will divert the execution to a custom dpm registry running on `localhost:2092` to construct the DRL, query the DID doc, parse the DWN endpoints and request the dpk from the DWN
+- To see the custom registry server, check out [/src/registry/index.ts](/src/registry/index.ts)
+-
+- Integrity hashes are produces using the dpk.tgz content.
+- Integrity hashes ensure the publisher cannot swap out code under a specific verion in the protocol path.
+- Once a release is published, it cannot be changed.
 
 ```ts
 {
@@ -96,3 +107,8 @@ DPM reuses the `package.json` and `package-lock.json` files for easy integration
 
 [apache-license-badge]: https://img.shields.io/badge/license-Apache%202.0-blue.svg
 [apache-license-link]: https://opensource.org/licenses/Apache-2.0
+[drpm-monorepo]: https://github.com/bnonni/drpm
+[drpm-monorepo-package-dpm]: https://github.com/bnonni/drpm/packages/dpm
+[drpm-monorepo-package-dpk]: https://github.com/bnonni/drpm/packages/dpk
+[drpm-monorepo-package-drg]: https://github.com/bnonni/drpm/packages/drg
+[drpm-monorepo-package-common]: https://github.com/bnonni/drpm/packages/common
