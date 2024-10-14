@@ -87,7 +87,7 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "tool5": "http://registry.drpm.tools.local/@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
+    "tool5": "^5.0.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

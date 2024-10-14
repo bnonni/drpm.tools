@@ -18,8 +18,8 @@ if [[ -f "$REGISTRY_PID_FILE" ]]; then
 else
     echo "No registry.pid file found, starting registry ..."
     nohup node ./dist/esm/registry/bin/www.js > registry.nohup.out 2>&1 &
-    REGISTRY_PID=`echo $!`
+    REGISTRY_PID="$!"
     echo "$REGISTRY_PID" > "registry.pid"
 fi
+
 echo "Registry running on process id $REGISTRY_PID"
-exit 1
