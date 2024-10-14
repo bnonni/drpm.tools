@@ -1,13 +1,9 @@
 #!/usr/bin/env node
-import { DPM_PORT, REGISTRY_PROCESS_NAME } from '../config.js';
-
-process.title = REGISTRY_PROCESS_NAME;
-
-/**
- * Module dependencies.
- */
 import http from 'http';
-import app from '../index.js';
+import { Logger } from '../../utils/logger.js';
+import { DPM_PORT, REGISTRY_NAME, REGISTRY_URL } from '../config.js';
+import app from '../drg.js';
+process.title = REGISTRY_NAME;
 
 /**
  * Get port from environment and store in Express.
@@ -61,11 +57,11 @@ function onError(error: NodeJS.ErrnoException) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(`${bind} requires elevated privileges`);
+      Logger.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(`${bind} is already in use`);
+      Logger.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -81,5 +77,5 @@ function onListening() {
   typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr?.port;
-  console.log(`Listening on http://localhost:${port}`);
+  Logger.log(`Listening on ${REGISTRY_URL}`);
 }

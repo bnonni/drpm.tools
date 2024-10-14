@@ -5,32 +5,40 @@ export const CWD = process.cwd();
 export const HOME = process.env.HOME;
 export const DPM_PORT = process.env.PORT || 2092;
 
-export const REGISTRY_DIR_NAME = '.registry';
-export const REGISTRY_DIR = join(CWD, REGISTRY_DIR_NAME);
-
-export const REGISTRY_PROCESS_NAME = 'registry.drpm.tools';
-export const REGISTRY_PID_FILE = 'registry.pid';
-export const REGISTRY_PID = await readFile(join(CWD, REGISTRY_PID_FILE), 'utf8') ?? process.pid ?? 0;
-export const REGISTRY_URL = process.env.REGISTRY_URL || 'http://registry.drpm.tools.local';
+export const REGISTRY_NAME = 'registry.drpm.tools.local';
+export const REGISTRY_DIR = '.registryd';
+export const REGISTRY_PID = 'registryd.pid';
+export const DPM_REGISTRY = 'dpm:registry';
+export const DPK_REGISTRY = 'dpk:registry';
+export const DPM_HOME = `${HOME}/.dpm`;
+export const NPMRC_GLOBAL = `${HOME}/.npmrc`;
+export const NPMRC_LOCAL = `${CWD}/.npmrc`;
+export const REGISTRY_URL = process.env.REGISTRY_URL || `http://${REGISTRY_NAME}`;
+export const REGISTRY_PREFIXES = [
+  `@${DPM_REGISTRY}=${REGISTRY_URL}`,
+  `@${DPK_REGISTRY}=${REGISTRY_URL}`,
+  `${DPM_REGISTRY}=${REGISTRY_URL}`,
+  `${DPK_REGISTRY}=${REGISTRY_URL}`
+];
+export const REGISTRY_DIR_PATH = join(CWD, REGISTRY_DIR);
+export const REGISTRY_PID_PATH = await readFile(join(CWD, REGISTRY_PID), 'utf8') ?? process.pid ?? 0;
+export const DRPM_PROTOCOL_B64URL = Buffer.from(dwn.protocol).toString('base64url');
+export const DWN_DRL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL}`;
 
 export default {
   CWD,
   HOME,
   DPM_PORT,
-  REGISTRY_PROCESS_NAME,
-  REGISTRY_PID_FILE,
-  REGISTRY_PID,
-  REGISTRY_DIR,
-  REGISTRY_DIR_NAME,
+  REGISTRY_NAME,
   REGISTRY_URL,
-  DRL_READ_PROTOCOLS : `read/protocols/${Buffer.from(dwn.protocol).toString('base64url')}`,
-  DPM_HOME           : `${HOME}/.dpm`,
-  NPMRC              : `${HOME}/.npmrc`,
-  LOCAL_NPMRC        : `${CWD}/.npmrc`,
-  PREFIXES           : [
-    `@dpm:registry=${REGISTRY_URL}`,
-    `@dpk:registry=${REGISTRY_URL}`,
-    `dpm:registry=${REGISTRY_URL}`,
-    `dpk:registry=${REGISTRY_URL}`
-  ],
+  REGISTRY_PID,
+  REGISTRY_PID_PATH,
+  REGISTRY_DIR,
+  REGISTRY_DIR_PATH,
+  DRPM_PROTOCOL_B64URL,
+  DWN_DRL_PARAM,
+  DPM_HOME,
+  NPMRC_GLOBAL,
+  NPMRC_LOCAL,
+  REGISTRY_PREFIXES
 };

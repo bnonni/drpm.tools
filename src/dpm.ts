@@ -3,7 +3,7 @@ import { createWriteStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { pipeline } from 'stream/promises';
-import DRL_READ_PROTOCOLS, { REGISTRY_DIR } from './registry/config.js';
+import DWN_DRL_PARAM, { REGISTRY_DIR } from './registry/config.js';
 import { Logger } from './utils/logger.js';
 import { DpkRequest, DpkResponse, QueryFilters } from './utils/types.js';
 
@@ -38,7 +38,7 @@ export async function fetchDPK({ did, dpk: { name, version, protocolPath }}: Dpk
   try {
 
     for (const endpoint of await getDwnEndpoints(did)) {
-      const DRL = `${endpoint}/${did}/${DRL_READ_PROTOCOLS}/${protocolPath}?${
+      const DRL = `${endpoint}/${did}/${DWN_DRL_PARAM}/${protocolPath}?${
         protocolPath === 'package'
           ? `filter.tags.name=${name}`
           : `filter.tags.version=${version}`

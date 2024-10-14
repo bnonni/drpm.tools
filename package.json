@@ -12,6 +12,7 @@
   "bin": "./dist/esm/cli/dpm.js",
   "exports": {
     ".": {
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
@@ -29,11 +30,11 @@
     "nohup:registry": "sh scripts/registry.nohup.sh",
     "pid:registry": "sh scripts/registry.pid.sh",
     "kill:registry": "sh scripts/registry.kill.sh",
-    "prepare": "npm run build",
-    "postinstall": "sh ./scripts/postinstall.sh",
     "dev": "nodemon",
     "docker:build": "docker build -t dpm-registry .",
-    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
+    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
+    "postinstall": "sh ./scripts/postinstall.sh",
+    "prepare": "npm run build"
   },
   "homepage": "https://dpm.software",
   "bugs": {
@@ -86,7 +87,7 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "@dpm/tool5": "http://localhost:2092/@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
+    "tool5": "http://registry.drpm.tools.local/@dpm/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

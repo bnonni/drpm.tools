@@ -1,33 +1,48 @@
-import { Request } from 'express';
-import { ensureDir, exists } from 'fs-extra';
+import { createHash } from 'crypto';
 import { createWriteStream } from 'fs';
+import { ensureDir, exists } from 'fs-extra';
 import { access, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { REGISTRY_DIR } from './config.js';
 import { pipeline } from 'stream/promises';
-import { createHash } from 'crypto';
 import { Logger } from '../utils/logger.js';
+import { REGISTRY_DIR_PATH } from './config.js';
 
-export async function sha512Integrity(tgzFilepath: string): Promise<string> {
-  const fileBuffer = await readFile(tgzFilepath);
+export async function sha512Integrity(tarballPath: string): Promise<string> {
+  const fileBuffer = await readFile(tarballPath);
   const hash = createHash('sha512').update(fileBuffer).digest('base64');
   return `sha512-${hash}`;
 }
 
-export async function ensureRegistryPackageDir(packageDirPath: string): Promise<any> {
+// Ensure the path to the .registryd/{dpk, dpk/version} directory exists
+export async function ensureDpkDir(dpkDir: string): Promise<any> {
   try {
-    await ensureDir(packageDirPath);
-    return true;
+    await ensureDir(dpkDir);
   } catch {
-    return null;
+    throw new Error(`Failed to ensure dir at ${dpkDir}`);
   }
 };
 
-export function getRegistryPath(name: string, version: string): string {
-  return join(REGISTRY_DIR, name, version);
+// Get the path to the .registryd/dpk directory
+export function getDpkPath(name: string): string {
+  return join(REGISTRY_DIR_PATH, name);
 };
 
-export async function loadMetadata(metadataPath: string): Promise<{ [key: string]: any } | null> {
+// Get the path to the .registryd/dpk/version directory
+export function getDpkVersionPath(name: string, version: string): string {
+  return join(REGISTRY_DIR_PATH, name, version);
+};
+
+// Get the path to the .registryd/dpk/version/metadata.json file
+export function getDpkMetadataPath(name: string, version: string): string {
+  return join(getDpkVersionPath(name, version), 'metadata.json');
+};
+
+// Get the path to the .registryd/dpk/version/dpk-version.tgz file
+export function getDpkTarballPath(name: string, version: string): string {
+  return join(getDpkVersionPath(name, version), `${name}-${version}.tgz`);
+};
+
+export async function loadDpkMetadata(metadataPath: string): Promise<{ [key: string]: any } | null> {
   try {
     if(!await exists(metadataPath)) {
       return null;
@@ -41,7 +56,7 @@ export async function loadMetadata(metadataPath: string): Promise<{ [key: string
   }
 };
 
-export async function loadTarball(tarballPath: string): Promise<any> {
+export async function loadDpkTarball(tarballPath: string): Promise<any> {
   try {
     if(!await exists(tarballPath)) {
       return null;
@@ -54,26 +69,29 @@ export async function loadTarball(tarballPath: string): Promise<any> {
   }
 };
 
-export function getMetadataPath(name: string, version: string): string {
-  return join(getRegistryPath(name, version), 'metadata.json');
-};
-
-export function getTarballPath(name: string, version: string): string {
-  return join(getRegistryPath(name, version), `${name}-${version}.tgz`);
-};
-
-export async function saveTarball(tarball: ReadableStream<Uint8Array>, tarballPath: string): Promise<void> {
+export async function saveDpkTarball(tarball: ReadableStream<Uint8Array>, tarballPath: string): Promise<void> {
   Logger.log(`Saving tarball to ${tarballPath} ...`);
   await pipeline(tarball, createWriteStream(tarballPath));
 }
 
-export async function saveMetadata(name: string, version: string, metadata: any): Promise<void> {
-  const packagePath = getRegistryPath(name, version);
-  await ensureRegistryPackageDir(packagePath);
-  const metadataPath = getMetadataPath(name, version);
-  await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-};
 
-export async function getTarballUrl(req: Request, name: string, version: string): Promise<string> {
-  return `http://registry.localhost:2091/${name}/-/${name}-${version}.tgz`;
+export async function saveDpkMetadata(name: string, version: string, metadata: { [key: string]: any }): Promise<boolean> {
+  const dpkAtVersionPath = getDpkVersionPath(name, version);
+  try {
+    await ensureDpkDir(dpkAtVersionPath);
+    Logger.info(`Ensured dir at ${dpkAtVersionPath}`);
+  } catch (error: any) {
+    Logger.error(`Failed to ensure dir at ${dpkAtVersionPath}`, error);
+    return false;
+  }
+
+  const dpkMetadataPath = getDpkMetadataPath(name, version);
+  try {
+    await writeFile(dpkMetadataPath, JSON.stringify(metadata, null, 2));
+    Logger.info(`Saved metadata to ${dpkMetadataPath}`);
+    return true;
+  } catch (error: any) {
+    Logger.error(`Failed to save dpk metadata to ${dpkMetadataPath} `, error);
+    return false;
+  }
 };

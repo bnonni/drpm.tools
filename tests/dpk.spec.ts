@@ -1,2 +1,2 @@
-import { Did } from '@dpm/tool5';
+import { Did } from 'tool5';
 console.log(Did);
