@@ -1,23 +1,14 @@
-# Use an official Node.js runtime as the base image
-FROM node:20
+# node:lts-alpine
+# https://hub.docker.com/_/node/tags?name=lts-alpine
+FROM node@sha256:c13b26e7e602ef2f1074aef304ce6e9b7dd284c419b35d89fcf3cc8e44a8def9 AS builder
+WORKDIR /workspace
+COPY package*.json tsconfig*.json .npmrc ./
+RUN npm install --no-save --no-fund --ignore-scripts
+COPY src src
+RUN NODE_ENV=production npm run build
 
-# Create app directory
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install app dependencies
-RUN npm install
-
-# Install app dependencies
-RUN npm run build
-
-# Bundle app source
-COPY . .
-
-# Expose the port the app will run on
+FROM node@sha256:c13b26e7e602ef2f1074aef304ce6e9b7dd284c419b35d89fcf3cc8e44a8def9 AS final
+WORKDIR /workspace
+COPY --from=builder /workspace/dist/esm ./
 EXPOSE 2092
-
-# Define the command to run your server
-CMD [ "node", "./dist/esm/registry/bin/www.js" ]
+CMD [ "node", "esm/registry/bin/www.js" ]
