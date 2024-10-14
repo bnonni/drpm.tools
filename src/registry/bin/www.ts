@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import DPM_CONFIG from '../config.js';
-const { DPM_PORT, REGISTRY_PROCESS_NAME } = DPM_CONFIG;
+import { DPM_PORT, REGISTRY_PROCESS_NAME } from '../config.js';
 
 process.title = REGISTRY_PROCESS_NAME;
 

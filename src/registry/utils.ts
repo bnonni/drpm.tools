@@ -27,7 +27,7 @@ export function getRegistryPath(name: string, version: string): string {
   return join(REGISTRY_DIR, name, version);
 };
 
-export async function accessMetadata(metadataPath: string): Promise<any> {
+export async function loadMetadata(metadataPath: string): Promise<{ [key: string]: any } | null> {
   try {
     if(!await exists(metadataPath)) {
       return null;
@@ -41,7 +41,7 @@ export async function accessMetadata(metadataPath: string): Promise<any> {
   }
 };
 
-export async function accessTarball(tarballPath: string): Promise<any> {
+export async function loadTarball(tarballPath: string): Promise<any> {
   try {
     if(!await exists(tarballPath)) {
       return null;

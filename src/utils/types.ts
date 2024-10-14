@@ -1,10 +1,9 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 
 export type Dpk = {
-    name?: string;
-    parentId?: string;
-    version?: string;
-    protocolPath?: string;
+    name: string;
+    version: string;
+    protocolPath: string;
 }
 export type DpkRequest = {
     did: string;
