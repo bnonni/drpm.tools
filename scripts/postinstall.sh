@@ -28,6 +28,7 @@ REGISTRY_PROCESS_NAME="registry.dpm.software"
 REGISTRY_PID=0
 PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
 MISSING_PREFIXES=()
+SCRIPTS_DIR="$PWD/scripts"
 
 # Function to output cleaner info
 roomy_echo() {
@@ -121,7 +122,7 @@ find_missing_prefixes() {
 # Function to prompt for global installation
 prompt_global_npmrc_install() {
     echo ""
-    read -rp "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
+    read -p "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
     [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true || return 0
 }
 
@@ -155,20 +156,19 @@ do_check_and_install_npmrc() {
     if [[ "${#MISSING_PREFIXES[@]}" -eq 0 ]]; then
         echo "No missing prefixes in $NPMRC_FILE."
 
-        if ! $FORCE; then
-            echo "Use --force (-f) to override and update the file"
-        else
+        if $FORCE; then
             backup_file "$NPMRC_FILE"
+            add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
         fi
+    else
+        add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
     fi
-
-    add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
 }
 
 # Function to start the DPM registry if not running
 start_dpm_registry() {
     if docker version >/dev/null 2>&1; then
-        sh ./scripts/registry.docker.sh
+        sh $SCRIPTS_DIR/registry.docker.sh
     else
         # shellcheck disable=SC2009
         REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || \
@@ -178,14 +178,14 @@ start_dpm_registry() {
 
         if [[ -z "$REGISTRY_PID" ]]; then
             roomy_echo "Starting registry ..."
-            sh ./scripts/registry.nohup.sh
+            sh $SCRIPTS_DIR/registry.nohup.sh
         else
             echo ""
             read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
             if [[ "$ANSWER" =~ ^[yY]$ ]]; then
                 echo "Restarting registry process (pid=$REGISTRY_PID) ..."
                 kill -9 "$REGISTRY_PID"
-                sh scripts/registry.nohup.sh
+                sh $SCRIPTS_DIR/registry.nohup.sh
                 echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
             else
                 echo "Registry still running, continuing ..."
@@ -198,23 +198,23 @@ start_dpm_registry() {
 # Perhaps suggest it to them, but that's pretty "invasive" IMO
 # Function to edit /etc/hosts
 edit_hosts() {
-    local CUSTOM_DOMAINS="127.0.0.1 registry.dpm.software.local"
-
-    echo ""
-    read -rp "Some hosts need to be added to your local hosts file. Should we add them for you? [y/N] " ANSWER
-    if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-        read -rp "Please enter your password: " -s PASSWORD
-        if ! grep -q "$CUSTOM_DOMAINS" /etc/hosts; then
-            echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAINS\" >> /etc/hosts"
-            echo "Custom domain added to /etc/hosts"
+    local DRG_CUSTOM_LOCAL="127.0.0.1 registry.dpm.software.local"
+    if ! grep -q "$DRG_CUSTOM_LOCAL" /etc/hosts; then
+        echo ""
+        read -rp "The DRG localhost ($DRG_CUSTOM_LOCAL) needs to be added to /etc/hosts. This requires sudo privileges. Can we add this for you? [y/n] " ANSWER
+        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+            roomy_echo "Backing up /etc/hosts to $DPM_HOME/hosts.bak ..."
+            cp /etc/hosts $DPM_HOME/hosts.bak
+            roomy_read "Please enter your password: " -s PASSWORD
+            echo "$PASSWORD" | sudo -S sh -c "echo \"$DRG_CUSTOM_LOCAL\" >> /etc/hosts"
+            echo "Added $DRG_CUSTOM_LOCAL to /etc/hosts"
         else
-            echo "Custom domain already present in /etc/hosts"
+            roomy_echo "Add the following hosts to your /etc/hosts file."
+            echo "$DRG_CUSTOM_LOCAL"
+            exit 0
         fi
     else
-        for VAR in "${CUSTOM_DOMAINS[@]}"; do
-            roomy_echo "Add the following hosts to your /etc/hosts file."
-            echo "$VAR"
-        done
+        echo "DRG custom local domain $DRG_CUSTOM_LOCAL already present in /etc/hosts"
     fi
 }
 
@@ -287,9 +287,9 @@ do_check_and_install_npmrc "$LOCAL_NPMRC"
 if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
     echo "Global installation detected ..."
     do_check_and_install_npmrc "$GLOBAL_NPMRC"
-else
-    prompt_global_npmrc_install
-    $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
+# else
+#     prompt_global_npmrc_install
+#     $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
 fi
 
 if $NGINX_FLAG; then
