@@ -25,17 +25,6 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-<<<<<<< Updated upstream
-    "start:registry": "node ./dist/esm/registry/bin/www.js",
-    "nohup:registry": "sh scripts/registry.nohup.sh",
-    "pid:registry": "sh scripts/registry.pid.sh",
-    "kill:registry": "sh scripts/registry.kill.sh",
-    "prepare": "npm run build",
-    "postinstall": "sh ./scripts/postinstall.sh",
-    "dev": "nodemon",
-    "docker:build": "docker build -t dpm-registry .",
-    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
-=======
     "start:dregistry": "node ./dist/esm/dregistry/bin/www.js",
     "nohup:dregistry": "sh scripts/dregistry.nohup.sh",
     "pid:dregistry": "sh scripts/dregistry.pid.sh",
@@ -46,7 +35,6 @@
     "docker:run:drg": "docker run --rm -p 2092:2092 --name dregistry-drpm-tools-local --network dregistry-drpm-local dregistry-drpm",
     "postinstall": "sh ./scripts/postinstall.sh",
     "prepare": "npm run build"
->>>>>>> Stashed changes
   },
   "homepage": "https://dpm.software",
   "bugs": {
