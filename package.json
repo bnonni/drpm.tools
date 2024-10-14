@@ -36,7 +36,7 @@
     "prepack": "npm run build",
     "postinstall": "sh ./scripts/postinstall.sh --global"
   },
-  "homepage": "https://dpm.software",
+  "homepage": "https://drpm.tools",
   "bugs": {
     "url": "https://github.com/bnonni/dpm/issues"
   },

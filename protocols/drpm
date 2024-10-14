@@ -1,5 +1,5 @@
 {
-    "protocol": "https://dpm.software/protocols/dpm",
+    "protocol": "https://drpm.tools/protocols/dpm",
     "published": true,
     "types": {
         "package": {

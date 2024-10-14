@@ -3,10 +3,10 @@ import { ensureDir, exists } from 'fs-extra';
 import { createWriteStream } from 'fs';
 import { access, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { REGISTRY_DIR } from './config.js';
+import { REGISTRY_DIR } from '../drg/config.js';
 import { pipeline } from 'stream/promises';
 import { createHash } from 'crypto';
-import { Logger } from '../utils/logger.js';
+import { Logger } from './logger.js';
 
 export async function sha512Integrity(tgzFilepath: string): Promise<string> {
   const fileBuffer = await readFile(tgzFilepath);
@@ -72,8 +72,4 @@ export async function saveMetadata(name: string, version: string, metadata: any)
   await ensureRegistryPackageDir(packagePath);
   const metadataPath = getMetadataPath(name, version);
   await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-};
-
-export async function getTarballUrl(req: Request, name: string, version: string): Promise<string> {
-  return `http://registry.localhost:2091/${name}/-/${name}-${version}.tgz`;
 };

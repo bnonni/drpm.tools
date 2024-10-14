@@ -2,21 +2,6 @@
 
 set -e # Exit on error
 
-
-if [[ -n "$XDG_CONFIG_HOME" ]]; then
-    DPM_HOME="$XDG_CONFIG_HOME/dpm"
-else
-    DPM_HOME="$HOME/.dpm"
-fi
-
-POSTINSTALL_COMPLETE_GLOBAL="$DPM_HOME/.postinstall"
-POSTINSTALL_COMPLETE_LOCAL="$PWD/.postinstall"
-# Check if either global or local postinstall has already completed
-if [[ -f "$POSTINSTALL_COMPLETE_GLOBAL" || -f "$POSTINSTALL_COMPLETE_LOCAL" ]]; then
-    echo "Postinstall script has already run (global or local). Skipping..."
-    exit 0
-fi
-
 # Initialize flags
 FORCE=false
 GLOBAL_FLAG=false
@@ -29,8 +14,8 @@ NGINX_DIR="$BUILD_DIR/nginx"
 NPMRC=".npmrc"
 GLOBAL_NPMRC="$HOME/$NPMRC"
 LOCAL_NPMRC="$PWD/$NPMRC"
+POSTINSTALL=".postinstall"
 
-# Initialize global dpm variables
 REGISTRY_URL="http://localhost:2092"
 REGISTRY_PID_FILE="registry.pid"
 REGISTRY_PROCESS_NAME="registry.dpm.software"
@@ -38,6 +23,21 @@ REGISTRY_PID=0
 PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
 MISSING_PREFIXES=()
 SCRIPTS_DIR="$PWD/scripts"
+
+if [[ -n "$XDG_CONFIG_HOME" ]]; then
+    DPM_HOME="$XDG_CONFIG_HOME/dpm"
+else
+    DPM_HOME="$HOME/.dpm"
+fi
+
+# Check if either global or local postinstall has already completed
+POSTINSTALLED_GLOBAL="$DPM_HOME/$POSTINSTALL"
+POSTINSTALLED_LOCAL="$PWD/$POSTINSTALL"
+if [[ -f "$POSTINSTALLED_GLOBAL" || -f "$POSTINSTALLED_LOCAL" ]]; then
+    echo "Postinstall script has already run (global or local). Skipping..."
+    exit 0
+fi
+
 
 # Function to output cleaner info
 roomy_echo() {
@@ -157,7 +157,7 @@ start_dpm_registry() {
 # Perhaps suggest it to them, but that's pretty "invasive" IMO
 # Function to edit /etc/hosts
 edit_hosts() {
-    local DRG_CUSTOM_LOCAL="127.0.0.1 registry.dpm.software.local"
+    local DRG_CUSTOM_LOCAL="127.0.0.1 local.registry.drpm.tools"
     if ! grep -q "$DRG_CUSTOM_LOCAL" /etc/hosts; then
         echo ""
         read -rp "The DRG localhost ($DRG_CUSTOM_LOCAL) needs to be added to /etc/hosts. This requires sudo privileges. Can we add this for you? [y/n] " ANSWER
@@ -221,25 +221,6 @@ setup_dpm_env_vars() {
     fi
 }
 
-# Function to start the DPM registry if not running
-start_dpm_registry() {
-    REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || pgrep -f $REGISTRY_PROCESS_NAME || ps aux | grep $REGISTRY_PROCESS_NAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
-    if [[ -z "$REGISTRY_PID" ]]; then
-        echo "Starting registry ..."
-        sh scripts/registry.nohup.sh
-    else
-        read -p "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
-        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-            echo "Restarting registry process (pid=$REGISTRY_PID) ..."
-            kill -9 "$REGISTRY_PID"
-            sh scripts/registry.nohup.sh
-            echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
-        else
-            echo "Registry still running, continuing ..."
-        fi
-    fi
-}
-
 # Function to set up Nginx
 setup_nginx() {
     local OS="$1"
@@ -286,39 +267,27 @@ setup_nginx() {
     esac
 }
 
-# Function to edit /etc/hosts
-edit_hosts() {
-    CUSTOM_DOMAIN="127.0.0.1 registry.dpm.software.local"
-    read -p "Please enter your password: " -s PASSWORD
-    if ! grep -q "$CUSTOM_DOMAIN" /etc/hosts; then
-        echo "$PASSWORD" | sudo -S sh -c "echo \"$CUSTOM_DOMAIN\" >> /etc/hosts"
-        echo "Custom domain added to /etc/hosts"
-    else
-        echo "Custom domain already present in /etc/hosts"
-    fi
-}
-
-npmrc_main() {
+setup_npmrc() {
     # Do global install
     do_check_and_install_npmrc "$GLOBAL_NPMRC"
-    touch "$POSTINSTALL_COMPLETE_GLOBAL"
+    touch "$POSTINSTALLED_GLOBAL"
     # Do local install as backup
     do_check_and_install_npmrc "$LOCAL_NPMRC"
-    touch "$POSTINSTALL_COMPLETE_LOCAL"
+    touch "$POSTINSTALLED_LOCAL"
 }
 
 # Main logic
 main() {
     # Run the npmrc check and install for global and local
-    npmrc_main
+    setup_npmrc
+    # Set up environment variables
+    setup_dpm_env_vars
     # Run editing hosts file
     edit_hosts
     # Run Nginx setup
     setup_nginx "$OS"
     # Start the DPM registry
     start_dpm_registry
-    # Set up environment variables
-    setup_dpm_env_vars
 }
 
 # Parse command line arguments
@@ -333,7 +302,7 @@ done
 
 # Create the DPM home directory if it doesn't exist
 [[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME"
-roomy_echo "DRPM installed per DPM_HOME ($DPM_HOME)."
+roomy_echo "DPM installed per DPM_HOME ($DPM_HOME)."
 
 # Run the main function and exit 0
 main

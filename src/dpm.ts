@@ -3,7 +3,7 @@ import { createWriteStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { pipeline } from 'stream/promises';
-import DRL_READ_PROTOCOLS, { REGISTRY_DIR } from './registry/config.js';
+import DRL_READ_PROTOCOLS, { REGISTRY_DIR } from './drg/config.js';
 import { Logger } from './utils/logger.js';
 import { DpkRequest, DpkResponse, QueryFilters } from './utils/types.js';
 

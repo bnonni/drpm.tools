@@ -15,7 +15,7 @@ import {
   getMetadataPath,
   getTarballPath,
   saveMetadata,
-} from './utils.js';
+} from '../utils/drg.js';
 
 await ensureDir(REGISTRY_DIR).catch(err => Logger.error('Error ensuring registry directory:', err));
 
@@ -30,12 +30,12 @@ app.use((req, _, next) => {
 });
 
 app.get('/', (_: Request, res: Response) => {
-  Logger.log('http://registry.dpm.software.local => { ok: true }');
+  Logger.log('http://local.registry.drpm.tools => { ok: true }');
   res.status(200).json({ ok: true });
 });
 
 app.get('/health', (_: Request, res: Response) => {
-  Logger.log('http://registry.dpm.software.local/health => { ok: true }');
+  Logger.log('http://local.registry.drpm.tools/health => { ok: true }');
   res.status(200).json({ ok: true });
 });
 
