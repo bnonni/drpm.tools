@@ -22,12 +22,21 @@ else
 fi
 
 # Initialize global dpm variables
-REGISTRY_URL="http://localhost:2092"
-REGISTRY_PID_FILE="registry.pid"
-REGISTRY_PROCESS_NAME="registry.dpm.software"
+DRG_URL="http://local.drg.drpm.tools"
+REGISTRYD_PID_FILE_NAME="registryd.pid"
+DRG_HOSTNAME="local.drg.drpm.tools"
 REGISTRY_PID=0
-PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
+PREFIXES=("@drg:registry=$DRG_URL" "@dpk:registry=$DRG_URL" "drg:registry=$DRG_URL" "dpk:registry=$DRG_URL")
 MISSING_PREFIXES=()
+
+POSTINSTALL_GLOABL="$DPM_HOME/.postinstall"
+POSTINSTALL_LOCAL="$PWD/.postinstall"
+
+# Check if the postinstall script has already run
+if [[ -f "$POSTINSTALL_GLOABL" || -f "$POSTINSTALL_LOCAL" ]]; then
+    echo "Global or Local postinstall has already run, exiting..."
+    exit 0
+fi
 
 # Function to output cleaner info
 roomy_echo() {
@@ -171,9 +180,9 @@ start_dpm_registry() {
         sh ./scripts/registry.docker.sh
     else
         # shellcheck disable=SC2009
-        REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || \
-            pgrep -f $REGISTRY_PROCESS_NAME \
-            || ps aux | grep $REGISTRY_PROCESS_NAME | grep -v grep | awk '{print $2}' \
+        REGISTRY_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null || \
+            pgrep -f $DRG_HOSTNAME \
+            || ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}' \
             || lsof -i :2092 | grep node | awk '{print $2}')"
 
         if [[ -z "$REGISTRY_PID" ]]; then
@@ -186,7 +195,7 @@ start_dpm_registry() {
                 echo "Restarting registry process (pid=$REGISTRY_PID) ..."
                 kill -9 "$REGISTRY_PID"
                 sh scripts/registry.nohup.sh
-                echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
+                echo "Registry restarted (pid=$(pgrep -f \"$DRG_HOSTNAME\"))"
             else
                 echo "Registry still running, continuing ..."
             fi
@@ -232,7 +241,7 @@ setup_dpm_env_vars() {
             ;;
     esac
 
-    local VARS_TO_EXPORT=("DPM_HOME=\"$DPM_HOME\"" "REGISTRY_URL=\"$REGISTRY_URL\"" "REGISTRY_PID_FILE=\"$REGISTRY_PID_FILE\"" "REGISTRY_PROCESS_NAME=\"$REGISTRY_PROCESS_NAME\"" "PATH=\"$DPM_HOME:$PATH\"")
+    local VARS_TO_EXPORT=("DPM_HOME=\"$DPM_HOME\"" "DRG_URL=\"$DRG_URL\"" "REGISTRYD_PID_FILE_NAME=\"$REGISTRYD_PID_FILE_NAME\"" "DRG_HOSTNAME=\"$DRG_HOSTNAME\"" "PATH=\"$DPM_HOME:$PATH\"")
 
     read -rp "Some environment variables need to be set. Should we set them for you? [y/N] " ANSWER
     if [[ "$ANSWER" =~ ^[yY]$ ]]; then

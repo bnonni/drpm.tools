@@ -12,12 +12,14 @@
   "bin": "./dist/esm/cli/dpm.js",
   "exports": {
     ".": {
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
+    "dev": "nodemon",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
@@ -25,17 +27,17 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-    "start:registry": "node ./dist/esm/registry/bin/www.js",
-    "nohup:registry": "sh scripts/registry.nohup.sh",
-    "pid:registry": "sh scripts/registry.pid.sh",
-    "kill:registry": "sh scripts/registry.kill.sh",
-    "prepare": "npm run build",
-    "postinstall": "sh ./scripts/postinstall.sh",
-    "dev": "nodemon",
+    "start:registryd": "node ./dist/esm/server.js",
+    "nohup:registryd": "sh scripts/registryd.nohup.sh",
+    "pid:registryd": "sh scripts/registryd.pid.sh",
+    "kill:registryd": "sh scripts/registryd.kill.sh",
+    "docker:registryd": "sh scripts/drg.docker.sh",
     "docker:build": "docker build -t dpm-registry .",
-    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
+    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
+    "postinstall": "sh ./scripts/postinstall.sh",
+    "prepare": "npm run build"
   },
-  "homepage": "https://dpm.software",
+  "homepage": "https://drpm.tools",
   "bugs": {
     "url": "https://github.com/bnonni/dpm/issues"
   },
@@ -94,7 +96,7 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "tool5": "^5.0.1"
+    "@drg/tool5": "http://localhost:2092/@drg/tool5/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

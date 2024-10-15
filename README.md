@@ -36,7 +36,7 @@ In DPM, packages are published to DWNs referenced by DIDs. Any entity can have a
 ### DPM Namespace
 
 - dUser [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
-- dOrganization [did:web:dpm.software](https://dpm.software/.well-known/did.json)
+- dOrganization [did:web:dpm.software](https://drpm.tools/.well-known/did.json)
 - dPackage [http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
 
 ## Decentralized Module Import (DMI)
