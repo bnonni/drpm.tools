@@ -1,7 +1,7 @@
 import { DidDht, DidWeb, UniversalResolver } from '@web5/dids';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
-import DRL_PROTOCOL_PARAM, { DRG_DIR_PATH, DRPM_DWN_URL } from './config.js';
+import { DRG_DIR_PATH, DRPM_DWN_URL, DRL_PROTOCOL_PARAM } from './config.js';
 import { Logger } from './utils/logger.js';
 import { DpkRequest, DpkResponse } from './utils/types.js';
 
@@ -18,7 +18,6 @@ export async function getDwnEndpoints(did: string) {
 
 export async function fetchDPK({ did, dpk: { name, version, protocolPath }}: DpkRequest): Promise<DpkResponse> {
   try {
-
     for (const endpoint of await getDwnEndpoints(did)) {
       const DRL = `${endpoint}/${did}/${DRL_PROTOCOL_PARAM}/${protocolPath}?${
         protocolPath === 'package'

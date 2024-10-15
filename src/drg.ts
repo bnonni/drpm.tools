@@ -33,12 +33,10 @@ drg.get(['/', '/health'], (req: Request, res: Response) => {
   res.status(200).json({ ok: true });
 });
 
-drg.get('/@drg/:name/:didVersion', async (req: Request, res: Response) => {
-  Logger.log(`[req.params`, req.params);
+drg.get('/:scope/:name/:didVersion', async (req: Request, res: Response) => {
   const defaultError = 'Failed to fetch and save metadata';
   const route = req?.params[0] ?? '/:scope/:name/:didVersion';
   try {
-    Logger.log(`[${route}] req.params`, req.params);
     const {scope, name, didVersion} = req.params ?? {};
     if(!(scope || name || didVersion)) {
       const missing = [scope, name, didVersion].filter(param => !param);
