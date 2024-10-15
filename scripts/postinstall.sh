@@ -2,12 +2,6 @@
 
 set -e
 
-# Check if the postinstall script has already run
-if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
-    echo "Global or Local postinstall has already run, exiting..."
-    exit 0
-fi
-
 # Check if SHELL env var is set
 if [[ -z $SHELL ]]; then
     echo "Something went wrong! No SHELL found."
@@ -216,7 +210,8 @@ do_check_drpm_env_vars() {
     done
 }
 
-main() {
+
+pre_main_setup() {
     # Source local .drpmrc and print message
     source "$PWD/.drpmrc"
     echo "Sourced local .drpmrc ($LOCAL_DRPMRC_FILE)"
@@ -224,12 +219,30 @@ main() {
     # Copy local .drpmrc to $DRPM_HOME and print message
     cp "$LOCAL_DRPMRC_FILE" "$DRPM_HOME"
     echo "Copied local .drpmrc to $DRPM_HOME"
-
+    
+    SOURCE_DRPMRC="source $GLOBAL_DRPMRC_FILE"
+    if ! grep -qE "$SHELLRC_FILE" "$SOURCE_DRPMRC"; then
+        [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
+        backup_file "$SHELLRC_FILE" "$DRPM_HOME/$SHELLRC_FILE.bak"
+        echo $SOURCE_DRPMRC >> "$SHELLRC_FILE"
+        echo "Updated $SHELLRC_FILE."
+        echo "To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
+    else
+        echo "$PREFIX exists in .npmrc, continuing ..."
+    fi
     # Check if rc file requires new line, add source statement to it and print message
-    [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
-    echo "source $GLOBAL_DRPMRC_FILE" >> "$SHELLRC_FILE"
-    echo "Updated $SHELLRC_FILE: source $LOCAL_DRPMRC_FILE"
+    
+    DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
+    DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
+    
+    # Check if the postinstall script has already run
+    if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
+        echo "Global or Local postinstall has already run, exiting..."
+        exit 0
+    fi
+}
 
+main() {
     # Check if global .npmrc installed properly
     do_check_and_install_npmrc "$GLOBAL_NPMRC_FILE"
 
@@ -252,8 +265,9 @@ if [[ "$#" -gt 0 ]]; then
     done
 fi
 
-# Main entry point
+# Setup runs before main
+pre_main_setup
+# Post setup main entry point
 main
-
 # Exit cleanly
 exit 0
