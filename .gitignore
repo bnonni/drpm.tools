@@ -28,5 +28,8 @@ npm-debug.log*
 *.tgz
 *.pid
 
-# DPM generated files
+# DRPM generated files
+.drg
 .registry*
+.dregistry*
+.postinstall

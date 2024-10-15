@@ -1,9 +1,9 @@
 export default {
-  protocol  : 'https://dpm.software/protocols/dpm',
+  protocol  : 'https://drpm.tools/protocols/dpm',
   published : true,
   types     : {
     package : {
-      schema      : 'https://dpm.software/schemas/package',
+      schema      : 'https://drpm.tools/schemas/package',
       dataFormats : [
         'application/json'
       ]

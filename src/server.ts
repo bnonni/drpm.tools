@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 import http from 'http';
-import { Logger } from '../../utils/logger.js';
-import { DPM_PORT, REGISTRY_NAME, REGISTRY_URL } from '../config.js';
-import app from '../drg.js';
-process.title = REGISTRY_NAME;
+import { Logger } from './utils/logger.js';
+import { DRPM_PORT, DRG_HOSTNAME, DRG_URL } from './config.js';
+import drg from './drg.js';
+process.title = DRG_HOSTNAME;
 
 /**
  * Get port from environment and store in Express.
  */
-const port = normalizePort(DPM_PORT.toString());
-app.set('port', port);
+const port = normalizePort(DRPM_PORT.toString());
+drg.set('port', port);
 
 /**
  * Create HTTP server.
  */
-const server = http.createServer(app);
+const server = http.createServer(drg);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -77,5 +77,5 @@ function onListening() {
   typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr?.port;
-  Logger.log(`Listening on ${REGISTRY_URL}`);
+  Logger.log(`Listening on ${DRG_URL}`);
 }

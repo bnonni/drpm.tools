@@ -3,39 +3,42 @@
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { ensureDir } from 'fs-extra';
-import { fetchDPK } from '../dpm.js';
-import { ResponseUtils } from '../utils/dwn.js';
-import { Logger } from '../utils/logger.js';
-import { REGISTRY_DIR } from './config.js';
+import { fetchDPK } from './dpm.js';
+import { ResponseUtils } from './utils/response.js';
+import { Logger } from './utils/logger.js';
+import { DRG_DIR_PATH } from './config.js';
 import {
   getDpkMetadataPath,
   getDpkTarballPath,
   loadDpkMetadata,
   loadDpkTarball,
   saveDpkMetadata,
-} from './utils.js';
+} from './utils/drg.js';
 
-await ensureDir(REGISTRY_DIR).catch(err => Logger.error('Error ensuring registry directory:', err));
+await ensureDir(DRG_DIR_PATH).catch(err => Logger.error('Error ensuring registryd directory:', err));
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.raw({ type: 'application/octet-stream', limit: '10gb' }));
-app.use((req: Request, _: Response, next: NextFunction) => {
+const drg = express();
+
+drg.use(cors());
+drg.use(express.json());
+drg.use(express.urlencoded({ extended: true }));
+drg.use(express.raw({ type: 'application/octet-stream', limit: '10gb' }));
+drg.use((req: Request, _: Response, next: NextFunction) => {
   Logger.log(`${req.method} ${req.url}`);
   next();
 });
 
-app.get(['/', '/health'], (req: Request, res: Response) => {
+drg.get(['/', '/health'], (req: Request, res: Response) => {
   Logger.log(`[${req.baseUrl}/${req.path}] { ok: true }`);
   res.status(200).json({ ok: true });
 });
 
-app.get('/:scope/:name/:didVersion', async (req: Request, res: Response) => {
+drg.get('/@drg/:name/:didVersion', async (req: Request, res: Response) => {
+  Logger.log(`[req.params`, req.params);
   const defaultError = 'Failed to fetch and save metadata';
   const route = req?.params[0] ?? '/:scope/:name/:didVersion';
   try {
+    Logger.log(`[${route}] req.params`, req.params);
     const {scope, name, didVersion} = req.params ?? {};
     if(!(scope || name || didVersion)) {
       const missing = [scope, name, didVersion].filter(param => !param);
@@ -69,7 +72,7 @@ app.get('/:scope/:name/:didVersion', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/:scope/:name/:didVersion/-/:tarball', async (req: Request, res: Response) => {
+drg.get('/:scope/:name/:didVersion/-/:tarball', async (req: Request, res: Response) => {
   const defaultError = 'Failed to fetch and store tarball';
   const route = req?.params[0] ?? '/:scope/:name/:didVersion/-/:tarball';
   try {
@@ -99,4 +102,4 @@ app.get('/:scope/:name/:didVersion/-/:tarball', async (req: Request, res: Respon
   }
 });
 
-export default app;
+export default drg;
