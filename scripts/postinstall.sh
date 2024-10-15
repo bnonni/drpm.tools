@@ -212,30 +212,36 @@ do_check_drpm_env_vars() {
 
 
 pre_main_setup() {
+    # Check if local .drpmrc exists, download if not
+    local CWD_DRPMRC_FILE="$PWD/.drpmrc"
+    if [[ ! -f $CWD_DRPMRC_FILE ]]; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -O "$CWD_DRPMRC_FILE"
+        echo "Downloaded .drpmrc to $CWD_DRPMRC_FILE"
+    fi
+
     # Source local .drpmrc and print message
-    source "$PWD/.drpmrc"
-    echo "Sourced local .drpmrc ($LOCAL_DRPMRC_FILE)"
+    source "$CWD_DRPMRC_FILE"
+    echo "Sourced local .drpmrc ($CWD_DRPMRC_FILE)"
     
     # Copy local .drpmrc to $DRPM_HOME and print message
-    cp "$LOCAL_DRPMRC_FILE" "$DRPM_HOME"
+    cp "$CWD_DRPMRC_FILE" "$DRPM_HOME"
     echo "Copied local .drpmrc to $DRPM_HOME"
     
+    # Check if rc file requires new line, add source statement to it and print message
     SOURCE_DRPMRC="source $GLOBAL_DRPMRC_FILE"
     if ! grep -qE "$SHELLRC_FILE" "$SOURCE_DRPMRC"; then
         [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
         backup_file "$SHELLRC_FILE" "$DRPM_HOME/$SHELLRC_FILE.bak"
-        echo $SOURCE_DRPMRC >> "$SHELLRC_FILE"
+        echo "$SOURCE_DRPMRC" >> "$SHELLRC_FILE"
         echo "Updated $SHELLRC_FILE."
         echo "To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
     else
         echo "$PREFIX exists in .npmrc, continuing ..."
     fi
-    # Check if rc file requires new line, add source statement to it and print message
-    
-    DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
-    DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
     
     # Check if the postinstall script has already run
+    DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
+    DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
     if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
         echo "Global or Local postinstall has already run, exiting..."
         exit 0

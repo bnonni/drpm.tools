@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-
-# Exit on error
-set -e
-
 # Set SHELLRC to default value and check for shell type
 export SHELLRC_FILE="$HOME/.profile"
 case "$SHELL" in
@@ -23,10 +18,12 @@ fi
 
 # Initialize global system variables
 export LOCAL_OS="$(uname)"
-export GLOBAL_DRPMRC_FILE="$HOME/.drpmrc"
-export LOCAL_DRPMRC_FILE="$PWD/.drpmrc"
+
 export GLOBAL_NPMRC_FILE="$HOME/.npmrc"
 export LOCAL_NPMRC_FILE="$PWD/.npmrc"
+
+export GLOBAL_DRPMRC_FILE="$DRPM_HOME/.drpmrc"
+export LOCAL_DRPMRC_FILE="$PWD/.drpmrc"
 
 # Initialize drpm variables
 export DRPM_NGINX_DIR="$PWD/build/nginx"
@@ -42,9 +39,10 @@ export DRPM_NPMRC_PREFIXES=(
     "@$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
     "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
 )
-export DRPM_REGISTRYD_PID=0
-export DRPM_REGISTRYD_PID_FILE_NAME="registryd.pid"
+export DRPM_REGISTRYD_PID_FILE_NAME=""
+export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registryd.pid"
+export DRPM_REGISTRYD_PID=$(cat $DRPM_REGISTRYD_PID_FILE 2>/dev/null || echo 0)
 export DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
 export DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
 
-echo ".drpmrc sourced"
+# echo ".drpmrc sourced"

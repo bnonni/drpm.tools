@@ -74,7 +74,7 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node ./dist/esm/server.js",
+    "start": "node ./dist/esm/drg-server.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json",
     "test:register-hooks": "echo 'Unimplemented!' && exit 0; npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",

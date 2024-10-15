@@ -13,7 +13,7 @@ import {
   loadDpkMetadata,
   loadDpkTarball,
   saveDpkMetadata,
-} from './utils/drg.js';
+} from './utils/registry.js';
 
 await ensureDir(DRG_DIR_PATH).catch(err => Logger.error('Error ensuring registryd directory:', err));
 
