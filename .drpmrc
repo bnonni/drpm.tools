@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# Exit on error
+set -e
+
+# Set SHELLRC to default value and check for shell type
+export SHELLRC_FILE="$HOME/.profile"
+case "$SHELL" in
+    */zsh)
+        export SHELLRC_FILE="$HOME/.zshrc"
+        ;;
+    */bash)
+        export SHELLRC_FILE="$HOME/.bashrc"
+        ;;
+esac
+
+# Set DRPM_HOME to default value and check for XDG_CONFIG_HOME
+export DRPM_HOME="$HOME/.drpm"
+if [[ -n "$XDG_CONFIG_HOME" ]]; then
+    export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
+fi
+[[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME"
+
+# Initialize global system variables
+export LOCAL_OS="$(uname)"
+export GLOBAL_DRPMRC_FILE="$DRPM_HOME/.drpmrc"
+export LOCAL_DRPMRC_FILE="$PWD/.drpmrc"
+export GLOBAL_NPMRC_FILE="$HOME/.npmrc"
+export LOCAL_NPMRC_FILE="$PWD/.npmrc"
+
+# Initialize drpm variables
+export DRPM_NGINX_DIR="$PWD/build/nginx"
+export DRPM_DRG_HOSTNAME="local.drg.drpm.tools"
+export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME"
+export DRPM_DRG_PORT_DEFAULT=80
+export DRPM_DRG_PORT_FALLBACK=2092
+export DRPM_DRG_PREFIX='drg:registry';
+export DRPM_DPK_PREFIX='dpk:registry';
+export DRPM_NPMRC_PREFIXES=(
+    "@$DRPM_DRG_PREFIX=$DRPM_DRG_URL"
+    "$DRPM_DRG_PREFIX=$DRPM_DRG_URL"
+    "@$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
+    "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
+)
+export DRPM_REGISTRYD_PID=0
+export DRPM_REGISTRYD_PID_FILE_NAME="registryd.pid"
+export DRPM_POSTINSTALL_GLOABL="$DRPM_HOME/.postinstall"
+export DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
+
+echo ".drpmrc sourced"

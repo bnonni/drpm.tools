@@ -1,20 +1,27 @@
 {
-    "id": "did:web:dpm.software",
+    "id": "did:web:drpm.tools",
     "service": [
         {
-            "id": "did:web:dpm.software",
+            "id": "did:web:drpm.tools",
             "type": "DecentralizedWebNode",
             "serviceEndpoint": [
-                "https://dwn.dpm.software/"
+                "https://dwn.drpm.tools/"
             ],
             "enc": "#enc",
             "sig": "#sig"
         },
         {
-            "id": "DPKRegistry",
-            "type": "DPKRegistry",
+            "id": "DRG",
+            "type": "DecentralizedPackageRegistry",
             "serviceEndpoint": [
-                "https://registry.dpm.software/"
+                "https://registry.drpm.tools/"
+            ]
+        },
+        {
+            "id": "DpkExplorer",
+            "type": "DpkExplorer",
+            "serviceEndpoint": [
+                "https://explorer.drpm.tools/"
             ]
         }
     ]

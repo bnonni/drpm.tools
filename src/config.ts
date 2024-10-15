@@ -3,7 +3,7 @@ import { join } from 'path';
 import dwn from './utils/protocol.js';
 export const CWD = process.cwd();
 export const HOME = process.env.HOME;
-export const DRPM_PORT = process.env.PORT || 2092;
+export const DRPM_PORT = process.env.PORT || 80;
 export const DRPM_HOME = `${HOME}/.drpm`;
 export const DRG_HOSTNAME = 'local.drg.drpm.tools';
 export const DRPM_DWN_URL = 'https://dwn.drpm.tools/';
