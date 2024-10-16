@@ -15,7 +15,11 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
-  "bin": "./dist/esm/cli/dpm.js",
+  "bin": {
+    "dpm": "./dist/esm/dpm/cli.js",
+    "create-dpk": "echo TODO: Implement me!",
+    "init-dpk": "echo TODO: Implement me!"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
@@ -26,11 +30,11 @@
   },
   "homepage": "https://drpm.tools",
   "bugs": {
-    "url": "https://github.com/bnonni/dpm/issues"
+    "url": "https://github.com/bnonni/drpm.tools/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/bnonni/dpm.git"
+    "url": "git+ssh://git@github.com/bnonni/drpm.tools.git"
   },
   "license": "Apache-2.0",
   "contributors": [
@@ -56,25 +60,36 @@
     "src"
   ],
   "keywords": [
+    "decentralized registry package manager",
+    "decentralized registry package",
+    "decentralized registry",
+    "decentralized registry",
+    "decentralized package registry",
+    "decentralized manager",
+    "decentralized package manager",
     "decentralized",
     "decentralized-applications",
     "decentralized-identity",
     "decentralized-web",
     "web5",
-    "decentralized package manager",
     "dpm",
+    "drpm",
     "package manager",
     "dwn",
     "dweb node",
     "decentralized web node",
-    "dwn protocol"
+    "dwn protocol",
+    "decentralized identifiers",
+    "dids",
+    "decentralized package imports",
+    "decentralized module imports"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node ./dist/esm/drg-server.js",
+    "start": "node ./dist/esm/drg/server.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json",
     "test:register-hooks": "echo 'Unimplemented!' && exit 0; npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",

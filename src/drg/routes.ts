@@ -3,17 +3,17 @@
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { ensureDir } from 'fs-extra';
-import { fetchDPK } from './dpm.js';
-import { ResponseUtils } from './utils/response.js';
-import { Logger } from './utils/logger.js';
-import { DRG_DIR_PATH } from './config.js';
+import { fetchDPK } from '../dpk.js';
+import { ResponseUtils } from '../utils/response.js';
+import { Logger } from '../utils/logger.js';
+import { DRG_DIR_PATH } from '../config.js';
 import {
   getDpkMetadataPath,
   getDpkTarballPath,
   loadDpkMetadata,
   loadDpkTarball,
   saveDpkMetadata,
-} from './utils/registry.js';
+} from '../utils/registry.js';
 
 await ensureDir(DRG_DIR_PATH).catch(err => Logger.error('Error ensuring registryd directory:', err));
 

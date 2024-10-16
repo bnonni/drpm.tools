@@ -1,5 +1,5 @@
 export default {
-  protocol  : 'https://drpm.tools/protocols/dpm',
+  protocol  : 'https://drpm.tools/protocols/drpm',
   published : true,
   types     : {
     package : {
