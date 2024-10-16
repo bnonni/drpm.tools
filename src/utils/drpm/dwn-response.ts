@@ -2,6 +2,7 @@ export type ResponseInfo = {
     ok: boolean;
     code: number;
     status: string;
+    message?: string;
 }
 
 export type DwnResponseInfo = {
