@@ -7,5 +7,5 @@
         "src/**/*.test.ts",
         "node_modules"
     ],
-    "exec": "npm run build:esm && npm run start:registryd"
+    "exec": "npm run build:esm && node ./dist/esm/drg/server.js"
 }

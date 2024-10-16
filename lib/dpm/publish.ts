@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 import { readdir, readFile, writeFile } from 'fs/promises';
 import dpm from '../../src/protocol.js';
 import { join } from 'path';
-import metadata from './dpk-metadata.js';
+import metadata from './data/dpk-metadata.js';
 
 async function sha512Integrity(tgzFilepath: string): Promise<string> {
   console.log(`Computing sha512 integrity hash for ${tgzFilepath}`);

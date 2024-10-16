@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import http from 'http';
-import { Logger } from './utils/logger.js';
-import { DRPM_PORT, DRG_HOSTNAME, DRG_URL } from './config.js';
-import drg from './drg.js';
+import { Logger } from '../utils/logger.js';
+import { DRPM_PORT, DRG_HOSTNAME, DRG_URL } from '../config.js';
+import drg from './routes.js';
 process.title = DRG_HOSTNAME;
 
 /**
