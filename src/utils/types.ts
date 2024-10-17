@@ -1,5 +1,16 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 
+export type ResponseInfo = {
+    ok: boolean;
+    code: number;
+    status: string;
+    data?: any;
+    error?: string;
+}
+export type DwnResponseInfo = {
+    code: number;
+    status: string;
+}
 export type DpkIntegrityFormat = 'stream' | 'file';
 export type DpkIntegrityData = ReadableStream<Uint8Array> | string;
 export type DpkIntegrityParams = {
@@ -32,11 +43,24 @@ export type DpkRequest = {
     did: string;
     dpk: Dpk;
 };
+export type DpkFetchParams = {
+    name: string;
+    version: string;
+    drl: string
+};
+export type DpkMetadata = { [key: string]: any };
+export type DpkTarball = ReadableStream<Uint8Array>;
+export type DpkData = {
+    'package': DpkMetadata | null;
+    'package/release': DpkTarball | null;
+    [key: string]: any
+};
 export type DpkResponse = {
     ok: boolean;
     code: number;
     status: string;
-    message?: any | ReadableStream<Uint8Array>;
+    error?: string;
+    data?: DpkTarball | DpkMetadata | DpkData;
 };
 export type QueryFilters = {
     name: string;

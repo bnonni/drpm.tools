@@ -1,8 +1,8 @@
 import { Record, Web5 } from '@web5/api';
 import { readFile } from 'fs/promises';
-import { Integrity } from '../../src/utils/integrity.js';
-import dwnProtocol from '../../src/utils/protocol.js';
-import metadata from './data/npks/tool5/metadata.js';
+import { DpkIntegrity } from '../../src/utils/dpk/dpk-integrity.js';
+import dwnProtocol from '../../src/utils/drpm/drpm-protocol.js';
+import metadata from './data/tool5-npmjs-metadata.json';
 // package/release { name, version, dpk, integrity, parentId }
 // package { name }
 
@@ -32,7 +32,7 @@ async function createRelease({ version, dpk, integrity, parentId }) {
 async function createPackage({ name }: { name: string; }) {
   const { record, status } = await web5.dwn.records.create({
     store   : true,
-    data    : metadata,
+    data    : metadata[version],
     message : {
       published    : true,
       dataFormat   : 'application/json',
@@ -101,8 +101,8 @@ async function createPackage({ name }: { name: string; }) {
 const password = 'correct horse battery staple';
 const dwnEndpoints = ['http://localhost:3000'];
 const name = 'tool5';
-const tgzPath = `/Users/bryan/Projects/TBD/bnonni/drpm/drpm.tools/lib/dpm/data/npks/tool5/tool5-6.1.0.tgz`;
-const version = '6.1.0';
+const version = '6.0.0';
+const tgzPath = `/Users/bryan/Projects/TBD/bnonni/drpm/drpm.tools/lib/dpm/data/npks/tool5/tool5-${version}.tgz`;
 const { web5, did } = await Web5.connect({
   password,
   sync             : '30s',
@@ -110,14 +110,14 @@ const { web5, did } = await Web5.connect({
   didCreateOptions : { dwnEndpoints }
 });
 console.log('web5Connect => did', did);
-const parentPackageRecordId = 'bafyreidfw2bsvcmrnrcknsfi5gwrcnedhht64v5z64hk5nv2a5udfffus4';
-const integrity = await Integrity.sha512IntegrityFile(tgzPath);
+const parentPackageRecordId = 'bafyreiadl7fhh7vlea4vf4jvjkexnjpfzbbm6eiy3nin7vcrmlkgwwmzs4';
+const integrity = await DpkIntegrity.sha512IntegrityFile(tgzPath);
 const tarball = await readFile(tgzPath);
 
 if (process.argv.slice(2).includes('package')) {
   const { status: packageStatus, record: packageRecord } = await createPackage({ name });
   console.log('Created package => status', packageStatus);
-  console.log('Created package => record.id', packageRecord.id);
+  console.log('Created package => record.id', packageRecord);
 } else {
   const { status: releaseStatus, record: releaseRecord } = await createRelease({ version, dpk: tarball, integrity, parentId: parentPackageRecordId });
   console.log('Created release => status', releaseStatus);

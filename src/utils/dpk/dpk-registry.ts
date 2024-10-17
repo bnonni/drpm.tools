@@ -36,7 +36,7 @@ export class DpkRegistry {
     try {
       await this.ensureDpkDir(dpkAtVersionPath);
     } catch (error: any) {
-      Logger.error(`Failed to ensure dir at ${dpkAtVersionPath}`, error);
+      Logger.error(`DpkRegistry: saveDpkMetadata - Failed to ensure dir at ${dpkAtVersionPath}`, error);
       return false;
     }
 
@@ -46,7 +46,7 @@ export class DpkRegistry {
       Logger.info(`Saved metadata to ${dpkMetadataPath}`);
       return true;
     } catch (error: any) {
-      Logger.error(`Failed to save dpk metadata to ${dpkMetadataPath} `, error);
+      Logger.error(`DpkRegistry: saveDpkMetadata - Failed to save dpk metadata to ${dpkMetadataPath} `, error);
       return false;
     }
   }
@@ -58,7 +58,7 @@ export class DpkRegistry {
       Logger.info(`Ensured dir at ${path}`);
       return true;
     } catch (error: any) {
-      Logger.error(`Failed to ensure dir at ${path}`, error);
+      Logger.error(`DpkRegistry: ensureDpkDir - Failed to ensure dir at ${path}`, error);
       throw error;
     }
   }
@@ -87,14 +87,14 @@ export class DpkRegistry {
   static async loadDpkMetadata(path: string): Promise<any> {
     try {
       if(!await exists(path)) {
-        Logger.info(`metadata.json does not exist at path ${path}`);
+        Logger.info(`DpkRegistry: loadDpkMetadata - metadata.json does not exist at path ${path}`);
         return null;
       }
       await access(path);
       const metadata = JSON.parse(await readFile(path, 'utf8'));
       return metadata;
     } catch (error: any) {
-      Logger.error(`metadata.json does not exist at path ${path}`, error);
+      Logger.error(`DpkRegistry: loadDpkMetadata - metadata.json does not exist at path ${path}`, error);
       throw error;
     }
   };
@@ -108,7 +108,7 @@ export class DpkRegistry {
       await access(path);
       return path;
     } catch (error: any) {
-      Logger.error(`tgz files does not exist at path ${path}`, error);
+      Logger.error(`DpkRegistry: loadDpkTarball - tgz files does not exist at path ${path}`, error);
       throw error;
     }
   };

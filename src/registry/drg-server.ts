@@ -77,5 +77,5 @@ function onListening() {
   typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr?.port;
-  Logger.log(`Listening on ${DRG_URL}`);
+  Logger.log(`Listening on ${DRG_URL} port ${port}`);
 }
