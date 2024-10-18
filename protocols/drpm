@@ -34,8 +34,15 @@
                 "name": {
                     "type": "string"
                 },
+                "version": {
+                    "type": "string"
+                },
+                "integrity": {
+                    "type": "string"
+                },
                 "$requiredTags": [
-                    "name"
+                    "name",
+                    "version"
                 ]
             },
             "$actions": [

@@ -8,17 +8,14 @@ case "$SHELL" in
         export SHELLRC_FILE="$HOME/.bashrc"
         ;;
 esac
-
 # Set DRPM_HOME to default value and check for XDG_CONFIG_HOME
 export DRPM_HOME="$HOME/.drpm"
 if [[ -n "$XDG_CONFIG_HOME" ]]; then
     export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
 fi
 [[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME"
-
 export DRPM_DRG_DIR="$DRPM_HOME/@drg";
 [[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
-
 # Initialize global system variables
 export LOCAL_OS="$(uname)"
 export GLOBAL_NPMRC_FILE="$HOME/.npmrc"
@@ -39,6 +36,7 @@ export DRPM_NPMRC_PREFIXES=(
     "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
 )
 export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registryd.pid"
+[[ ! -f "$DRPM_REGISTRYD_PID_FILE" ]] && touch "$DRPM_REGISTRYD_PID_FILE"
 export DRPM_REGISTRYD_PID=$(cat $DRPM_REGISTRYD_PID_FILE 2>/dev/null || echo 0)
 export DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
 export DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"

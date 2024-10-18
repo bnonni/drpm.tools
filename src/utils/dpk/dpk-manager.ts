@@ -11,9 +11,19 @@ const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb] });
 export class DpkManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
   static async getDwnEndpoints(did: string) {
-    const { didDocument } = await DidResolver.resolve(did);
+    Logger.info(`DpkManager: DidResolver`, DidResolver);
+    const resolution = await DidResolver.resolve(did);
+    Logger.info(`DpkManager: resolution ${resolution}`);
+    const { didDocument } = resolution;
+    Logger.info(`DpkManager: Resolved didDocument ${didDocument}`);
     const services = didDocument?.service;
-    const didServiceEndpoint = services?.find(service => service.type === 'DecentralizedWebNode')?.serviceEndpoint ?? [DRPM_DWN_URL];
+    const didServiceEndpoint = services?.find(
+      service => service.type === 'DecentralizedWebNode'
+    )?.serviceEndpoint ?? (
+      process.env.NODE_ENV === 'development'
+        ? ['http://localhost:3000']
+        : [DRPM_DWN_URL]
+    );
     const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
     return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
   }
@@ -23,10 +33,7 @@ export class DpkManager {
     try {
       const response: Response = await fetch(drl);
       if (ResponseUtils.fetchFail(response)) {
-        Logger.error(
-          'DpkManager: DWeb Node package response not ok',
-          response
-        );
+        Logger.error('DpkManager: DWeb Node request failed', response);
         return {
           ok     : false,
           code   : 404,
@@ -37,10 +44,7 @@ export class DpkManager {
 
       const data = await response.json();
       if (!data) {
-        Logger.error(
-          'DpkManager: DWeb Node request failed - no response data',
-          response
-        );
+        Logger.error('DpkManager: DWeb Node request failed - no data', response);
         return {
           ok     : false,
           code   : 404,
@@ -66,7 +70,7 @@ export class DpkManager {
         data
       };
     } catch(error: any) {
-      Logger.error('DpkManager: DWeb Node request failed', error);
+      Logger.error('DpkManager: DWeb Node request error catch', error);
       return {
         ok     : false,
         code   : 404,
@@ -81,10 +85,7 @@ export class DpkManager {
     try {
       const response: Response = await fetch(drl);
       if (ResponseUtils.fetchFail(response)) {
-        Logger.error(
-          'DpkManager: DWeb Node package/release request error - response fail',
-          response
-        );
+        Logger.error('DpkManager: DWeb Node request error', response);
         return {
           ok     : false,
           code   : 404,
@@ -92,11 +93,9 @@ export class DpkManager {
           error  : response.statusText
         };
       }
+
       if (response.headers.get('content-type') !== 'application/octet-stream') {
-        Logger.error(
-          'DpkManager: DWeb Node package/release request error - bad content-type',
-          response
-        );
+        Logger.error('DpkManager: DWeb Node request error - bad content-type', response);
         return {
           ok     : false,
           code   : 404,
@@ -104,13 +103,25 @@ export class DpkManager {
           error  : `Bad content-type: ${response.headers.get('content-type')}`
         };
       }
-      if(!await DpkRegistry.saveDpkTarball({name, version, data: response})) {
-        Logger.error('DpkManager: Failed to save package/release tarball');
+
+      const data = response.body;
+      if (!data) {
+        Logger.error('DpkManager: DWeb Node request failed - no data', response);
         return {
           ok     : false,
           code   : 404,
           status : 'Not found',
-          error  : 'Failed to save package/release tarball'
+          error  : 'No file data'
+        };
+      }
+
+      if(!await DpkRegistry.saveDpkTarball({ name, version, data })) {
+        Logger.error('DpkManager: Failed to save tarball');
+        return {
+          ok     : false,
+          code   : 404,
+          status : 'Not found',
+          error  : 'Failed to save tarball'
         };
       }
 
@@ -139,10 +150,7 @@ export class DpkManager {
         const response: DpkResponse = await this.fetchDpk({ did, dpk: { name, version, path }});
 
         if(ResponseUtils.fail(response)) {
-          Logger.error(
-            `DpkManager: DWeb Node ${path} request error - response fail`,
-            response
-          );
+          Logger.error(`DpkManager: DWeb Node ${path} request error`, response);
           return {
             ok     : false,
             code   : 404,
@@ -160,7 +168,7 @@ export class DpkManager {
         data   : responses
       };
     } catch(error: any) {
-      Logger.error('DpkManager: DWeb Node request failed', error);
+      Logger.error('DpkManager: DWeb Node request error catch', error);
       return {
         ok     : false,
         code   : 404,
@@ -173,8 +181,8 @@ export class DpkManager {
   // Fetch DPK from DWeb Node: either metadata or release
   static async fetchDpk({ did, dpk: { name, version, path }}: DpkRequest): Promise<DpkResponse> {
     try {
-      for (const endpoint of await this.getDwnEndpoints(did)) {
-
+      for (const endpoint of await DpkManager.getDwnEndpoints(did)) {
+        Logger.info(`DpkManager: Fetching DPK ${name}@${version} from ${endpoint} ...`);
         const builder = DrlBuilder.create({ endpoint, did });
         const drl = path === 'package'
           ? builder.buildPackageDrl({ name, version })
@@ -188,17 +196,14 @@ export class DpkManager {
 
         if (ResponseUtils.fail(response)) {
           Logger.error(
-            `DpkManager: DWeb Node request error - response fail, continuing ...`,
+            `DpkManager: DWeb Node request error, continuing ...`,
             response
           );
           continue;
         }
 
         if(!response.data) {
-          Logger.error(
-            'DpkManager: DWeb Node request error - no response data, continuing ...',
-            response
-          );
+          Logger.error('DpkManager: DWeb Node request error - no data, continuing ...', response);
           continue;
         }
 
@@ -216,7 +221,7 @@ export class DpkManager {
         status : 'Not found'
       };
     } catch(error: any) {
-      Logger.error('DpkManager: DWeb Node request failed:', error);
+      Logger.error('DpkManager: DWeb Node request error catch', error);
       return {
         ok      : false,
         code    : 404,

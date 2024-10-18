@@ -22,8 +22,9 @@ export type BaseDrl = {
     endpoint?: string;
 };
 export type DrlQuery = {
-    name: string;
-    version: string;
+    name?: string;
+    version?: string;
+    integrity?: string;
 };
 export type DrgSaveDpkData = {
     name: string;

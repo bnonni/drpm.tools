@@ -35,8 +35,18 @@ export class DrlBuilder {
   }
 
   // Add query parameters (name and version)
-  addQuery({ name, version }: DrlQuery): DrlBuilder {
-    this.query = `?filter.tags.name=${name}&filter.tags.version=${version}`;
+  addNameQuery({ name }: DrlQuery): DrlBuilder {
+    this.query = `?filter.tags.name=${name}`;
+    return this;
+  }
+
+  addVersionQuery({ version }: DrlQuery): DrlBuilder {
+    this.query = `?filter.tags.version=${version}`;
+    return this;
+  }
+
+  addIntegrityQuery({ integrity }: DrlQuery): DrlBuilder {
+    this.query = `?filter.tags.integrity=${integrity}`;
     return this;
   }
 
@@ -49,13 +59,13 @@ export class DrlBuilder {
   buildPackageDrl({ name, version }: DrlQuery): string {
     if (!this.baseDrl) throw new Error('Base DRL not set');
     this.addPackage();
-    return this.addQuery({ name, version }).build();
+    return this.addNameQuery({ name, version }).build();
   }
 
   // Build and return the final DRL
   buildPackageReleaseDrl({ name, version }: DrlQuery): string {
     if (!this.baseDrl) throw new Error('Base DRL not set');
     this.addPackageRelease();
-    return this.addQuery({ name, version }).build();
+    return this.addVersionQuery({ name, version }).build();
   }
 }

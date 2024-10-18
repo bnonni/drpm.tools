@@ -133,20 +133,13 @@ add_prefixes_to_npmrc() {
 do_check_and_install_npmrc() {
     local NPMRC_FILE="$1"
     ensure_npmrc_exists "$NPMRC_FILE"
-
     find_missing_prefixes "$NPMRC_FILE"
-
     if [[ "${#DRG_PREFIXES_MISSING[@]}" -eq 0 ]]; then
         echo "No missing prefixes in $NPMRC_FILE."
-
-        if ! $FORCE; then
-            echo "Use --force (-f) to override and update the file"
-        else
-            backup_file "$NPMRC_FILE"
-        fi
+    else
+        backup_file "$NPMRC_FILE"
+        add_prefixes_to_npmrc "$NPMRC_FILE" "${DRG_PREFIXES_MISSING[@]}"
     fi
-
-    add_prefixes_to_npmrc "$NPMRC_FILE" "${DRG_PREFIXES_MISSING[@]}"
 }
 
 # Function to start the DRPM registry if not running
@@ -210,12 +203,11 @@ do_check_drpm_env_vars() {
     done
 }
 
-
 pre_main_setup() {
     # Check if local .drpmrc exists, download if not
     local CWD_DRPMRC_FILE="$PWD/.drpmrc"
     if [[ ! -f $CWD_DRPMRC_FILE ]]; then
-        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -O "$CWD_DRPMRC_FILE"
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$CWD_DRPMRC_FILE"
         echo "Downloaded .drpmrc to $CWD_DRPMRC_FILE"
     fi
 
@@ -243,8 +235,12 @@ pre_main_setup() {
     DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
     DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
     if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
-        echo "Global or Local postinstall has already run, exiting..."
-        exit 0
+        if ! $FORCE; then
+            echo "Global or Local postinstall has already run, exiting..."
+            exit 0
+        else
+            echo "Force flag set, forcing postinstall ..."
+        fi
     fi
 }
 
