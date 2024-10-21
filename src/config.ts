@@ -1,7 +1,7 @@
 import { appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import dwn from './utils/drpm/drpm-protocol.js';
-import { DrlBuilder } from './utils/drpm/drl-builder.js';
+import { DrlUtils } from './utils/drpm/drl-utils.js';
 import { Logger } from './utils/logger.js';
 
 const parsePackageJson = async () => JSON.parse(await readFile(NPM_PACKAGE_JSON_PATH, 'utf8'));
@@ -36,7 +36,8 @@ export const NPMRC_PREFIXES = process.env.DRPM_NPMRC_PREFIXES || [
 export const DRG_DIR = process.env.DRPM_DRG_DIR || join(DRPM_HOME, `@drg`);
 export const REGISTRYD_PID_FILE = join(DRPM_HOME, 'registryd.pid');
 export const REGISTRYD_PID = await readFile(REGISTRYD_PID_FILE, 'utf8').catch(ensureFileData);
-export const DRPM_PROTOCOL_B64URL = DrlBuilder.base64urlEncode(dwn.protocol);
+export const DRPM_PROTOCOL = dwn.protocol ?? 'https://drpm.tools/protocols/drpm';
+export const DRPM_PROTOCOL_B64URL = DrlUtils.base64urlEncode(DRPM_PROTOCOL) ?? 'aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt';
 export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL}`;
 export const DPK_VERSION_PREFIXES = ['~', '^', '<', '>', '<=', '>=', '=', '-', '@'];
 

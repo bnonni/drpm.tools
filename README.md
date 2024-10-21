@@ -79,8 +79,8 @@ This monorepo contains 4 different developer tools; each providing distinct and 
 - DPIs are used to import code from locally installed DPKs
 
 ```ts
-import express from '@drg/express';
-const express = require('@drg/express');
+import express from '@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo';
+const express = require('@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo');
 ```
 
 ## Register Hooks
@@ -116,7 +116,11 @@ DRPM reuses the `package.json` and `package-lock.json` files for easy integratio
 // package-lock.json example
 {
     "dependencies": {
-        "@drg/express": "http://@drg/express/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^4.21.1"
+        // Defaults to DHT
+        "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0",
+        "@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^4.21.1", 
+        "@drpm/react~web~dwn.nonni.org": "^18.3.1", // Example of did:web
+        "@drpm/next~btc~xg4x-ay5y-q5zq-232": "^6.1.0", // Example of did:btc
     }
 }
 ```
@@ -124,11 +128,29 @@ DRPM reuses the `package.json` and `package-lock.json` files for easy integratio
 ```json
 // package-lock.json example
 {
-    "@drg/express": {
+    "@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
+        "version": "4.21.1",
+        "resolved": "",
+        "integrity": "",
+        "license": ""
+    },
+    "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
+        "version": "6.1.0",
+        "resolved": "",
+        "integrity": "",
+        "license": ""
+    },
+    "@drpm/react~web~dwn.nonni.org": {
         "version": "0.1.0",
-        "resolved": "http://@drg/express/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^4.21.1",
-        "integrity": "sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==",
-        "license": "Apache-2.0"
+        "resolved": "",
+        "integrity": "",
+        "license": ""
+    },
+    "@drpm/next~btc~xg4x-ay5y-q5zq-232": {
+        "version": "0.1.0",
+        "resolved": "",
+        "integrity": "",
+        "license": ""
     }
 }
 ```

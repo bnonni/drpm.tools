@@ -1,71 +1,101 @@
-import { DRPM_DWN_URL, DRL_PROTOCOL_PARAM } from '../../config.js';
+import { DRPM_DWN_URL, DRPM_PROTOCOL, DRPM_PROTOCOL_B64URL } from '../../config.js';
 import { Logger } from '../logger.js';
-import { BaseDrl, DrlQuery } from '../types.js';
+import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from '../types.js';
+import { DrlUtils } from './drl-utils.js';
+
 
 export class DrlBuilder {
   baseDrl: string;
   path: string = '';
-  query: string = '';
-
-  static base64urlEncode(data: any) {
-    return Buffer.from(data).toString('base64url');
-  }
+  query: string[] = [];
 
   constructor({ endpoint, did }: BaseDrl) {
-    if(!did) throw new Error('DID reqired to build DRL');
-    if(!endpoint) Logger.warn('No DWN Endpoint Found! Using the default endpoint is not recommended.');
-    this.baseDrl = `${endpoint ?? DRPM_DWN_URL}/${did}/${DRL_PROTOCOL_PARAM}`;
+    if (!did) throw new Error('DID required to build DRL');
+    if (!endpoint) Logger.warn('No DWN Endpoint Found! Using the default endpoint is not recommended.');
+    this.baseDrl = `${endpoint ?? DRPM_DWN_URL}/${did}`;
   }
 
   // Start building with base DRL
-  static create({ endpoint, did }: BaseDrl): DrlBuilder {
-    return new DrlBuilder({ endpoint, did });
+  static create({ did, endpoint }: BaseDrl): DrlBuilder {
+    return new DrlBuilder({ did, endpoint });
   }
 
-  // Add a package to the DRL path
-  addPackage(): DrlBuilder {
-    this.path = `${this.baseDrl}/package`;
+  // Add a generic path (e.g., query, read)
+  addPath({pathSegment}: {pathSegment: string}): DrlBuilder {
+    this.path = `${this.path}/${pathSegment}`;
     return this;
   }
 
-  addPackageRelease(): DrlBuilder {
-    this.addPackage();
-    this.path = `${this.path}/release`;
+  addProtocolEncoded(): DrlBuilder {
+    this.path = `${this.path}/read/protocols/${DRPM_PROTOCOL_B64URL}`;
     return this;
   }
 
-  // Add query parameters (name and version)
-  addNameQuery({ name }: DrlQuery): DrlBuilder {
-    this.query = `?filter.tags.name=${name}`;
+  // Add encoded protocol to the path
+  addProtocol({protocol}: {protocol?: string}): DrlBuilder {
+    const encodedProtocol = DrlUtils.base64urlEncode(protocol ?? DRPM_PROTOCOL);
+    this.path = `${this.path}/read/protocols/${encodedProtocol}`;
     return this;
   }
 
-  addVersionQuery({ version }: DrlQuery): DrlBuilder {
-    this.query = `?filter.tags.version=${version}`;
+  // Add encoded protocol to the path
+  addProtocolPath({protocolPath}: {protocolPath: string}): DrlBuilder {
+    this.path = `${this.path}/${protocolPath}`;
     return this;
   }
 
-  addIntegrityQuery({ integrity }: DrlQuery): DrlBuilder {
-    this.query = `?filter.tags.integrity=${integrity}`;
+  // Add filter query parameters dynamically
+  addFilter({key, value, subKey}: DrlAddQueryFilterParams): DrlBuilder {
+    const filter = subKey
+      ? `filter.${key}.${subKey}=${value}`
+      : `filter.${key}=${value}`;
+    this.query.push(filter);
+    return this;
+  }
+
+  // Add multiple filters dynamically, supporting arrays for filters like tags
+  addFilters({ filters }: DrlFiltersParams): DrlBuilder {
+    Object.keys(filters).forEach(key => {
+      const filter = filters[key];
+      // Case 1: Simple key-value pair, e.g., { 'protocolPath': 'package' }
+      if (typeof filter === 'string') {
+        this.addFilter({ key, value: filter });
+      }
+      // Case 2: List of objects with value and subKey,
+      // e.g. { tags: [{ value: 'tool5', subKey: 'name' }, { value: '6.1.0', subKey: 'version' }] }
+      else if (Array.isArray(filter)) {
+        filter.forEach(({value, subKey}) => {
+          this.addFilter({ key, value, subKey });
+        });
+      }
+      // Case 3: Single object with value and subKey, e.g., { tags: { value: 'tool5', subKey: 'name' } }
+      else if (DrlUtils.isJsonObject(filter)) {
+        const {value, subKey} = filter ?? {};
+        this.addFilter({ key, value, subKey });
+      }
+    });
     return this;
   }
 
   // Build and return the final DRL
   build(): string {
-    return `${this.path}${this.query}`;
+    const queryString = this.query.length ? `?${this.query.join('&')}` : '';
+    console.log('this', this);
+    return `${this.baseDrl}${this.path}${queryString}`;
   }
 
-  // Build and return the final DRL
-  buildPackageDrl({ name, version }: DrlQuery): string {
-    if (!this.baseDrl) throw new Error('Base DRL not set');
-    this.addPackage();
-    return this.addNameQuery({ name, version }).build();
+  // Handle building a query-based DRL
+  buildDrlQuery({ filters }: DrlFiltersParams): string {
+    this.addPath({ pathSegment: 'query' });
+    this.addFilters({ filters });
+    return this.build();
   }
 
-  // Build and return the final DRL
-  buildPackageReleaseDrl({ name, version }: DrlQuery): string {
-    if (!this.baseDrl) throw new Error('Base DRL not set');
-    this.addPackageRelease();
-    return this.addVersionQuery({ name, version }).build();
+  // Handle building a protocol read DRL with optional protocolPath and filters
+  buildDrlRead({ protocolPath, filters }: DrlReadParams): string {
+    this.addProtocol({});
+    this.addProtocolPath({ protocolPath });
+    this.addFilters({ filters });
+    return this.build();
   }
 }

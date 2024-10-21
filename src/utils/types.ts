@@ -1,5 +1,7 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
+import { DrlBuilder } from './drpm/drl-builder.js';
 
+// Fetching
 export type ResponseInfo = {
     ok: boolean;
     code: number;
@@ -11,21 +13,58 @@ export type DwnResponseInfo = {
     code: number;
     status: string;
 }
-export type DpkIntegrityFormat = 'stream' | 'file';
-export type DpkIntegrityData = ReadableStream<Uint8Array> | string;
-export type DpkIntegrityParams = {
-    format: DpkIntegrityFormat;
-    data: DpkIntegrityData
+export type DwnResponseEntry = DwnRecordDescriptor & {
+    recordId: string;
+    contextId: string;
+    encodedData: string;
+    descriptor: DpkDwnDescriptor;
+    authorization: Authorization;
 };
+export type DpkDwnDescriptor = {
+    tags: {
+      name: string;
+      version: string;
+      integrity: string;
+      [key: string]: any;
+    },
+    method: string;
+    schema: string;
+    dataCid: string;
+    dataSize: number;
+    protocol: string;
+    interface: string;
+    published: true,
+    dataFormat: string;
+    dateCreated: string;
+    protocolPath: string;
+    datePublished: string;
+    messageTimestamp: string;
+};
+export type Signature = { protected: string; signature: string };
+export type Authorization = {
+    signature: {
+        payload: string;
+        signatures: Signature[]
+    }
+};
+export type DpkDwnResponse = DwnResponseStatus & { entries: DwnResponseEntry[] };
+export type DwnRecordDescriptor =
+    | DwnMessageDescriptor[DwnInterface.RecordsWrite]
+    | DwnMessageDescriptor[DwnInterface.RecordsDelete];
+
+// DrlBuilder
 export type BaseDrl = {
     did: string;
     endpoint?: string;
 };
-export type DrlQuery = {
-    name?: string;
-    version?: string;
-    integrity?: string;
-};
+export type DrlQueryFilter = { subKey?: string; value: string };
+export type DrlAddQueryFilterParams = { key: string } & DrlQueryFilter;
+export type DrlFiltersParams = {
+    filters: Record<string, string | Array<DrlQueryFilter> | DrlQueryFilter>;
+  }
+export type DrlReadParams = { [key: string]: any; } & DrlFiltersParams;
+
+// Drg
 export type DrgSaveDpkData = {
     name: string;
     version: string;
@@ -35,64 +74,39 @@ export type DrgGetDpkPath = {
     name: string;
     version: string
 };
+export interface DrgResponse {
+    ok: true | false;
+    code: number;
+    status: string;
+    error?: string;
+    data?: any;
+}
+
+// Dpk
+export type DpkIntegrityFormat = 'stream' | 'file';
+export type DpkIntegrityData = ReadableStream<Uint8Array> | string;
+export type DpkIntegrityParams = {
+    format: DpkIntegrityFormat;
+    data: DpkIntegrityData
+};
 export type Dpk = {
     name: string;
-    version: string;
-    path?: string;
+    version?: string;
+    path: string;
 }
 export type DpkRequest = {
     did: string;
     dpk: Dpk;
 };
-export type DpkFetchParams = {
-    name: string;
-    version: string;
-    drl: string
+export type DpkRequestParams = Dpk & {
+    builder: DrlBuilder;
+    did?: string;
+    endpoint?: string;
 };
 export type DpkMetadata = { [key: string]: any };
 export type DpkTarball = ReadableStream<Uint8Array>;
 export type DpkData = {
-    'package': DpkMetadata | null;
-    'package/release': DpkTarball | null;
-    [key: string]: any
+    'package'?: DpkMetadata;
+    'package/release'?: DpkTarball;
+    [key: string]: any;
 };
-export type DpkResponse = {
-    ok: boolean;
-    code: number;
-    status: string;
-    error?: string;
-    data?: DpkTarball | DpkMetadata | DpkData;
-};
-export type QueryFilters = {
-    name: string;
-    version: string;
-    [key: string]: string
-};
-export type DwnResponseEntry = DwnRecordDescriptor & {
-    recordId: string;
-    contextId: string;
-    encodedData: string;
-    descriptor: {
-        tags: {
-          name: string;
-          version: string;
-          integrity: string;
-        },
-        method: string;
-        schema: string;
-        dataCid: string;
-        dataSize: number;
-        protocol: string;
-        interface: string;
-        published: true,
-        dataFormat: string;
-        dateCreated: string;
-        protocolPath: string;
-        datePublished: string;
-        messageTimestamp: string;
-    };
-};
-export type DwnResponse = DwnResponseStatus & { entries: DwnResponseEntry[] };
-export type DwnRecordDescriptor =
-    | DwnMessageDescriptor[DwnInterface.RecordsWrite]
-    | DwnMessageDescriptor[DwnInterface.RecordsDelete];
