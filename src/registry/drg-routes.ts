@@ -25,7 +25,7 @@ drg.use((req: Request, _: Response, next: NextFunction) => {
   next();
 });
 
-// @drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo
+// "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
 drg.get('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> => {
   try {
     const { scope, name, id } = req.params ?? {};
