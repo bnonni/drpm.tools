@@ -11,12 +11,11 @@ Decentralized Registry Package Manager - npm for the DWeb. Publish a Decentraliz
   - [DRPM Vocab](#drpm-vocab)
   - [Other Vocab](#other-vocab)
 - [Summary](#summary)
-- [Monorepo](#monorepo)
 - [Namespace](#namespace)
 - [Decentralized Package Import](#decentralized-package-import)
 - [Register Hooks](#register-hooks)
-- [CLI](#cli)
-- [Dependencies](#dependencies)
+- [Decentralized Package Manager CLI](#dpm-cli)
+- [Dependencies & Imports](#dependencies--imports)
 - [Project Resources](#project-resources)
 
 ## Vocabulary
@@ -63,7 +62,7 @@ In DRPM, packages are published to DWNs referenced by DIDs. Any entity can have 
 
 - DRPM User [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
 - DRPM Organization [did:web:drpm.tools](https://drpm.tools/.well-known/did)
-- DRPM Package [http://@drg/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
+- DRPM Package [@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
 
 <!-- ## Monorepo
 
@@ -74,15 +73,6 @@ This monorepo contains 4 different developer tools; each providing distinct and 
 - [/packages/drg](/packages/drg/README.md) = new primitive to leverage dpk by running a local DRG for interacting with DIDs, DWNs & DPKs
 - [/packages/common](/packages/common/README.md) = a library of utilities used by dpm, dpk and drg -->
 
-## Decentralized Package Import
-
-- DPIs are used to import code from locally installed DPKs
-
-```ts
-import express from '@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo';
-const express = require('@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo');
-```
-
 ## Register Hooks
 
 The DRPM register hooks paradigm can be used to run one-off scripts without downloading the DPK into the `node_modules` folder. Check out [hooks.ts](/lib/hooks.ts) and [register.ts](/lib/register.ts)
@@ -92,11 +82,11 @@ npm run build
 node --import ./dist/esm/src/register.js ./path/to/your/script.js
 ```
 
-## CLI
+## DPM CLI
 
-TODO
+Coming Soon! See Issue [#24](https://github.com/bnonni/drpm.tools/issues/24).
 
-## Dependencies
+## Dependencies & Imports
 
 DRPM reuses the `package.json` and `package-lock.json` files for easy integration to the normal `npm` dev env. The same principals apply: the entries in each file ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution
 
@@ -153,6 +143,15 @@ DRPM reuses the `package.json` and `package-lock.json` files for easy integratio
         "license": ""
     }
 }
+```
+
+### Decentralized Package Import
+
+- DPIs (or DMIs) are used to import code from locally installed DPKs
+
+```ts
+import express from '@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo';
+const express = require('@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo');
 ```
 
 ## Project Resources
