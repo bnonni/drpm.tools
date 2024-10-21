@@ -34,8 +34,12 @@
                 "name": {
                     "type": "string"
                 },
+                "latest": {
+                    "type": "string"
+                },
                 "$requiredTags": [
-                    "name"
+                    "name",
+                    "latest"
                 ]
             },
             "$actions": [
@@ -96,6 +100,9 @@
             },
             "release": {
                 "$tags": {
+                    "name": {
+                        "type": "string"
+                    },
                     "version": {
                         "type": "string"
                     },
@@ -103,6 +110,7 @@
                         "type": "string"
                     },
                     "$requiredTags": [
+                        "name",
                         "version",
                         "integrity"
                     ]
