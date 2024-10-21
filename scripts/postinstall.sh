@@ -145,7 +145,7 @@ do_check_and_install_npmrc() {
 # Function to start the DRPM registry if not running
 start_drg_server() {
     if docker version >/dev/null 2>&1; then
-        sh ./scripts/registry.docker.sh
+        sh $SCRIPTS_DIR/registry.docker.sh
     else
         # shellcheck disable=SC2009
         REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null || \
@@ -155,7 +155,7 @@ start_drg_server() {
 
         if [[ -z "$REGISTRYD_PID" ]]; then
             roomy_echo "Starting registry ..."
-            sh ./scripts/registry.nohup.sh
+            sh $SCRIPTS_DIR/registry.nohup.sh
         else
             echo ""
             read -rp "Registry running, (pid=$REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER

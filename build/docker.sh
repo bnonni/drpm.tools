@@ -28,5 +28,5 @@ dwn_name=$(docker run --rm --network $DOCKER_NETWORK \
     --pull always --detach --volume dwn-data:/dwn-server/data \
     --publish 3000:3000 ghcr.io/tbd54566975/dwn-server:main)
 
-echo "$registry_name" > "$CONTAINERS_FILE"
-echo "$dwn_name" >> "$CONTAINERS_FILE"
+echo "$registry_name" > "$DOCKER_CONTAINERS_FILE"
+echo "$dwn_name" >> "$DOCKER_CONTAINERS_FILE"
