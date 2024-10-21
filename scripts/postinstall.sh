@@ -1,34 +1,28 @@
 #!/usr/bin/env bash
 
-set -e # Exit on error
+set -e
+
+# Check if SHELL env var is set
+if [[ -z $SHELL ]]; then
+    echo "Something went wrong! No SHELL found."
+    exit 1
+fi
+
+# Check if HOME env var is set
+if [[ -z $HOME ]]; then
+    echo "Something went wrong! No HOME found."
+    exit 1
+fi
 
 # Initialize flags
 FORCE=false
 GLOBAL_FLAG=false
 NGINX_FLAG=false
+DRG_PREFIXES_MISSING=()
 
-# Initialize global system variables
-OS="$(uname)"
-BUILD_DIR="$PWD/build"
-NGINX_DIR="$BUILD_DIR/nginx"
-NPMRC=".npmrc"
-GLOBAL_NPMRC="$HOME/$NPMRC"
-LOCAL_NPMRC="$PWD/$NPMRC"
-
-if [[ -n "$XDG_CONFIG_HOME" ]]; then
-    DPM_HOME="$XDG_CONFIG_HOME/dpm"
-else
-    DPM_HOME="$HOME/.dpm"
+if [[ "$npm_config_global" == "true" ]]; then
+    GLOBAL_FLAG=true
 fi
-
-# Initialize global dpm variables
-REGISTRY_URL="http://localhost:2092"
-REGISTRY_PID_FILE="registry.pid"
-REGISTRY_PROCESS_NAME="registry.dpm.software"
-REGISTRY_PID=0
-PREFIXES=("@dpm:registry=$REGISTRY_URL" "@dpk:registry=$REGISTRY_URL" "dpm:registry=$REGISTRY_URL" "dpk:registry=$REGISTRY_URL")
-MISSING_PREFIXES=()
-SCRIPTS_DIR="$PWD/scripts"
 
 # Function to output cleaner info
 roomy_echo() {
@@ -45,27 +39,23 @@ unsupported_os() {
 # Function to set up Nginx
 setup_nginx() {
     local OS="$1"
+    roomy_echo "Setting up Nginx for $OS..."
     case "$OS" in
         Darwin)
-            roomy_echo "Setting up Nginx for macOS (Darwin)..."
-            # Install nginx using Homebrew if not installed
             if ! brew ls --versions nginx > /dev/null; then
                 echo "Nginx not found. Installing..."
                 brew install nginx
             else
                 echo "Nginx is already installed."
             fi
-            # Copy custom macOS config and replace the existing nginx.conf
             echo "Copying custom macOS nginx.conf..."
             cp "$NGINX_DIR/mac.conf" /usr/local/etc/nginx/nginx.conf
-            # Start Nginx as a brew service
             echo "Starting Nginx via brew services..."
             brew services start nginx
             ;;
         # NOTE: This is not specific enough. For example, Arch users won't have apt-get.
+        # TODO: rewrite linux nginx setup
         Linux)
-            roomy_echo "Setting up Nginx for Linux..."
-            # Install nginx if not installed
             if ! command -v nginx > /dev/null; then
                 echo "Nginx not found. Installing..."
                 sudo apt-get update && sudo apt-get install -y nginx
@@ -90,7 +80,7 @@ setup_nginx() {
 backup_file() {
     local FILE_TO_BAK="$1"
     if [[ -f "$FILE_TO_BAK" ]]; then
-        BAK_FILE="$DPM_HOME/$(basename "$FILE_TO_BAK").bak"
+        BAK_FILE="$DRPM_HOME/$(basename "$FILE_TO_BAK").bak"
         roomy_echo "Backing up $FILE_TO_BAK to $BAK_FILE"
         cp "$FILE_TO_BAK" "$BAK_FILE"
     fi
@@ -112,18 +102,11 @@ find_missing_prefixes() {
     local FILE_TO_CHECK="$1"
     for PREFIX in "${PREFIXES[@]}"; do
         if ! grep -qE "$PREFIX" "$FILE_TO_CHECK"; then
-            MISSING_PREFIXES+=("$PREFIX")
+            DRG_PREFIXES_MISSING+=("$PREFIX")
         else
             echo "$PREFIX exists in .npmrc, continuing ..."
         fi
     done
-}
-
-# Function to prompt for global installation
-prompt_global_npmrc_install() {
-    echo ""
-    read -p "Would you like to add the DPM registries to global .npmrc ($GLOBAL_NPMRC)? [y/N] " ANSWER
-    [[ "$ANSWER" =~ ^[yY]$ ]] && GLOBAL_FLAG=true || return 0
 }
 
 # Function to add missing prefixes to an `.npmrc` file
@@ -150,43 +133,37 @@ add_prefixes_to_npmrc() {
 do_check_and_install_npmrc() {
     local NPMRC_FILE="$1"
     ensure_npmrc_exists "$NPMRC_FILE"
-
     find_missing_prefixes "$NPMRC_FILE"
-
-    if [[ "${#MISSING_PREFIXES[@]}" -eq 0 ]]; then
+    if [[ "${#DRG_PREFIXES_MISSING[@]}" -eq 0 ]]; then
         echo "No missing prefixes in $NPMRC_FILE."
-
-        if $FORCE; then
-            backup_file "$NPMRC_FILE"
-            add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
-        fi
     else
-        add_prefixes_to_npmrc "$NPMRC_FILE" "${MISSING_PREFIXES[@]}"
+        backup_file "$NPMRC_FILE"
+        add_prefixes_to_npmrc "$NPMRC_FILE" "${DRG_PREFIXES_MISSING[@]}"
     fi
 }
 
-# Function to start the DPM registry if not running
-start_dpm_registry() {
+# Function to start the DRPM registry if not running
+start_drg_server() {
     if docker version >/dev/null 2>&1; then
         sh $SCRIPTS_DIR/registry.docker.sh
     else
         # shellcheck disable=SC2009
-        REGISTRY_PID="$(cat $REGISTRY_PID_FILE 2>/dev/null || \
-            pgrep -f $REGISTRY_PROCESS_NAME \
-            || ps aux | grep $REGISTRY_PROCESS_NAME | grep -v grep | awk '{print $2}' \
+        REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null || \
+            pgrep -f $DRG_HOSTNAME \
+            || ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}' \
             || lsof -i :2092 | grep node | awk '{print $2}')"
 
-        if [[ -z "$REGISTRY_PID" ]]; then
+        if [[ -z "$REGISTRYD_PID" ]]; then
             roomy_echo "Starting registry ..."
             sh $SCRIPTS_DIR/registry.nohup.sh
         else
             echo ""
-            read -rp "Registry running, (pid=$REGISTRY_PID). Would you like to restart the registry process? [y/N] " ANSWER
+            read -rp "Registry running, (pid=$REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER
             if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-                echo "Restarting registry process (pid=$REGISTRY_PID) ..."
-                kill -9 "$REGISTRY_PID"
-                sh $SCRIPTS_DIR/registry.nohup.sh
-                echo "Registry restarted (pid=$(pgrep -f \"$REGISTRY_PROCESS_NAME\"))"
+                echo "Restarting registry process (pid=$REGISTRYD_PID) ..."
+                kill -9 "$REGISTRYD_PID"
+                sh scripts/registry.nohup.sh
+                echo "Registry restarted (pid=$(pgrep -f \"$DRG_HOSTNAME\"))"
             else
                 echo "Registry still running, continuing ..."
             fi
@@ -194,80 +171,90 @@ start_dpm_registry() {
     fi
 }
 
-# NOTE: I really don't think we should be touching people's /etc/hosts file.
-# Perhaps suggest it to them, but that's pretty "invasive" IMO
-# Function to edit /etc/hosts
-edit_hosts() {
-    local DRG_CUSTOM_LOCAL="127.0.0.1 registry.dpm.software.local"
-    if ! grep -q "$DRG_CUSTOM_LOCAL" /etc/hosts; then
-        echo ""
-        read -rp "The DRG localhost ($DRG_CUSTOM_LOCAL) needs to be added to /etc/hosts. This requires sudo privileges. Can we add this for you? [y/n] " ANSWER
-        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-            roomy_echo "Backing up /etc/hosts to $DPM_HOME/hosts.bak ..."
-            cp /etc/hosts $DPM_HOME/hosts.bak
-            roomy_read "Please enter your password: " -s PASSWORD
-            echo "$PASSWORD" | sudo -S sh -c "echo \"$DRG_CUSTOM_LOCAL\" >> /etc/hosts"
-            echo "Added $DRG_CUSTOM_LOCAL to /etc/hosts"
-        else
-            roomy_echo "Add the following hosts to your /etc/hosts file."
-            echo "$DRG_CUSTOM_LOCAL"
+
+# Check list of required env vars
+do_check_drpm_env_vars() {
+    REQUIRED_ENV_VARS=(
+        SHELLRC_FILE
+        DRPM_HOME
+        LOCAL_OS
+        GLOBAL_DRPMRC_FILE
+        LOCAL_DRPMRC_FILE
+        GLOBAL_NPMRC_FILE
+        LOCAL_NPMRC_FILE
+        DRPM_NGINX_DIR
+        DRPM_DRG_HOSTNAME
+        DRPM_DRG_URL
+        DRPM_DRG_PORT_DEFAULT
+        DRPM_DRG_PORT_FALLBACK
+        DRPM_DRG_PREFIX
+        DRPM_DPK_PREFIX
+        DRPM_NPMRC_PREFIXES
+        DRPM_REGISTRYD_PID
+        DRPM_REGISTRYD_PID_FILE_NAME
+        DRPM_POSTINSTALL_GLOABL
+        DRPM_POSTINSTALL_LOCAL
+    )
+    for REQUIRED_ENV_VAR in "${REQUIRED_ENV_VARS[@]}"; do
+    if [ -z "${!REQUIRED_ENV_VAR}" ]; then
+        roomy_echo "$REQUIRED_ENV_VAR unset! Set it in your $SHELLRC_FILE."
+        exit 0
+    fi
+    done
+}
+
+pre_main_setup() {
+    # Check if local .drpmrc exists, download if not
+    local CWD_DRPMRC_FILE="$PWD/.drpmrc"
+    if [[ ! -f $CWD_DRPMRC_FILE ]]; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$CWD_DRPMRC_FILE"
+        echo "Downloaded .drpmrc to $CWD_DRPMRC_FILE"
+    fi
+
+    # Source local .drpmrc and print message
+    source "$CWD_DRPMRC_FILE"
+    echo "Sourced local .drpmrc ($CWD_DRPMRC_FILE)"
+    
+    # Copy local .drpmrc to $DRPM_HOME and print message
+    cp "$CWD_DRPMRC_FILE" "$DRPM_HOME"
+    echo "Copied local .drpmrc to $DRPM_HOME"
+    
+    # Check if rc file requires new line, add source statement to it and print message
+    SOURCE_DRPMRC="source $GLOBAL_DRPMRC_FILE"
+    if ! grep -qE "$SHELLRC_FILE" "$SOURCE_DRPMRC"; then
+        [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
+        backup_file "$SHELLRC_FILE" "$DRPM_HOME/$SHELLRC_FILE.bak"
+        echo "$SOURCE_DRPMRC" >> "$SHELLRC_FILE"
+        echo "Updated $SHELLRC_FILE."
+        echo "To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
+    else
+        echo "$PREFIX exists in .npmrc, continuing ..."
+    fi
+    
+    # Check if the postinstall script has already run
+    DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
+    DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
+    if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
+        if ! $FORCE; then
+            echo "Global or Local postinstall has already run, exiting..."
             exit 0
-        fi
-    else
-        echo "DRG custom local domain $DRG_CUSTOM_LOCAL already present in /etc/hosts"
-    fi
-}
-
-# Function to set up environment variables
-setup_dpm_env_vars() {
-    case "$SHELL" in
-        */zsh)
-            SHELL_RC="$HOME/.zshrc"
-            ;;
-        */bash)
-            SHELL_RC="$HOME/.bashrc"
-            ;;
-        *)
-            SHELL_RC="$HOME/.profile"
-            ;;
-    esac
-
-    local VARS_TO_EXPORT=("DPM_HOME=\"$DPM_HOME\"" "REGISTRY_URL=\"$REGISTRY_URL\"" "REGISTRY_PID_FILE=\"$REGISTRY_PID_FILE\"" "REGISTRY_PROCESS_NAME=\"$REGISTRY_PROCESS_NAME\"" "PATH=\"$DPM_HOME:$PATH\"")
-
-    read -rp "Some environment variables need to be set. Should we set them for you? [y/N] " ANSWER
-    if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-        echo "Found $SHELL_RC file, adding env vars ..."
-        [[ -s "$SHELL_RC" && $(tail -c1 "$SHELL_RC" | wc -l) -eq 0 ]] && echo >> "$SHELL_RC"
-
-        for VAR in "${VARS_TO_EXPORT[@]}"; do
-            if ! grep -q "$VAR" "$SHELL_RC"; then
-                echo "export $VAR" >> "$SHELL_RC"
-            fi
-        done
-
-        echo "DPM env vars added to $SHELL_RC"
-
-        if [[ "$0" != "${BASH_SOURCE[0]}" ]]; then
-            echo "Attempting to source $SHELL_RC ..."
-            # shellcheck disable=SC1090
-            . "$SHELL_RC"
         else
-            echo "Please run 'source $SHELL_RC' or open a new terminal session to apply changes"
+            echo "Force flag set, forcing postinstall ..."
         fi
-    else
-        roomy_echo "Please add the following variables to your shell."
-        for VAR in "${VARS_TO_EXPORT[@]}"; do
-            echo "$VAR"
-        done
     fi
 }
 
+main() {
+    # Check if global .npmrc installed properly
+    do_check_and_install_npmrc "$GLOBAL_NPMRC_FILE"
 
-# Create the DPM home directory if it doesn't exist
-[[ ! -d "$DPM_HOME" ]] && mkdir -p "$DPM_HOME"
-roomy_echo "DRPM installed per DPM_HOME ($DPM_HOME)."
+    # Setup nginx
+    setup_nginx "$LOCAL_OS"
 
-# Main logic
+    # Start the DRG registry server
+    start_drg_server
+}
+
 # Parse command line arguments
 if [[ "$#" -gt 0 ]]; then
     while [[ "$#" -gt 0 ]]; do
@@ -280,25 +267,9 @@ if [[ "$#" -gt 0 ]]; then
     done
 fi
 
-# Check for Nginx directory
-do_check_and_install_npmrc "$LOCAL_NPMRC"
-
-# shellcheck disable=SC2154
-if $GLOBAL_FLAG || [[ "$npm_config_global" == "true" ]]; then
-    echo "Global installation detected ..."
-    do_check_and_install_npmrc "$GLOBAL_NPMRC"
-# else
-#     prompt_global_npmrc_install
-#     $GLOBAL_FLAG && do_check_and_install_npmrc "$GLOBAL_NPMRC"
-fi
-
-if $NGINX_FLAG; then
-    setup_nginx "$OS"
-else
-    roomy_echo "Skipping Nginx setup ..."
-fi
-
-edit_hosts
-start_dpm_registry
-setup_dpm_env_vars
+# Setup runs before main
+pre_main_setup
+# Post setup main entry point
+main
+# Exit cleanly
 exit 0

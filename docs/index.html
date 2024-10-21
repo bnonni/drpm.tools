@@ -1,45 +1,73 @@
 <h1>Decentralized Package Manager (DPM)</h1>
-<img src="/assets/img/animal/spider.webp" height=250 width=250 />
+<img src="/assets/img/animal/wolf.webp" height=250 width=250 />
 
 <p>Decentralized Package Manager (DPM) - a package manager for the dWeb - like npm but decentralized.</p>
+<h2>MONOREPO COMING SOON</h2>
+<p>Thanks to name squatters on npmjs.org, we are forced to rename our project to DRPM and move our upcoming monorepo setup to <a href="https://github.com/bnonni/drpm">@bnonni/drpm</a>. Keep an eye on that repo for the latest codebase. For now, we will be actively developing and updating this repo. Once this repo is stable, all code will be moved to @bnonni/drpm and will be restructured as a monorepo. Check out <a href="https://drpm.tools">drpm.tools</a> for the landing page.</p>
+<p>This monorepo contains 4 different developer tools; each providing distinct and important functionality:</p>
+<ul>
+<li><a href="/packages/dpm/README.md">/packages/dpm</a> = an easy-to use CLI for performing certain actions that fall outside the capabilities of npm</li>
+<li><a href="/packages/dpk/README.md">/packages/dpk</a> = core primitive providing the ability to install and manage DPKs, use DPIs &amp; build and publish DPKs</li>
+<li><a href="/packages/drg/README.md">/packages/drg</a> = new primitive to leverage dpk by running a local DRG for interacting with DIDs, DWNs &amp; DPKs</li>
+<li><a href="/packages/common/README.md">/packages/common</a> = a library of utilities used by dpm, dpk and drg</li>
+</ul>
 <h2>Summary</h2>
 <p>DPM is a package manager for interacting with decentralized packages (DPKs) published to Decentralized Web Nodes (DWNs). It leverages decentralized identifiers (DIDs) to lookup the DWN endpoint associated with that DID document and query DPKs stored at the <code>dpm</code> protocol path.</p>
 <p>The goal of DPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DPM, publishers write code to their DWNs and list it on <a href="explorer.dpm.software">explorer.dpm.software</a>.</p>
 <p>Developers can discover packages here just like npmjs.com, except explorer.dpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.</p>
 <p>Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as <code>@web5</code>) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.</p>
+<h3>NPM Namespace</h3>
 <ul>
-<li>NPMJS User <a href="https://npmjs.com/~bnonni">npmjs.com/~bnonni</a></li>
+<li>User <a href="https://npmjs.com/~bnonni">npmjs.com/~bnonni</a></li>
 <li>Organization: <a href="https://npmjs.com/org/web5">npmjs.com/org/web5</a></li>
 <li>Package: <a href="npmjs.com/package/tool5">npmjs.com/package/tool5</a></li>
 </ul>
-<p>In DPM, packages are published and listed under DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves <code>did:dht</code> to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.</p>
+<p>In DPM, packages are published to DWNs referenced by DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship. DPM supports DHT method DIDs (for now). DOM resolves <code>did:dht</code> to the did document on the Mainline DHT network, which lists the dwn endpoints, and makes fetch requests to the DWN using the DMI to build DWN query URL.</p>
+<h3>DPM Namespace</h3>
+<ul>
+<li>dUser <a href="https://nonni.org/.well-known/did">did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo</a></li>
+<li>dOrganization <a href="https://drpm.tools/.well-known/did.json">did:web:dpm.software</a></li>
+<li>dPackage <a href="http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2">http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0</a></li>
+</ul>
 <h2>Decentralized Module Import (DMI)</h2>
 <ul>
-<li>DMIs are used in the codebase to import code from DWNs</li>
-<li>At install time, DPM uses the node <code>--import</code> CLI flag to intercept the module loading and query for the code</li>
-<li>The interception is done by adding <code>--import /path/to/register-dpm-hooks.js</code> to the global <code>NODE_OPTIONS</code> env var</li>
-<li>DPM installs the code from the DWN to the local <code>node_modules</code> folder</li>
-<li>Devs reference this code normal esm imports referencing the did of the publisher in the path, e.g.</li>
+<li>DMIs are used to import code from locally installed DPKs</li>
+<li>DPM diverts <code>npm install</code> to grab the dpk from the DWN and install it to the local <code>node_modules</code> folder</li>
+<li>Devs reference dpks like normal esm imports</li>
 </ul>
-<pre><code class="language-ts">import * as Web5Api from &#39;did:dht:@web5/api/0.0.1&#39;;
-const web5Api = require(&#39;did:dht:@web5/api/0.0.1&#39;);
+<pre><code class="language-ts">import myDPK from &#39;@dpm/my-dpk&#39;;
+const myDPK = require(&#39;@dpm/my-dpk&#39;);
 </code></pre>
-<h2>DPM Loader</h2>
-<p>Check out <a href="/src/dpm.ts">dpm.ts</a> and <a href="/src/register.ts">register.ts</a>.</p>
-<h2>Lockfile</h2>
-<p>DPM uses the <code>package-lock.json</code> file contains the <code>DRL@hashed-dwn-record-content</code> to ensure the integrity of the software being installed. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.</p>
+<h2>DPM Hook &amp; Register</h2>
+<p>The DPM hook and register paradigm can be used to run one-off scripts without downloading the dpk into the node_modules folder. Check out <a href="/lib/hooks.ts">hooks.ts</a> and <a href="/lib/register.ts">register.ts</a>.</p>
+<pre><code class="language-shell">npm run build
+node --import ./dist/esm/src/register.js ./path/to/your/script.js
+</code></pre>
+<h2>DPM CLI</h2>
+<p>TODO</p>
+<h2>DPM Dependencies</h2>
+<p>DPM reuses the <code>package.json</code> and <code>package-lock.json</code> files for easy integration of dpm to a dev workflow. The same principals apply: the entries in each will ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution.</p>
 <ul>
-<li>After install, dpm will produce a file called <code>dpm.lock</code>.</li>
-<li>The lockfile functions like a packge-lock.json: it locks each particular package to the specified version.</li>
-<li>It contains all the converted DMIs in the form of DRLs with integrity hashes unique to each version.</li>
-<li>The integrity hashes are the hash of the actual dwn record content (i.e. the code itself) returned from the query.</li>
-<li>This is done to ensure the publisher cannot swap out code under a specific verion in the protocol path.</li>
-<li>E.g. <code>DMI</code> =&gt; <code>did:dht:web5/package/api/0.0.1</code> =&gt; <code>https://dwn.nonni.org/did:dht:web5/protocols/dpm/package/api/0.0.1</code></li>
+<li>Dependency entries for dpks in <code>package.json</code></li>
+</ul>
+<pre><code class="language-json">{
+    &quot;dependencies&quot;: {
+        &quot;@dpm/my-dpk&quot;: &quot;http://dpm/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^5.0.0&quot;
+    }
+}
+</code></pre>
+<ul>
+<li>With dpm installed and dpks listed in dependencies, <code>npm install</code> will divert the execution to a custom dpm registry running on <code>localhost:2092</code> to construct the DRL, query the DID doc, parse the DWN endpoints and request the dpk from the DWN</li>
+<li>To see the custom registry server, check out <a href="/src/registry/index.ts">/src/registry/index.ts</a></li>
+<li></li>
+<li>Integrity hashes are produces using the dpk.tgz content.</li>
+<li>Integrity hashes ensure the publisher cannot swap out code under a specific verion in the protocol path.</li>
+<li>Once a release is published, it cannot be changed.</li>
 </ul>
 <pre><code class="language-ts">{
-    &quot;did:dht:bnonni/package/dpm/0.0.1&quot;: {
-        &quot;version&quot;: &quot;0.0.1&quot;,
-        &quot;resolved&quot;: &quot;https://dwn.nonni.org/did:dht:bnonni/protocols/dpm/package/dpm/0.0.1&quot;,
+    &quot;@dpm/my-dpk&quot;: {
+        &quot;version&quot;: &quot;0.1.0&quot;,
+        &quot;resolved&quot;: &quot;http://@dpm/my-dpk/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo^0.1.0&quot;
         &quot;integrity&quot;: &quot;sha512-x/AIjFIKRllrhcb48dqUNAAZl0ig9+qMuN91RpZo3Cb2+zuibfh+KISl6+kVVyktDz230JKc208UkQwwMqyB+w==/VNCYsUA==&quot;,
         &quot;license&quot;: &quot;Apache-2.0&quot;
     }

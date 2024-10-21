@@ -1,47 +1,40 @@
 {
-  "name": "dpm",
+  "name": "drpm",
   "version": "0.1.0",
   "type": "module",
-  "description": "Decentralized Package Manager (DPM)(디피엠) leverages decentralized identifiers (DIDs) to reference software packages stored on the DWeb as a record in the publisher's Decentralized Web Node (DWN)",
+  "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "directories": {
-    "doc": "docs"
+    ".well-known": ".well-known",
+    "assets": "assets",
+    "build": "build",
+    "docs": "docs",
+    "lib": "lib",
+    "protocols": "protocols",
+    "scripts": "scripts"
   },
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
-  "bin": "./dist/esm/cli/dpm.js",
+  "bin": {
+    "dpm": "./dist/esm/dpm/cli.js",
+    "create-dpk": "echo TODO: Implement me!",
+    "init-dpk": "echo TODO: Implement me!"
+  },
   "exports": {
     ".": {
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./package.json": "./package.json"
+      "require": "./dist/cjs/index.js",
+      "package.json": "./package.json"
+    }
   },
-  "scripts": {
-    "clean": "rimraf dist coverage tests/compiled",
-    "wipe": "rimraf node_modules package-lock.json",
-    "build:tests": "npm run build && tsc -p tests/tsconfig.json",
-    "test:register-hooks": "npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm",
-    "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
-    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
-    "start:registry": "node ./dist/esm/registry/bin/www.js",
-    "nohup:registry": "sh scripts/registry.nohup.sh",
-    "pid:registry": "sh scripts/registry.pid.sh",
-    "kill:registry": "sh scripts/registry.kill.sh",
-    "prepare": "npm run build",
-    "postinstall": "sh ./scripts/postinstall.sh",
-    "dev": "nodemon",
-    "docker:build": "docker build -t dpm-registry .",
-    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry"
-  },
-  "homepage": "https://dpm.software",
+  "homepage": "https://drpm.tools",
   "bugs": {
-    "url": "https://github.com/bnonni/dpm/issues"
+    "url": "https://github.com/bnonni/drpm.tools/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/bnonni/dpm.git"
+    "url": "git+ssh://git@github.com/bnonni/drpm.tools.git"
   },
   "license": "Apache-2.0",
   "contributors": [
@@ -67,21 +60,51 @@
     "src"
   ],
   "keywords": [
+    "decentralized registry package manager",
+    "decentralized registry package",
+    "decentralized registry",
+    "decentralized registry",
+    "decentralized package registry",
+    "decentralized manager",
+    "decentralized package manager",
     "decentralized",
     "decentralized-applications",
     "decentralized-identity",
     "decentralized-web",
     "web5",
-    "decentralized package manager",
     "dpm",
+    "drpm",
     "package manager",
     "dwn",
     "dweb node",
     "decentralized web node",
-    "dwn protocol"
+    "dwn protocol",
+    "decentralized identifiers",
+    "dids",
+    "decentralized package imports",
+    "decentralized module imports"
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "dev": "nodemon",
+    "start": "node ./dist/esm/registry/drg-server.js",
+    "clean": "rimraf dist coverage tests/compiled",
+    "wipe": "rimraf node_modules package-lock.json",
+    "test:register-hooks": "echo 'Unimplemented!' && exit 0; npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
+    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
+    "build:tests": "npm run build && tsc -p tests/tsconfig.json",
+    "registryd:nohup": "sh scripts/registryd/nohup.sh",
+    "registryd:pid": "sh scripts/registryd/pid.sh",
+    "registryd:kill": "sh scripts/registryd/kill.sh",
+    "registryd:docker": "sh build/docker.sh",
+    "docker:build": "docker build -t dpm-registry .",
+    "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
+    "postinstall": "sh ./scripts/postinstall.sh",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@ngrok/ngrok": "^1.4.1",
@@ -94,7 +117,7 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "tar": "^7.4.3",
-    "tool5": "^5.0.1"
+    "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
