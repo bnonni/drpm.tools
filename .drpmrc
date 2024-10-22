@@ -18,20 +18,22 @@ export DRPM_DRG_DIR="$DRPM_HOME/@drg";
 [[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
 # Initialize global system variables
 export LOCAL_OS="$(uname)"
-export GLOBAL_NPMRC_FILE="$HOME/.npmrc"
 export LOCAL_NPMRC_FILE="$PWD/.npmrc"
-export GLOBAL_DRPMRC_FILE="$DRPM_HOME/.drpmrc"
+export GLOBAL_NPMRC_FILE="$HOME/.npmrc"
 export LOCAL_DRPMRC_FILE="$PWD/.drpmrc"
+export GLOBAL_DRPMRC_FILE="$DRPM_HOME/.drpmrc"
+export LOCAL_DRPM_PROFILE="$PWD/.drpm_profile"
+export GLOBAL_DRPM_PROFILE="$DRPM_HOME/.drpm_profile"
 # Initialize drpm variables
 export DRPM_NGINX_DIR="$PWD/build/nginx"
-export DRPM_DRG_HOSTNAME="local.drg.drpm.tools"
+export DRPM_DRG_HOSTNAME="local.drpm.tools"
 export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME"
 export DRPM_DRG_PORT_DEFAULT=2092
-export DRPM_DRG_PREFIX='drg:registry';
+export DRPM_PREFIX='drpm:registry';
 export DRPM_DPK_PREFIX='dpk:registry';
 export DRPM_NPMRC_PREFIXES=(
-    "@$DRPM_DRG_PREFIX=$DRPM_DRG_URL"
-    "$DRPM_DRG_PREFIX=$DRPM_DRG_URL"
+    "@$DRPM_PREFIX=$DRPM_DRG_URL"
+    "$DRPM_PREFIX=$DRPM_DRG_URL"
     "@$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
     "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
 )

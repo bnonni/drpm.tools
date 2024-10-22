@@ -1,5 +1,5 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
-import { DrlBuilder } from './drpm/drl-builder.js';
+import { DrlBuilder } from './drl-builder.js';
 
 // Fetching
 export type ResponseInfo = {
@@ -11,7 +11,8 @@ export type ResponseInfo = {
 }
 export type DwnResponseInfo = {
     code: number;
-    status: string;
+    status?: string;
+    detail: string;
 }
 export type DwnResponseEntry = DwnRecordDescriptor & {
     recordId: string;
@@ -83,11 +84,11 @@ export interface DrgResponse {
 }
 
 // Dpk
-export type DpkIntegrityFormat = 'stream' | 'file';
-export type DpkIntegrityData = ReadableStream<Uint8Array> | string;
-export type DpkIntegrityParams = {
-    format: DpkIntegrityFormat;
-    data: DpkIntegrityData
+export type DIntegrityFormat = 'stream' | 'file';
+export type DIntegrityData = ReadableStream<Uint8Array> | string;
+export type DIntegrityParams = {
+    format: DIntegrityFormat;
+    data: DIntegrityData
 };
 export type Dpk = {
     name: string;

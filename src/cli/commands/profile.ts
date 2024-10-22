@@ -1,14 +1,6 @@
-import { join } from 'path';
-import { DRPM_HOME } from '../config.js';
 import { readFile, writeFile } from 'fs/promises';
-import { userInfo } from 'os';
-import { ensureDir, ensureFile, exists } from 'fs-extra';
-import { Logger } from '../utils/logger.js';
-
-export const DRPM_USER = userInfo()?.username;
-export const DEFAULT_DATAPATH = join(DRPM_HOME, 'DATA');
-export const DRPM_PROFILE = join(DRPM_HOME, '.profile');
-export const DEFAULT_PROFILE = { did: '', dwnEndpoint: [], dataPath: '', password: 'insecure-static-password' };
+import { DRPM_PROFILE } from '../../config.js';
+import { Logger } from '../../utils/logger.js';
 
 type Profile = {
   did: string;
@@ -58,20 +50,12 @@ export class DpmProfile {
     return profile;
   }
 
+  static async set({ did, password, dwnEndpoint, dataPath }: ProfileCommandParams): Promise<void> {
+
+  }
+
   static async run({ action, did, password, dwnEndpoint, dataPath }: ProfileCommandParams): Promise<void> {
-    if(!await exists(DRPM_HOME)) {
-      await ensureDir(DRPM_HOME);
-    }
-
-    if(!await exists(DRPM_PROFILE)) {
-      await ensureFile(DRPM_PROFILE);
-      await writeFile(DRPM_PROFILE, JSON.stringify(DEFAULT_PROFILE, null, 2));
-    }
-
-    const profile = await this.loadProfile();
-    if(!profile.dataPath) {
-      profile.dataPath = DEFAULT_DATAPATH;
-    }
+   
 
     switch(action) {
       case 'set': {
@@ -86,6 +70,5 @@ export class DpmProfile {
       default:
         throw new Error(`Invalid action ${action}: must be either 'get' or 'set'`);
     }
-    Logger.log('Profile updated successfully.');
   }
 }

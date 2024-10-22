@@ -203,22 +203,37 @@ do_check_drpm_env_vars() {
     done
 }
 
-pre_main_setup() {
+# Check if dotfiles are installed
+check_and_install_drpm_dotfiles() {
     # Check if local .drpmrc exists, download if not
     local CWD_DRPMRC_FILE="$PWD/.drpmrc"
-    if [[ ! -f $CWD_DRPMRC_FILE ]]; then
+    if [[ ! -f $CWD_DRPMRC_FILE || ! -f $GLOBAL_DRPMRC_FILE ]]; then
         curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$CWD_DRPMRC_FILE"
         echo "Downloaded .drpmrc to $CWD_DRPMRC_FILE"
+        
+        # Source local .drpmrc and print message
+        source "$CWD_DRPMRC_FILE"
+        echo "Sourced local .drpmrc ($CWD_DRPMRC_FILE)"
+        
+        # Copy local .drpmrc to $DRPM_HOME and print message
+        cp "$CWD_DRPMRC_FILE" "$DRPM_HOME"
+        echo "Copied local .drpmrc to $DRPM_HOME"
+    else
+        echo ".drpmrc exists, continuing ..."
     fi
 
-    # Source local .drpmrc and print message
-    source "$CWD_DRPMRC_FILE"
-    echo "Sourced local .drpmrc ($CWD_DRPMRC_FILE)"
-    
-    # Copy local .drpmrc to $DRPM_HOME and print message
-    cp "$CWD_DRPMRC_FILE" "$DRPM_HOME"
-    echo "Copied local .drpmrc to $DRPM_HOME"
-    
+    local CWD_DRPM_PROFILE="$PWD/.drpm_profile"
+    if [[ ! -f $CWD_DRPM_PROFILE || ! -f $GLOBAL_DRPM_PROFILE ]]; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpm_profile -o "$CWD_DRPM_PROFILE"
+        echo "Downloaded .drpm_profile to $CWD_DRPM_PROFILE"
+        
+        # Copy local .drpmrc to $DRPM_HOME and print message
+        cp "$CWD_DRPM_PROFILE" "$DRPM_HOME"
+        echo "Copied local .drpm_profile to $DRPM_HOME"
+    else
+        echo ".drpm_profile exists, continuing ..."
+    fi
+
     # Check if rc file requires new line, add source statement to it and print message
     SOURCE_DRPMRC="source $GLOBAL_DRPMRC_FILE"
     if ! grep -qE "$SHELLRC_FILE" "$SOURCE_DRPMRC"; then
@@ -230,6 +245,15 @@ pre_main_setup() {
     else
         echo "$PREFIX exists in .npmrc, continuing ..."
     fi
+}
+
+pre_main_setup() {
+
+    # Check if .drpmrc and .drpm_profile are installed locally
+    check_and_install_drpm_dotfiles
+
+    # Check if .drpmrc env vars installed properly
+    do_check_drpm_env_vars
     
     # Check if the postinstall script has already run
     DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
@@ -240,6 +264,7 @@ pre_main_setup() {
             exit 0
         else
             echo "Force flag set, forcing postinstall ..."
+            rm -rf "$DRPM_POSTINSTALL_GLOABL" "$DRPM_POSTINSTALL_LOCAL"
         fi
     fi
 }
@@ -247,9 +272,6 @@ pre_main_setup() {
 main() {
     # Check if global .npmrc installed properly
     do_check_and_install_npmrc "$GLOBAL_NPMRC_FILE"
-
-    # Setup nginx
-    setup_nginx "$LOCAL_OS"
 
     # Start the DRG registry server
     start_drg_server

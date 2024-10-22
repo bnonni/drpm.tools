@@ -1,23 +1,52 @@
 #!/usr/bin/env node
 import { program } from 'commander';
-import { NPM_PACKAGE_JSON } from '../config.js';
-import { DpmProfile } from './profile.js';
-import { DpmProtocol } from './protocol.js';
+import {
+  DEFAULT_DATAPATH,
+  DEFAULT_PROFILE,
+  DRPM_HOME,
+  DRPM_PROFILE,
+  PACKAGE_VERSION
+} from '../config.js';
+import { DpmProfile } from './commands/profile.js';
+import { DpmProtocol } from './commands/protocol.js';
+import { ensureDir, ensureFile, exists, writeFile } from 'fs-extra';
 
-const {version} = NPM_PACKAGE_JSON;
-program.version(`dpm v${version}\nDecentralized Package Manager`, '-v, --version', 'Output the current version');
-
+program.version(
+  `dpm v${PACKAGE_VERSION}\nDecentralized Package Manager CLI`,
+  '-v, --version',
+  'Output the current version'
+);
 
 // Config command to set keys in .drpm_profile
-program
+const profileCommand = program
   .command('profile')
+  .description('Configure profile data for DRPM.');
+
+profileCommand
+  .command('set')
   .description('Configure profile data for DRPM.')
   .option('-a, --action <action>', 'The action to take on your profile; Options: set, get')
   .option('-d, --did <did>', 'Your Decentralized Identifier (DID)')
   .option('-p, --password <password>', 'Secure password to protect your local DRPM DWN data')
   .option('-e, --dwnEndpoint <dwnEndpoint>', 'Your Decentralized Web Node (DWN) endpoint; e.g. https://dwn.example.com or dwn.example.com')
   .option('-s, --storagePath <dataPath>', 'Path to your local DRPM DWN data; Must be an absolute path (default: $HOME/.drpm/USERNAME/DATA')
-  .action(async (args) => await DpmProfile.run(args));
+  .action(async (args) => {
+    if(!await exists(DRPM_HOME)) {
+      await ensureDir(DRPM_HOME);
+    }
+
+    if(!await exists(DRPM_PROFILE)) {
+      await ensureFile(DRPM_PROFILE);
+      await writeFile(DRPM_PROFILE, JSON.stringify(DEFAULT_PROFILE, null, 2));
+    }
+
+    const profile = await this.loadProfile();
+    if(!profile.dataPath) {
+      profile.dataPath = DEFAULT_DATAPATH;
+    }
+
+    await DpmProfile.set(args);
+  });
 
 // Configure DWN command
 program

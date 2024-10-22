@@ -1,5 +1,5 @@
 import { Record, Web5 } from '@web5/api';
-import drpm from '../utils/drpm/drpm-protocol.js';
+import drpm from '../../utils/drpm/protocol.js';
 
 import { DpmProfile } from './profile.js';
 

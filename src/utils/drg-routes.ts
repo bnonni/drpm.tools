@@ -1,8 +1,8 @@
 import { Request } from 'express';
-import { DPK_VERSION_PREFIXES, NPM_PACKAGE_JSON } from '../../config.js';
-import { DpkMetadata, DpkTarball, DrgResponse } from '../types.js';
+import { DPK_VERSION_PREFIXES, NPM_PACKAGE_JSON } from '../config.js';
+import { DrgResponse } from './types.js';
 
-export class DrgRouteUtils {
+export class DrgRoutes {
   static isPrefixed(semver: string): boolean {
     return DPK_VERSION_PREFIXES.some(prefix => semver.startsWith(prefix));
   }
@@ -22,14 +22,14 @@ export class DrgRouteUtils {
     return { ok: false, code: code ?? 404, status: status ?? 'Not Found', error };
   }
 
-  static routeSuccess({code, status, data}: {code?: number; status?: string; data: DpkTarball | DpkMetadata}): DrgResponse {
+  static routeSuccess({code, status, data}: {code?: number; status?: string; data: any}): DrgResponse {
     return { ok: false, code: code ?? 200, status: status ?? 'OK', data };
   }
 
   static dependencyLookup({dependency}: {dependency: string}): { prefix: string, version: string } {
     const semver = NPM_PACKAGE_JSON?.dependencies?.[dependency];
-    const { prefix, version } = DrgRouteUtils.isPrefixed(semver)
-      ? DrgRouteUtils.findPrefix(semver)
+    const { prefix, version } = DrgRoutes.isPrefixed(semver)
+      ? DrgRoutes.findPrefix(semver)
       : { prefix: '', version: semver };
     return {prefix, version};
   }

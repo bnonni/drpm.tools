@@ -89,11 +89,11 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node ./dist/esm/registry/drg-server.js",
+    "start": "node ./dist/esm/drg/server.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json",
-    "test:register-hooks": "echo 'Unimplemented!' && exit 0; npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm && chmod +x ./dist/esm/dpm/dpm.js",
+    "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
+    "build": "npm run build:cjs && npm run build:esm && chmod +x ./dist/esm/cli/dpm.js",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
@@ -104,7 +104,7 @@
     "docker:build": "docker build -t dpm-registry .",
     "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
     "postinstall": "sh ./scripts/postinstall.sh",
-    "prepack": "npm run build && chmod +x ./dist/esm/dpm/dpm.js"
+    "prepack": "npm run build && chmod +x ./dist/esm/cli/dpm.js"
   },
   "dependencies": {
     "@ngrok/ngrok": "^1.4.1",
@@ -117,9 +117,11 @@
     "body-parser": "^1.20.3",
     "commander": "^12.1.0",
     "cors": "^2.8.5",
+    "did-btc-sdk": "^1.0.0",
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
