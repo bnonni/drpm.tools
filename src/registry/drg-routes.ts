@@ -192,39 +192,50 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
 });
 
 // PUT route to handle metadata publishing
-drg.put('/:scope/:name', async (req: Request, res: Response): Promise<any> => {
+drg.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> => {
   try {
     const { scope, name } = req.params;
     const packageData = req.body;
 
+    const dpkPath = join(DRG_DIR, name);
+    const metadataPath = `${dpkPath}/metadata.json`;
+    const dpkMetadata = await DpkRegistry.loadDpkMetadata(metadataPath);
+
     Logger.log(`Publishing metadata for @${scope}/${name}...`);
 
     // Metadata structure
-    const metadata = {
-      name     : `@${scope}/${name}`,
+    const metadata = !dpkMetadata ? {
+      name,
+      'dist-tags' : {
+        latest : packageData.version
+      },
       versions : {
         [packageData.version] : {
-          name         : `@${scope}/${name}`,
-          version      : packageData.version,
-          dependencies : packageData.dependencies,
+          ...packageData,
           dist         : {
             tarball : `http://endpoint/${scope}/${name}/-/package.tgz`,
             shasum  : 'generated-shasum' // Placeholder for actual shasum generation
           }
         }
       },
-      'dist-tags' : {
-        latest : packageData.version
+    } : {
+      ...dpkMetadata,
+      versions : {
+        ...dpkMetadata.versions,
+        [packageData.version] : {
+          ...packageData,
+          dist         : {
+            tarball : `http://endpoint/${scope}/${name}/-/package.tgz`,
+            shasum  : 'generated-shasum' // Placeholder for actual shasum generation
+          }
+        }
       },
-      time : {
-        [packageData.version] : new Date().toISOString()
-      },
-      maintainers : packageData.maintainers,
-      readme      : packageData.readme || 'No README provided.'
     };
 
+    // TODO: add publishDpk logic to dpk-manager
+
     // Store metadata in a file
-    const metadataDir = join(__dirname, `packages/@${scope}`);
+    const metadataDir = join(DRG_DIR, name);
     const metadataFilePath = join(metadataDir, `${name}.json`);
 
     await ensureDir(metadataDir); // Ensure the directory exists
