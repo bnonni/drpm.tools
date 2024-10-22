@@ -40,7 +40,7 @@ export class DpkRegistry {
       return false;
     }
 
-    const dpkMetadataPath = this.getDpkMetadataPath({name, version});
+    const dpkMetadataPath = this.getDpkVersionMetadataPath({name, version});
     try {
       await writeFile(dpkMetadataPath, JSON.stringify(data, null, 2));
       Logger.info(`Saved metadata to ${dpkMetadataPath}`);
@@ -51,11 +51,37 @@ export class DpkRegistry {
     }
   }
 
+  // Saves the metadata file to path $HOME/.drpm/@drg/name/version/metadata.json
+  static async saveMetadataToPath(path: string, metadata: any): Promise<boolean> {
+    try {
+      await this.ensureDpkDir(path);
+      await writeFile(path, JSON.stringify(metadata, null, 2));
+      Logger.info(`DpkRegistry: Saved metadata to ${path}`);
+      return true;
+    } catch (error: any) {
+      Logger.error(`DpkRegistry: Failed to save metadata to ${path} `, error);
+      return false;
+    }
+  }
+
+  static async saveTarballToPath(path: string, tarball: any): Promise<boolean> {
+    try {
+      await this.ensureDpkDir(path);
+      await pipeline(tarball, createWriteStream(path));
+      Logger.log(`DpkRegistry: Saved tarball to ${path}`);
+      return true;
+    } catch (error) {
+      Logger.error(`DpkRegistry: Failed to save tarball to ${path} `, error);
+      return false;
+    }
+  }
+
+
   // Ensure the path to the $HOME/.drpm/@drg/{dpk, dpk/version} directory exists
   static async ensureDpkDir(path: string): Promise<any> {
     try {
       await ensureDir(path);
-      Logger.info(`Ensured dir at ${path}`);
+      Logger.info(`DpkRegistry: Ensured dir at ${path}`);
       return true;
     } catch (error: any) {
       Logger.error(`DpkRegistry: Failed to ensure dir at ${path}`, error);
@@ -65,33 +91,38 @@ export class DpkRegistry {
 
   // Get the path to the $HOME/.drpm/@drg/name directory
   static getDpkPath({name}: {name: string}): string {
-    Logger.info(`Getting dpk dir path for ${name}`);
+    Logger.info(`DpkRegistry: Getting dpk dir path for ${name}`);
     return join(DRG_DIR, name);
   };
 
   // Get the path to the $HOME/.drpm/@drg/name directory
   static getDpkLatestPath({name}: {name: string}): string {
-    Logger.info(`Getting dpk dir path for ${name}`);
+    Logger.info(`DpkRegistry: Getting dpk dir path for ${name}`);
     return join(DRG_DIR, name, 'latest');
   };
 
   // Get the path to the $HOME/.drpm/@drg/name/version directory
   static getDpkVersionPath({name, version}: DrgGetDpkPath): string {
-    Logger.info(`Getting dpkVersion dir path for ${name}@${version}`);
+    Logger.info(`DpkRegistry: Getting dpkVersion dir path for ${name}@${version}`);
     return join(DRG_DIR, name, version);
   };
 
   // Get the path to the $HOME/.drpm/@drg/name/version/metadata.json file
   // e.g. /Users/username/.drpm/@drg/tool5/6.1.0/metadata.json
-  static getDpkMetadataPath({name, version}: DrgGetDpkPath): string {
-    Logger.info(`Getting metadata path for ${name}@${version}`);
-    return join(DRG_DIR, name, version, 'metadata.json');
+  static getDpkVersionMetadataPath({name, version}: DrgGetDpkPath): string {
+    Logger.info(`DpkRegistry: Getting metadata path for ${name}@${version}`);
+    return join(this.getDpkVersionPath({name, version}), 'metadata.json');
+  };
+
+  static getDpkMetadataPath({name}: {name: string}): string {
+    Logger.info(`DpkRegistry: Getting metadata path for ${name}`);
+    return join(DRG_DIR, name, 'metadata.json');
   };
 
   // Get the path to the $HOME/.drpm/@drg/dpk/version/dpk-version.tgz file
   // e.g. /Users/username/.drpm/@drg/tool5/6.1.0/tool5-6.1.0.tgz
   static getDpkTarballPath({name, version}: DrgGetDpkPath): string {
-    Logger.info(`Getting tarball path for ${name}@${version}`);
+    Logger.info(`DpkRegistry: Getting tarball path for ${name}@${version}`);
     return join(DRG_DIR, name, version, `${name}-${version}.tgz`);
   };
 

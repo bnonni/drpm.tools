@@ -2,6 +2,9 @@ import { Request } from 'express';
 import { DPK_VERSION_PREFIXES, NPM_PACKAGE_JSON } from '../../config.js';
 import { DpkMetadata, DpkTarball, DrgResponse } from '../types.js';
 
+type DrgFailure = { code?: number; status?: string; error: any };
+type DrgSuccess = { code?: number; status?: string; data: DpkTarball | DpkMetadata };
+
 export class DrgRouteUtils {
   static isPrefixed(semver: string): boolean {
     return DPK_VERSION_PREFIXES.some(prefix => semver.startsWith(prefix));
@@ -18,11 +21,11 @@ export class DrgRouteUtils {
     return Object.entries(params).filter(([k, v]) => !v && k);
   }
 
-  static routeFailure({code, status, error}: {code?: number; status?: string; error: any}): DrgResponse {
+  static routeFailure({code, status, error}: DrgFailure): DrgResponse {
     return { ok: false, code: code ?? 404, status: status ?? 'Not Found', error };
   }
 
-  static routeSuccess({code, status, data}: {code?: number; status?: string; data: DpkTarball | DpkMetadata}): DrgResponse {
+  static routeSuccess({code, status, data}: DrgSuccess): DrgResponse {
     return { ok: false, code: code ?? 200, status: status ?? 'OK', data };
   }
 

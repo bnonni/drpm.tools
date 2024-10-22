@@ -2,27 +2,34 @@
 
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
-import { ensureDir } from 'fs-extra';
+import { ensureDir, exists } from 'fs-extra';
 import { DRG_DIR } from '../config.js';
 import { DpkManager } from '../utils/dpk/dpk-manager.js';
 import { DpkRegistry } from '../utils/dpk/dpk-registry.js';
 import { DrgRouteUtils } from '../utils/drpm/drg-route-utils.js';
 import { ResponseUtils } from '../utils/drpm/dwn-response.js';
 import { Logger } from '../utils/logger.js';
+import { join } from 'path';
 
 await ensureDir(DRG_DIR).catch(Logger.error);
 
 const defaultError = 'Failed to fetch and save dpk metadata and tarball';
 
 const drg = express();
+
 drg.use(cors());
 drg.use(express.json());
 drg.use(express.urlencoded({ extended: true }));
 drg.use(express.raw({ type: 'application/octet-stream', limit: '10gb' }));
+
 drg.use((req: Request, _: Response, next: NextFunction) => {
   req.url = decodeURIComponent(req.url);
   Logger.log(`${req.method} ${req.url}`);
   next();
+});
+
+drg.get(['/', '/health'], (_: Request, res: Response): any => {
+  res.status(200).json({ ok: true });
 });
 
 // "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
@@ -33,54 +40,66 @@ drg.get('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
     const missing = DrgRouteUtils.checkReqParams({ scope, name, id });
     if(missing.length > 0 || !(scope || name || id)) {
       const missingList = missing.join(', ');
-      Logger.error(`Missing required params: ${missingList}`);
+      Logger.error(`DrgRoutes: Missing required params: ${missingList}`);
       return res.status(404).json({ error: `Missing required params: ${missingList}` });;
     }
     const did = `did:dht:${id}`;
     Logger.debug(`Using DID ${did}`);
-    const latestDpkPath = DpkRegistry.getDpkLatestPath({name});
-    const latestDpkMetadata = await DpkRegistry.loadDpkMetadata(latestDpkPath);
 
-    if(!latestDpkMetadata) {
-      Logger.debug(`Metadata not found for ${name}@latest`, latestDpkPath);
-      await ensureDir(latestDpkPath);
-      Logger.debug(`Fetching metadata for ${name}@latest ...`);
+    const dpkPath = join(DRG_DIR, name);
+    const dpkMetadataPath = `${dpkPath}/metadata.json`;
+
+    if(!(await exists(dpkPath) || await exists(dpkMetadataPath))) {
+      Logger.debug(`Path not found at ${dpkPath}, creating ...`);
+      await ensureDir(dpkPath);
+
+      Logger.debug(`Metadata not found at ${dpkMetadataPath}, fetching ...`);
       const response = await DpkManager.fetchDpk({ did, dpk: { name, path: 'package' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching package`, response.data);
-        return res.status(404).json({ error: `${defaultError}: ${response.data}` });
+        Logger.error(`DrgRoutes: Error fetching package`, response);
+        return res.status(404).json({ error: response.error });
       }
-      Logger.debug(`DPK response.data=`, response.data);
-      const version = response.data.descriptor.tags.latest;
-      Logger.debug(`DPK version=`, version);
-      const saved = await DpkRegistry.saveDpkMetadata({ name, version, data: response.data });
-      if(!saved) {
-        Logger.error('DpkManager: Failed to save metadata');
-        return DrgRouteUtils.routeFailure({ error: 'Failed to save metadata' });
-      }
-    }
-    const version = latestDpkMetadata['dist-tags'].latest ?? DrgRouteUtils.dependencyLookup({dependency: `${scope}/${name}`}).version;
-    Logger.debug(`Looking for DPK ${name}@${version} tarball ...`);
-    if(!version) {
-      return DrgRouteUtils.routeFailure({ error: 'Failed to find version' });
-    }
-    const tarballPath = DpkRegistry.getDpkTarballPath({name, version});
-    const tarball = await DpkRegistry.loadDpkTarball(tarballPath);
 
-    if (!tarball) {
-      Logger.debug(`Fetching tarball for ${name}@latest ...`);
+      if(!await DpkRegistry.saveMetadataToPath(dpkMetadataPath, response.data)) {
+        Logger.error('DrgRoutes: Failed to save metadata');
+        return res.status(404).json({ error: 'Failed to save metadata' });
+      }
+    }
+
+    const metadata = await DpkRegistry.loadDpkMetadata(dpkMetadataPath);
+    if(!metadata) {
+      Logger.error(`DrgRoutes: Failed to load metadata`);
+      return res.status(404).json({ error: 'Failed to load metadata' });
+    }
+    Logger.debug(`DPK metadata=`, metadata);
+    Logger.debug(`DPK metadata['dist-tags'].latest=`, metadata['dist-tags'].latest);
+    const dependency = `${scope}/${name}~${id}`;
+    const version = metadata['dist-tags'].latest ?? DrgRouteUtils.dependencyLookup({dependency}).version;
+    Logger.debug(`DPK version=`, version);
+    if(!version) {
+      Logger.error(`DrgRoutes: Failed to find version for ${dependency}`);
+      return res.status(404).json({ error: 'Failed to find version' });
+    }
+
+    const dpkTarballPath = join(dpkPath, `${name}-${version}.tgz`);
+    if (!await DpkRegistry.loadDpkTarball(dpkTarballPath)) {
+      Logger.debug(`Tarball not found at ${dpkTarballPath}, fetching ...`);
 
       const response = await DpkManager.fetchDpk({ did, dpk: { name, version, path: 'package/release' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching tarball`, response.data);
-        return DrgRouteUtils.routeFailure({ error: response.error });
+        Logger.error(`DrgRoutes: Error fetching tarball`, response);
+        return res.status(404).json({ error: response.error });
+      }
+
+      if(!await DpkRegistry.saveTarballToPath(dpkTarballPath, response.data)) {
+        Logger.error('DrgRoutes: Failed to save tarball');
+        return res.status(404).json({ error: 'Failed to save tarball' });
       }
     }
 
-    return res.status(200).sendFile(tarballPath, { headers: { 'Content-Type': 'application/octet-stream' }});
-
+    return res.status(200).sendFile(dpkTarballPath, { headers: { 'Content-Type': 'application/octet-stream' }});
   } catch (error: any) {
-    Logger.error(`Error fetching or saving metadata or tarball`, error);
+    Logger.error(`DrgRoutes: Error fetching or saving metadata or tarball`, error);
     return DrgRouteUtils.routeFailure({ error: error.message });
   }
 });
@@ -95,21 +114,21 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
     const missing = DrgRouteUtils.checkReqParams({ scope, name, method, id });
     if(missing.length > 0 || !(scope || name || method || id)) {
       const missingList = missing.join(', ');
-      Logger.error(`Missing required params: ${missingList}`);
+      Logger.error(`DrgRoutes: Missing required params: ${missingList}`);
       return res.status(404).json({ error: `Missing required params: ${missingList}` });;
     }
     const did = `did:${method}:${id}`;
     Logger.debug(`Using DID ${did}`);
-    const latestDpkPath = DpkRegistry.getDpkLatestPath({name});
-    const latestDpkMetadata = await DpkRegistry.loadDpkMetadata(latestDpkPath);
+    const latestDpk = DpkRegistry.getDpkLatestPath({name});
+    const latestDpkMetadata = await DpkRegistry.loadDpkMetadata(latestDpk);
 
     if(!latestDpkMetadata) {
-      Logger.debug(`Metadata not found for ${name}@latest`, latestDpkPath);
-      await ensureDir(latestDpkPath);
+      Logger.debug(`Metadata not found for ${name}@latest`, latestDpk);
+      await ensureDir(latestDpk);
       Logger.debug(`Fetching metadata for ${name}@latest ...`);
       const response = await DpkManager.fetchDpk({ did, dpk: { name, path: 'package' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching package`, response.data);
+        Logger.error(`DrgRoutes: Error fetching package`, response.data);
         return res.status(404).json({ error: `${defaultError}: ${response.data}` });
       }
       Logger.debug(`DPK response.data=`, response.data);
@@ -117,33 +136,31 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
       Logger.debug(`DPK version=`, version);
       const saved = await DpkRegistry.saveDpkMetadata({ name, version, data: response.data });
       if(!saved) {
-        Logger.error('DpkManager: Failed to save metadata');
-        return DrgRouteUtils.routeFailure({ error: 'Failed to save metadata' });
+        Logger.error('DrgRoutes: Failed to save metadata');
+        return res.status(404).json({ error: 'Failed to save metadata' });
       }
     }
     const version = latestDpkMetadata['dist-tags'].latest ?? DrgRouteUtils.dependencyLookup({dependency: `${scope}/${name}`}).version;
     Logger.debug(`Looking for DPK ${name}@${version} tarball ...`);
     if(!version) {
-      return DrgRouteUtils.routeFailure({ error: 'Failed to find version' });
+      Logger.error('DrgRoutes: Failed to find version');
+      return res.status(404).json({ error: 'Failed to find version' });
     }
     const tarballPath = DpkRegistry.getDpkTarballPath({name, version});
     const tarball = await DpkRegistry.loadDpkTarball(tarballPath);
 
     if (!tarball) {
       Logger.debug(`Fetching tarball for ${name}@latest ...`);
-
       const response = await DpkManager.fetchDpk({ did, dpk: { name, version, path: 'package/release' } });
       if(ResponseUtils.fail(response)) {
         Logger.error(`Error fetching tarball`, response.data);
-        return DrgRouteUtils.routeFailure({ error: response.error });
+        return res.status(404).json({ error: response.error });
       }
     }
-
     return res.status(200).sendFile(tarballPath, { headers: { 'Content-Type': 'application/octet-stream' }});
   } catch (error: any) {
     Logger.error(`Error fetching or saving metadata or tarball`, error);
-    res.status(404).json({ error: `${defaultError}: ${error.message}` });
-    return;
+    return res.status(404).json({ error: `${defaultError}: ${error.message}` });
   }
 });
 
