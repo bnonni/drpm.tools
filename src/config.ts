@@ -3,6 +3,7 @@ import { join } from 'path';
 import dwn from './utils/drpm/drpm-protocol.js';
 import { DrlUtils } from './utils/drpm/drl-utils.js';
 import { Logger } from './utils/logger.js';
+import { homedir } from 'os';
 
 const parsePackageJson = async () => JSON.parse(await readFile(NPM_PACKAGE_JSON_PATH, 'utf8'));
 const ensureFileData = async () => {
@@ -11,7 +12,7 @@ const ensureFileData = async () => {
 };
 
 export const CWD = process.cwd();
-export const HOME = process.env.HOME;
+export const HOME = process.env.HOME || homedir();
 export const NPM_PACKAGE_JSON_PATH = process.env.npm_package_json || join(CWD, 'package.json');
 export const NPM_PACKAGE_JSON = await parsePackageJson().catch(Logger.error);
 export const DRPM_PORT = process.env.DRPM_DRG_PORT_DEFAULT || process.env.PORT || 2092;

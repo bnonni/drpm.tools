@@ -1,20 +1,28 @@
 import { Record, Web5 } from '@web5/api';
-import { readFile } from 'fs/promises';
-import { DpkIntegrity } from '../../src/utils/dpk/dpk-integrity.js';
-import dwnProtocol from '../../src/utils/drpm/drpm-protocol.js';
-import metadata from './data/tool5-npmjs-metadata.json';
-// package/release { name, version, dpk, integrity, parentId }
-// package { name }
+import drpm from '../utils/drpm/drpm-protocol.js';
 
-async function createRelease({ version, dpk, integrity, parentId }) {
-  const { record, status } = await web5.dwn.records.create({
+import { DpmProfile } from './profile.js';
+
+const {password, dwnEndpoint} = await DpmProfile.loadProfile();
+
+const { web5, did } = await Web5.connect({
+  password,
+  didCreateOptions : { dwnEndpoints: dwnEndpoint },
+  techPreview      : { dwnEndpoints: dwnEndpoint },
+  sync             : 'off'
+});
+
+const dwn = web5.dwn;
+
+export async function createRelease({ version, dpk, integrity, parentId }: any) {
+  const { record, status } = await dwn.records.create({
     message : {
       parentContextId : parentId,
       published       : true,
       dataFormat      : 'application/octet-stream',
-      schema          : dwnProtocol.types.release.schema,
+      schema          : drpm.types.release.schema,
       protocolPath    : 'package/release',
-      protocol        : dwnProtocol.protocol,
+      protocol        : drpm.protocol,
       tags            : { version, integrity }
     },
     store : true,
@@ -29,16 +37,16 @@ async function createRelease({ version, dpk, integrity, parentId }) {
   return {status: send, record};
 }
 
-async function createPackage({ name }: { name: string; }) {
-  const { record, status } = await web5.dwn.records.create({
+export async function createPackage({ name, version, metadata }: { name: string; version: string; metadata: any }) {
+  const { record, status } = await dwn.records.create({
     store   : true,
     data    : metadata[version],
     message : {
       published    : true,
       dataFormat   : 'application/json',
-      schema       : dwnProtocol.types.package.schema,
+      schema       : drpm.types.package.schema,
       protocolPath : 'package',
-      protocol     : dwnProtocol.protocol,
+      protocol     : drpm.protocol,
       tags         : { name }
     },
   });
@@ -97,29 +105,3 @@ async function createPackage({ name }: { name: string; }) {
 
 //   return { status, records, reads };
 // }
-
-const password = 'correct horse battery staple';
-const dwnEndpoints = ['http://localhost:3000'];
-const name = 'tool5';
-const version = '6.0.0';
-const tgzPath = `/Users/bryan/Projects/TBD/bnonni/drpm/drpm.tools/lib/dpm/data/npks/tool5/tool5-${version}.tgz`;
-const { web5, did } = await Web5.connect({
-  password,
-  sync             : '30s',
-  techPreview      : { dwnEndpoints },
-  didCreateOptions : { dwnEndpoints }
-});
-console.log('web5Connect => did', did);
-const parentPackageRecordId = 'bafyreiadl7fhh7vlea4vf4jvjkexnjpfzbbm6eiy3nin7vcrmlkgwwmzs4';
-const integrity = await DpkIntegrity.sha512IntegrityFile(tgzPath);
-const tarball = await readFile(tgzPath);
-
-if (process.argv.slice(2).includes('package')) {
-  const { status: packageStatus, record: packageRecord } = await createPackage({ name });
-  console.log('Created package => status', packageStatus);
-  console.log('Created package => record.id', packageRecord);
-} else {
-  const { status: releaseStatus, record: releaseRecord } = await createRelease({ version, dpk: tarball, integrity, parentId: parentPackageRecordId });
-  console.log('Created release => status', releaseStatus);
-  console.log('Created release => record.id', releaseRecord.id);
-}

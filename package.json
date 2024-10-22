@@ -16,7 +16,7 @@
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "bin": {
-    "dpm": "./dist/esm/dpm/cli.js",
+    "dpm": "./dist/esm/dpm/dpm.js",
     "create-dpk": "echo TODO: Implement me!",
     "init-dpk": "echo TODO: Implement me!"
   },
@@ -93,7 +93,7 @@
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json",
     "test:register-hooks": "echo 'Unimplemented!' && exit 0; npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "npm run build:cjs && npm run build:esm && chmod +x ./dist/esm/dpm/dpm.js",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
@@ -104,20 +104,22 @@
     "docker:build": "docker build -t dpm-registry .",
     "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
     "postinstall": "sh ./scripts/postinstall.sh",
-    "prepack": "npm run build"
+    "prepack": "npm run build && chmod +x ./dist/esm/dpm/dpm.js"
   },
   "dependencies": {
     "@ngrok/ngrok": "^1.4.1",
+    "@tbd54566975/dwn-sdk-js": "^0.5.1",
     "@web5/agent": "^0.7.4",
     "@web5/api": "^0.10.0",
+    "@web5/common": "^1.1.0",
     "@web5/dids": "^1.1.4",
+    "@web5/user-agent": "^0.7.0",
     "body-parser": "^1.20.3",
     "commander": "^12.1.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3",
-    "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

@@ -9,10 +9,54 @@ import { DpkRegistry } from '../utils/dpk/dpk-registry.js';
 import { DrgRouteUtils } from '../utils/drpm/drg-route-utils.js';
 import { ResponseUtils } from '../utils/drpm/dwn-response.js';
 import { Logger } from '../utils/logger.js';
+import { rename, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { createWriteStream } from 'fs';
+
+// Utility functions to avoid redundant code
+async function handleMetadataRequest(reqParams: any, fetchPath: string) {
+  const { scope, name, method, id } = reqParams;
+  const did = `did:${method}:${id}`;
+  Logger.debug(`Using DID ${did}`);
+
+  const latestDpkPath = DpkRegistry.getDpkLatestPath({ name });
+  let latestDpkMetadata = await DpkRegistry.loadDpkMetadata(latestDpkPath);
+
+  if (!latestDpkMetadata) {
+    Logger.debug(`Metadata not found for ${name}@latest`, latestDpkPath);
+    await ensureDir(latestDpkPath);
+    Logger.debug(`Fetching metadata for ${name}@latest ...`);
+    const response = await DpkManager.fetchDpk({ did, dpk: { name, path: fetchPath } });
+    if (ResponseUtils.fail(response)) {
+      Logger.error(`Error fetching package`, response.data);
+      return { error: `${response.error}: ${response.data}` };
+    }
+    Logger.debug(`DPK version=`, response.data.descriptor.tags.latest);
+    latestDpkMetadata = response.data;
+    await DpkRegistry.saveDpkMetadata({ name, version: response.data.descriptor.tags.latest, data: response.data });
+  }
+
+  return latestDpkMetadata;
+}
+
+async function handleTarballRequest(name: string, version: string) {
+  const tarballPath = DpkRegistry.getDpkTarballPath({ name, version });
+  let tarball = await DpkRegistry.loadDpkTarball(tarballPath);
+
+  if (!tarball) {
+    Logger.debug(`Fetching tarball for ${name}@${version} ...`);
+    const response = await DpkManager.fetchDpk({ did: `did:${name}:${version}`, dpk: { name, version, path: 'package/release' } });
+    if (ResponseUtils.fail(response)) {
+      Logger.error(`Error fetching tarball`, response.data);
+      return { error: response.error };
+    }
+    tarball = response.data;
+  }
+
+  return tarballPath;
+}
 
 await ensureDir(DRG_DIR).catch(Logger.error);
-
-const defaultError = 'Failed to fetch and save dpk metadata and tarball';
 
 const drg = express();
 drg.use(cors());
@@ -47,8 +91,8 @@ drg.get('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
       Logger.debug(`Fetching metadata for ${name}@latest ...`);
       const response = await DpkManager.fetchDpk({ did, dpk: { name, path: 'package' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching package`, response.data);
-        return res.status(404).json({ error: `${defaultError}: ${response.data}` });
+        Logger.error(`Error fetching package`, response);
+        return res.status(404).json({ error: response.error });
       }
       Logger.debug(`DPK response.data=`, response.data);
       const version = response.data.descriptor.tags.latest;
@@ -109,8 +153,8 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
       Logger.debug(`Fetching metadata for ${name}@latest ...`);
       const response = await DpkManager.fetchDpk({ did, dpk: { name, path: 'package' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching package`, response.data);
-        return res.status(404).json({ error: `${defaultError}: ${response.data}` });
+        Logger.error(`Error fetching package`, response);
+        return res.status(404).json({ error: response.error });
       }
       Logger.debug(`DPK response.data=`, response.data);
       const version = response.data.descriptor.tags.latest;
@@ -134,7 +178,7 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
 
       const response = await DpkManager.fetchDpk({ did, dpk: { name, version, path: 'package/release' } });
       if(ResponseUtils.fail(response)) {
-        Logger.error(`Error fetching tarball`, response.data);
+        Logger.error(`Error fetching tarball`, response);
         return DrgRouteUtils.routeFailure({ error: response.error });
       }
     }
@@ -142,8 +186,90 @@ drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promis
     return res.status(200).sendFile(tarballPath, { headers: { 'Content-Type': 'application/octet-stream' }});
   } catch (error: any) {
     Logger.error(`Error fetching or saving metadata or tarball`, error);
-    res.status(404).json({ error: `${defaultError}: ${error.message}` });
+    res.status(404).json({ error: error.message });
     return;
+  }
+});
+
+// PUT route to handle metadata publishing
+drg.put('/:scope/:name', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { scope, name } = req.params;
+    const packageData = req.body;
+
+    Logger.log(`Publishing metadata for @${scope}/${name}...`);
+
+    // Metadata structure
+    const metadata = {
+      name     : `@${scope}/${name}`,
+      versions : {
+        [packageData.version] : {
+          name         : `@${scope}/${name}`,
+          version      : packageData.version,
+          dependencies : packageData.dependencies,
+          dist         : {
+            tarball : `http://endpoint/${scope}/${name}/-/package.tgz`,
+            shasum  : 'generated-shasum' // Placeholder for actual shasum generation
+          }
+        }
+      },
+      'dist-tags' : {
+        latest : packageData.version
+      },
+      time : {
+        [packageData.version] : new Date().toISOString()
+      },
+      maintainers : packageData.maintainers,
+      readme      : packageData.readme || 'No README provided.'
+    };
+
+    // Store metadata in a file
+    const metadataDir = join(__dirname, `packages/@${scope}`);
+    const metadataFilePath = join(metadataDir, `${name}.json`);
+
+    await ensureDir(metadataDir); // Ensure the directory exists
+    await writeFile(metadataFilePath, JSON.stringify(metadata, null, 2));
+
+    Logger.log(`Metadata saved for @${scope}/${name}`);
+
+    // Respond with the URL for uploading the tarball
+    res.status(201).json({tarballUrl: `http://endpoint/${scope}/${name}/-/package.tgz`});
+  } catch (error: any) {
+    Logger.error('Error during publish:', error);
+    res.status(500).json({ error: 'Failed to publish package metadata.' });
+  }
+});
+
+// POST route to handle tarball upload without using multer
+drg.post('/:scope/:name/-/package.tgz', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { scope, name } = req.params;
+    const version = req.body.version || 'latest'; // Assuming version is passed in body or default to 'latest'
+
+    const tarballDir = join(DRG_DIR, name);
+    const tarballPath = join(tarballDir, `${name}-${version}.tgz`);
+
+    await ensureDir(tarballDir); // Ensure the directory exists
+
+    // Create a write stream for the tarball file
+    const fileStream = createWriteStream(tarballPath);
+
+    // Pipe the request body (which contains the tarball file) into the file stream
+    req.pipe(fileStream);
+
+    // Handle stream events
+    fileStream.on('finish', () => {
+      Logger.log(`Tarball uploaded successfully for @${scope}/${name}`);
+      res.status(201).json({ message: 'Tarball uploaded successfully' });
+    });
+
+    fileStream.on('error', (err) => {
+      Logger.error('Failed to store tarball:', err);
+      res.status(500).json({ error: 'Failed to store tarball.' });
+    });
+  } catch (error: any) {
+    Logger.error('Error during tarball upload:', error);
+    res.status(500).json({ error: 'Failed to upload tarball.' });
   }
 });
 
