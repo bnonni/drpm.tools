@@ -1,3 +1,4 @@
+import { Record } from '@web5/api';
 import { DPM } from '../../cli/dpm.js';
 import { DRPM_DWN_URL } from '../../config.js';
 import { DidResolver } from '../did/resolver.js';
@@ -12,7 +13,7 @@ import { DRegistry } from './registry.js';
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
 type CreatePackageParams = {metadata: any;};
-type CreatePackageDidWebParams = {metadata: any; did: string};
+// type CreatePackageDidWebParams = {metadata: any; did: string};
 type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any};
 
 export class DManager {
@@ -180,36 +181,53 @@ export class DManager {
     }
   }
 
-  static async createPackageDidWeb({ metadata, did }: CreatePackageDidWebParams): Promise<DrgResponse> {
-    try {
-      const {name, version} = metadata;
-      for (const endpoint of await DManager.getDwnEndpoints(did)) {
-        Logger.info(`DManager: Creating package record for ${name}@${version} at ${endpoint} ...`);
+  // static async createPackageDidWeb({ metadata, did }: CreatePackageDidWebParams): Promise<DrgResponse> {
+  //   try {
+  //     // const userAgent = await Web5UserAgent.create();
+  //     const _dwn = new DwnApi({
+  //       agent : await Web5UserAgent.create(),
+  //       did,
+  //     });
+  //     await RecordsWrite.create({
+  //       data         : metadata,
+  //       published    : true,
+  //       dataFormat   : 'application/json',
+  //       schema       : dwn.types.package.schema,
+  //       protocolPath : 'package',
+  //       protocol     : dwn.protocol,
+  //       tags         : {
+  //         name   : metadata.name,
+  //         latest : metadata.version
+  //       },
+  //     });
+  //     const {name, version} = metadata;
+  //     for (const endpoint of await DManager.getDwnEndpoints(did)) {
+  //       Logger.info(`DManager: Creating package record for ${name}@${version} at ${endpoint} ...`);
 
-        const builder = DrlBuilder.create({ did, endpoint });
-        const response: DrgResponse = path === 'package' || !version
-          ? await this.readPackage({ builder, name })
-          : await this.readRelease({ builder, name, version });
+  //       const builder = DrlBuilder.create({ did, endpoint });
+  //       const response: DrgResponse = path === 'package' || !version
+  //         ? await this.readPackage({ builder, name })
+  //         : await this.readRelease({ builder, name, version });
 
-        if (ResponseUtils.fail(response)) {
-          Logger.error('DManager: Error during DWeb Node request, continuing ...', response);
-          continue;
-        }
+  //       if (ResponseUtils.fail(response)) {
+  //         Logger.error('DManager: Error during DWeb Node request, continuing ...', response);
+  //         continue;
+  //       }
 
-        if(!response.data) {
-          Logger.error('DManager: No data returned from DWeb Node request, continuing ...', response);
-          continue;
-        }
+  //       if(!response.data) {
+  //         Logger.error('DManager: No data returned from DWeb Node request, continuing ...', response);
+  //         continue;
+  //       }
 
-        return DRegistryUtils.routeSuccess({ data: response });
-      }
+  //       return DRegistryUtils.routeSuccess({ data: response });
+  //     }
 
-      return DRegistryUtils.routeFailure({ error: 'All DWeb Node requests failed' });
-    } catch(error: any) {
-      Logger.error('DManager: Error catch during DWeb Node request', error);
-      return DRegistryUtils.routeFailure({ error: error.message });
-    }
-  }
+  //     return DRegistryUtils.routeFailure({ error: 'All DWeb Node requests failed' });
+  //   } catch(error: any) {
+  //     Logger.error('DManager: Error catch during DWeb Node request', error);
+  //     return DRegistryUtils.routeFailure({ error: error.message });
+  //   }
+  // }
 
   static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
     try {
@@ -243,7 +261,7 @@ export class DManager {
       }
 
       Logger.log('DManager: Package record created!', create);
-      const data = await record?.data.json();
+      const data: Record = await record?.data.json();
       Logger.debug('DManager: Package record data parsed!', data);
 
       const { status: send } = await record.send(did);
