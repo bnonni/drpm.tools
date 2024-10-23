@@ -1,6 +1,6 @@
 {
   "name": "drpm",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "directories": {
