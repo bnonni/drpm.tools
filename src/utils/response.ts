@@ -1,4 +1,5 @@
-import { DwnResponseInfo, ResponseInfo } from '../types.js';
+import { DwnResponseStatus } from '@web5/agent';
+import { ResponseInfo } from './types.js';
 export class ResponseUtils {
   static is2xx = (code: number) => code >= 200 && code <= 299;
   static is3xx = (code: number) => code >= 300 && code <= 399;
@@ -12,10 +13,10 @@ export class ResponseUtils {
   static statusOk = (status: string) => status === 'OK';
   static statusNotOk = (status: string) => !this.statusOk(status);
 
-  static dwnSuccess = ({code, status}: DwnResponseInfo) =>
+  static dwnSuccess = ({status: {code, detail}}: DwnResponseStatus) =>
     this.codeSuccess(code) ||
-    this.statusNotOk(status);
-  static dwnFail = (info: DwnResponseInfo) => !this.dwnSuccess(info);
+    this.statusNotOk(detail);
+  static dwnFail = (status: DwnResponseStatus) => !this.dwnSuccess(status);
 
   static success = ({ok, code, status}: ResponseInfo) =>
     this.OK(ok) ||

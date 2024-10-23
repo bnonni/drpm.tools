@@ -1,14 +1,21 @@
-// export * from './dpm/cli.js';
+export * from './cli/dpm.js';
 
-export * from './registry/drg-routes.js';
-export * from './registry/drg-server.js';
+export * from './drg/routes.js';
+export * from './drg/server.js';
 
-export * from './utils/dpk/dpk-registry.js';
-export * from './utils/dpk/dpk-integrity.js';
-export * from './utils/dpk/dpk-manager.js';
-export * from './utils/drpm/dwn-response.js';
+export * from './utils/dpk/integrity.js';
+export * from './utils/dpk/manager.js';
+export * from './utils/dpk/registry-utils.js';
+export * from './utils/dpk/registry.js';
+
+export * from './utils/dwn/drl-builder.js';
+export * from './utils/dwn/drl-utils.js';
+export * from './utils/dwn/protocol.js';
+
+export * from './utils/did/did-btc.js';
+export * from './utils/did/resolver.js';
 export * from './utils/logger.js';
-export * from './utils/drpm/drpm-protocol.js';
+export * from './utils/response.js';
 export * from './utils/types.js';
 
 export * from './config.js';

@@ -5,9 +5,9 @@ import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import { Logger } from '../logger.js';
 import { DrgGetDpkPath, DrgSaveDpkData } from '../types.js';
-import { DRG_DIR } from '../../config.js';
+import { DRPM_DRG_DIR } from '../../config.js';
 
-export class DpkRegistry {
+export class DRegistry {
   // Saves the tarball file to path $HOME/.drpm/@drg/name/version/name-version.tgz
   static async saveDpkTarball({ name, version, data }: DrgSaveDpkData): Promise<boolean> {
     const dpkAtVersionPath = this.getDpkVersionPath({name, version});
@@ -15,7 +15,7 @@ export class DpkRegistry {
       await this.ensureDpkDir(dpkAtVersionPath);
       Logger.info(`Ensured dir at ${dpkAtVersionPath}`);
     } catch (error: any) {
-      Logger.error(`Failed to ensure dir at ${dpkAtVersionPath}`, error);
+      Logger.error(`DRegistry: Failed to ensure dir at ${dpkAtVersionPath}`, error);
       return false;
     }
 
@@ -25,7 +25,7 @@ export class DpkRegistry {
       await pipeline(data, createWriteStream(dpkTarballPath));
       return true;
     } catch (error) {
-      Logger.error(`Failed to save dpk tarball to ${dpkTarballPath} `, error);
+      Logger.error(`DRegistry: Failed to save dpk tarball to ${dpkTarballPath} `, error);
       return false;
     }
   }
@@ -36,7 +36,7 @@ export class DpkRegistry {
     try {
       await this.ensureDpkDir(dpkAtVersionPath);
     } catch (error: any) {
-      Logger.error(`DpkRegistry: Failed to ensure dir at ${dpkAtVersionPath}`, error);
+      Logger.error(`DRegistry: Failed to ensure dir at ${dpkAtVersionPath}`, error);
       return false;
     }
 
@@ -46,7 +46,7 @@ export class DpkRegistry {
       Logger.info(`Saved metadata to ${dpkMetadataPath}`);
       return true;
     } catch (error: any) {
-      Logger.error(`DpkRegistry: Failed to save dpk metadata to ${dpkMetadataPath} `, error);
+      Logger.error(`DRegistry: Failed to save dpk metadata to ${dpkMetadataPath} `, error);
       return false;
     }
   }
@@ -58,7 +58,7 @@ export class DpkRegistry {
       Logger.info(`Ensured dir at ${path}`);
       return true;
     } catch (error: any) {
-      Logger.error(`DpkRegistry: Failed to ensure dir at ${path}`, error);
+      Logger.error(`DRegistry: Failed to ensure dir at ${path}`, error);
       throw error;
     }
   }
@@ -66,62 +66,84 @@ export class DpkRegistry {
   // Get the path to the $HOME/.drpm/@drg/name directory
   static getDpkPath({name}: {name: string}): string {
     Logger.info(`Getting dpk dir path for ${name}`);
-    return join(DRG_DIR, name);
+    return join(DRPM_DRG_DIR, name);
   };
 
   // Get the path to the $HOME/.drpm/@drg/name directory
   static getDpkLatestPath({name}: {name: string}): string {
     Logger.info(`Getting dpk dir path for ${name}`);
-    return join(DRG_DIR, name, 'latest');
+    return join(DRPM_DRG_DIR, name, 'latest');
   };
 
   // Get the path to the $HOME/.drpm/@drg/name/version directory
   static getDpkVersionPath({name, version}: DrgGetDpkPath): string {
     Logger.info(`Getting dpkVersion dir path for ${name}@${version}`);
-    return join(DRG_DIR, name, version);
+    return join(DRPM_DRG_DIR, name, version);
   };
 
   // Get the path to the $HOME/.drpm/@drg/name/version/metadata.json file
   // e.g. /Users/username/.drpm/@drg/tool5/6.1.0/metadata.json
   static getDpkMetadataPath({name, version}: DrgGetDpkPath): string {
     Logger.info(`Getting metadata path for ${name}@${version}`);
-    return join(DRG_DIR, name, version, 'metadata.json');
+    return join(DRPM_DRG_DIR, name, version, 'metadata.json');
   };
 
   // Get the path to the $HOME/.drpm/@drg/dpk/version/dpk-version.tgz file
   // e.g. /Users/username/.drpm/@drg/tool5/6.1.0/tool5-6.1.0.tgz
   static getDpkTarballPath({name, version}: DrgGetDpkPath): string {
     Logger.info(`Getting tarball path for ${name}@${version}`);
-    return join(DRG_DIR, name, version, `${name}-${version}.tgz`);
+    return join(DRPM_DRG_DIR, name, version, `${name}-${version}.tgz`);
   };
 
-  // Loads the metadata file from path $HOME/.drpm/@drg/dpk/version/metadata.json
+  static async saveMetadataToPath({path, metadata}: {path: string; metadata: any}): Promise<boolean> {
+    try {
+      await DRegistry.ensureDpkDir(path);
+      await writeFile(path, JSON.stringify(metadata, null, 2));
+      Logger.info(`Saved metadata to ${path}`);
+      return true;
+    } catch (error: any) {
+      Logger.error(`DRegistry: Failed to save metadata to ${path} `, error);
+      return false;
+    }
+  }
+
+  static async saveTarballToPath({path, tarball}: {path: string; tarball: any}): Promise<boolean> {
+    try {
+      await DRegistry.ensureDpkDir(path);
+      await pipeline(tarball, createWriteStream(path));
+      Logger.info(`Saved tarball to ${path}`);
+      return true;
+    } catch (error: any) {
+      Logger.error(`DRegistry: Failed to save tarball to ${path} `, error);
+      return false;
+    }
+  }
+
   static async loadDpkMetadata(path: string): Promise<any> {
     try {
       if(!await exists(path)) {
-        Logger.info(`DpkRegistry: metadata.json does not exist at path ${path}`);
+        Logger.info(`DRegistry: metadata.json does not exist at path ${path}`);
         return null;
       }
       await access(path);
       const metadata = JSON.parse(await readFile(path, 'utf8'));
       return metadata;
     } catch (error: any) {
-      Logger.error(`DpkRegistry: metadata.json does not exist at path ${path}`, error);
+      Logger.error(`DRegistry: metadata.json does not exist at path ${path}`, error);
       throw error;
     }
   };
 
-  // Loads the tarball file from path $HOME/.drpm/@drg/dpk/version/dpk-version.tgz file
   static async loadDpkTarball(path: string): Promise<any> {
     try {
       if(!await exists(path)) {
-        Logger.info(`DpkRegistry: tarball does not exist at path ${path}`);
+        Logger.info(`DRegistry: tarball does not exist at path ${path}`);
         return null;
       }
       await access(path);
       return path;
     } catch (error: any) {
-      Logger.error(`DpkRegistry: tarball does not exist at path ${path}`, error);
+      Logger.error(`DRegistry: tarball does not exist at path ${path}`, error);
       throw error;
     }
   };

@@ -1,12 +1,12 @@
 import { createHash } from 'crypto';
 import { readFile } from 'fs/promises';
-import { DpkIntegrityParams } from '../types.js';
+import { DIntegrityParams } from '../types.js';
 
-export class DpkIntegrity {
-  public static async sha512Integrity({ format, data }: DpkIntegrityParams): Promise<string> {
+export class DIntegrity {
+  public static async sha512Integrity({ format, data }: DIntegrityParams): Promise<string> {
     return format === 'stream' || data instanceof ReadableStream
-      ? await DpkIntegrity.sha512IntegrityStream(data as ReadableStream<Uint8Array>)
-      : await DpkIntegrity.sha512IntegrityFile(data as string);
+      ? await DIntegrity.sha512IntegrityStream(data as ReadableStream<Uint8Array>)
+      : await DIntegrity.sha512IntegrityFile(data as string);
   }
   public static async sha512IntegrityStream(stream: ReadableStream<Uint8Array>): Promise<string> {
     const hash = createHash('sha512');
