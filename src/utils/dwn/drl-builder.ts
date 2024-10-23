@@ -1,6 +1,6 @@
-import { DRPM_DWN_URL, DRPM_PROTOCOL, DRPM_PROTOCOL_B64URL } from '../config.js';
-import { Logger } from './logger.js';
-import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from './types.js';
+import { DRPM_DWN_URL, DRPM_PROTOCOL, DRPM_PROTOCOL_B64URL } from '../../config.js';
+import { Logger } from '../logger.js';
+import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from '../types.js';
 import { DrlUtils } from './drl-utils.js';
 
 

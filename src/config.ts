@@ -1,9 +1,9 @@
 import { appendFile, readFile } from 'fs/promises';
-import { join } from 'path';
-import dwn from './utils/drpm/protocol.js';
-import { DrlUtils } from './utils/drl-utils.js';
-import { Logger } from './utils/logger.js';
 import { homedir, userInfo } from 'os';
+import { join } from 'path';
+import { DrlUtils } from './utils/dwn/drl-utils.js';
+import dwn from './utils/dwn/protocol.js';
+import { Logger } from './utils/logger.js';
 
 const parsePackageJson = async () => JSON.parse(await readFile(NPM_PACKAGE_JSON_PATH, 'utf8'));
 const ensureFileData = async () => {
@@ -20,7 +20,6 @@ export const DRPM_PORT = process.env.DRPM_DRG_PORT_DEFAULT || process.env.PORT |
 export const DRPM_HOME = process.env.DRPM_HOME || `${HOME}/.drpm`;
 export const DRG_HOSTNAME = `localhost`;
 // process.env.DRPM_DRG_HOSTNAME || 'local.drpm.tools';
-export const DRPM_DWN_URL = 'https://dwn.drpm.tools/';
 export const DRPM_DRG_URL = `http://${DRG_HOSTNAME}:${DRPM_PORT}`;
 // process.env.DRPM_DRG_URL ||
 export const DRG_PREFIX = process.env.DRPM_DRG_PREFIX || 'drpm:registry';
@@ -41,15 +40,20 @@ export const DRPM_PROTOCOL = dwn.protocol ?? 'https://drpm.tools/protocols/drpm'
 export const DRPM_PROTOCOL_B64URL = DrlUtils.base64urlEncode(DRPM_PROTOCOL) ?? 'aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt';
 export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL}`;
 export const DPK_VERSION_PREFIXES = ['~', '^', '<', '>', '<=', '>=', '=', '-', '@'];
-
+export const DRPM_DWN_URL = 'https://dwn.drpm.tools';
+export const DWN_LOCAL_PORT = 3000;
+export const DWN_LOCAL_URL = `http://localhost:${DWN_LOCAL_PORT}`;
+export const DRPM_HOME_BAK_DIR = `${DRPM_HOME}/bak`;
 export const DRPM_USER = userInfo()?.username;
 export const DEFAULT_DATAPATH = join(DRPM_HOME, 'DATA');
-export const DRPM_PROFILE = join(DRPM_HOME, '.profile');
+export const DRPM_PROFILE_PATH = join(DRPM_HOME, '.drpm_profile');
+export const DEFAULT_PASSWORD = 'insecure-static-password';
 export const DEFAULT_PROFILE = {
-  did         : '',
-  dwnEndpoint : [],
-  dataPath    : '',
-  password    : 'insecure-static-password'
+  did            : '',
+  dwnEndpoints   : [],
+  recoveryPhrase : '',
+  password       : DEFAULT_PASSWORD,
+  web5DataPath   : DEFAULT_DATAPATH,
 };
 
 export default {
@@ -70,8 +74,11 @@ export default {
   DRPM_PROTOCOL_B64URL,
   DRL_PROTOCOL_PARAM,
   NPMRC_PREFIXES,
+  DWN_LOCAL_PORT,
+  DWN_LOCAL_URL,
   DRPM_USER,
   DEFAULT_DATAPATH,
-  DRPM_PROFILE,
+  DRPM_HOME_BAK_DIR,
+  DRPM_PROFILE_PATH,
   DEFAULT_PROFILE
 };

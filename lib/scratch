@@ -1,0 +1,51 @@
+drg.get('/:scope/:name~:method~:id', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { scope, name, method, id } = req.params ?? {};
+    const dependency = `${scope}/${name}~${method}~${id}`;
+    Logger.log(`${dependency} => ${scope}, ${name}, ${method}, ${id}`);
+
+    const missing = DRegistryUtils.checkReqParams({ scope, name, id });
+    if(missing.length > 0) {
+      const missingList = missing.join(', ');
+      Logger.error(`DrgRoutes: Missing required params - ${missingList}`);
+      return res.status(404).json({ error: `Missing required params: ${missingList}` });;
+    }
+
+    const metadataResponse = await handleMetadataRequest(req.params);
+    if(ResponseUtils.fail(metadataResponse)) {
+      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
+      return res.send(404).json({ error: metadataResponse.error });
+    }
+
+    const metadata = metadataResponse?.data;
+    Logger.debug(`Found or fetched DPK metadata=${stringify(metadata)}`);
+
+    const dpkDistTags = metadata?.['dist-tags'];
+    Logger.debug(`Found DPK metadata.dist-tags=${stringify(dpkDistTags)}`);
+
+    const version = dpkDistTags?.latest ?? DRegistryUtils.dependencyLookup({dependency})?.version;
+    if(!version) {
+      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
+      return res.send(404).json({ error: 'Failed to find or fetch version' });
+    }
+    Logger.debug(`Found DPK version=${version}`);
+
+    const did = `did:${method}:${id}`;
+    Logger.debug(`Using DID ${did}`);
+    const tarballResponse = await handleTarballRequest({did, name, version});
+    if(ResponseUtils.fail(tarballResponse)) {
+      Logger.error(`DrgRoutes: Failed to find or fetch tarball`, tarballResponse.error);
+      return res.send(404).json({ error: tarballResponse.error });
+    }
+
+    const tarballPath = metadataResponse?.data;
+    Logger.debug(`Sending tarball at path ${tarballPath}`);
+    return res.status(200).sendFile(tarballPath, {
+      headers : { 'Content-Type': 'application/octet-stream' }
+    });
+
+  } catch (error: any) {
+    Logger.error(`Error fetching or saving metadata or tarball`, error);
+    return res.status(404).json({ error: error.message });
+  }
+});

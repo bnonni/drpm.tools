@@ -1,5 +1,5 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
-import { DrlBuilder } from './drl-builder.js';
+import { DrlBuilder } from './dwn/drl-builder.js';
 
 // Fetching
 export type ResponseInfo = {
@@ -8,12 +8,12 @@ export type ResponseInfo = {
     status: string;
     data?: any;
     error?: string;
-}
+};
 export type DwnResponseInfo = {
     code: number;
     status?: string;
     detail: string;
-}
+};
 export type DwnResponseEntry = DwnRecordDescriptor & {
     recordId: string;
     contextId: string;
@@ -61,8 +61,11 @@ export type BaseDrl = {
 export type DrlQueryFilter = { subKey?: string; value: string };
 export type DrlAddQueryFilterParams = { key: string } & DrlQueryFilter;
 export type DrlFiltersParams = {
-    filters: Record<string, string | Array<DrlQueryFilter> | DrlQueryFilter>;
-  }
+    filters:
+        | Record<string, string
+        | Array<DrlQueryFilter>
+        | DrlQueryFilter>;
+};
 export type DrlReadParams = { [key: string]: any; } & DrlFiltersParams;
 
 // Drg
@@ -81,7 +84,7 @@ export interface DrgResponse {
     status: string;
     error?: string;
     data?: any;
-}
+};
 
 // Dpk
 export type DIntegrityFormat = 'stream' | 'file';
@@ -111,3 +114,18 @@ export type DpkData = {
     'package/release'?: DpkTarball;
     [key: string]: any;
 };
+export type ProfileData = {
+    did: string;
+    password: string;
+    dwnEndpoints: string[];
+    web5DataPath: string;
+    recoveryPhrase: string;
+};
+export type ProfileOptions = {
+      did?: string;
+      password?: string;
+      dwnEndpoints?: string;
+      web5DataPath?: string
+      recoveryPhrase?: string;
+};
+export type ProfileCreateParams = { dwnEndpoint: string; password?: string; };

@@ -1,21 +1,11 @@
-import { Record, Web5 } from '@web5/api';
-import drpm from '../../utils/drpm/protocol.js';
+import { Record } from '@web5/api';
+import drpm from '../../utils/dwn/protocol.js';
+import { DPM } from '../dpm.js';
 
-import { DpmProfile } from './profile.js';
-
-const {password, dwnEndpoint} = await DpmProfile.loadProfile();
-
-const { web5, did } = await Web5.connect({
-  password,
-  didCreateOptions : { dwnEndpoints: dwnEndpoint },
-  techPreview      : { dwnEndpoints: dwnEndpoint },
-  sync             : 'off'
-});
-
-const dwn = web5.dwn;
+const { web5, did } = await DPM.connect();
 
 export async function createRelease({ version, dpk, integrity, parentId }: any) {
-  const { record, status } = await dwn.records.create({
+  const { record, status } = await web5.dwn.records.create({
     message : {
       parentContextId : parentId,
       published       : true,
@@ -38,7 +28,7 @@ export async function createRelease({ version, dpk, integrity, parentId }: any) 
 }
 
 export async function createPackage({ name, version, metadata }: { name: string; version: string; metadata: any }) {
-  const { record, status } = await dwn.records.create({
+  const { record, status } = await web5.dwn.records.create({
     store   : true,
     data    : metadata[version],
     message : {
@@ -61,7 +51,7 @@ export async function createPackage({ name, version, metadata }: { name: string;
 }
 
 // async function queryPackages({name}) {
-//   const { status, records = [] } = await web5.dwn.records.query({
+//   const { status, records = [] } = await web5.web5.dwn.records.query({
 //     from    : did,
 //     message : {
 //       filter : {
@@ -82,7 +72,7 @@ export async function createPackage({ name, version, metadata }: { name: string;
 // }
 
 // async function queryReleases({ version, integrity, parentId }) {
-//   const { status, records = [] } = await web5.dwn.records.query({
+//   const { status, records = [] } = await web5.web5.dwn.records.query({
 //     from    : did,
 //     message : {
 //       filter : {

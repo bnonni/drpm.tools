@@ -1,6 +1,6 @@
 {
     "did": "",
-    "dwnEndpoint": [],
-    "dataPath": "",
+    "dwnEndpoints": [],
+    "web5DataPath": "",
     "password": "insecure-static-password"
 }

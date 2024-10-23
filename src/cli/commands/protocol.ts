@@ -1,71 +1,58 @@
-import { Web5 } from '@web5/api';
-import drpm from '../../utils/drpm/protocol.js';
-import { DpmProfile } from './profile.js';
+import drpm from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
+import { stringify } from '../../utils/misc.js';
 import { ResponseUtils } from '../../utils/response.js';
+import { DPM } from '../dpm.js';
 
-export async function web5Connect(){
-  const {password, dwnEndpoint} = await DpmProfile.loadProfile();
-  return await Web5.connect({
-    password,
-    didCreateOptions : { dwnEndpoints: dwnEndpoint },
-    techPreview      : { dwnEndpoints: dwnEndpoint },
-    sync             : 'off'
-  });
-}
-
-export class DpmProtocol {
+export class ProtocolCommand {
   static async configure() {
-    const { web5, did } = await web5Connect();
+    const { web5, did } = await DPM.connect();
     const { status: config, protocol = null } = await web5.dwn.protocols.configure({
       message : { definition: drpm }
     });
 
     if(ResponseUtils.dwnFail({ status: config })) {
-      const badStatus = 'DpmProtocol: Failed to configure DRPM protocol in local DWN - Bad Status';
-      Logger.error(badStatus, config);
-      throw new Error(badStatus + JSON.stringify(config, null, 2));
+      throw new Error(
+        `ProtocolConfigureError: Failed to configure local DWN - Configure Fail Status: ${stringify(config)}`
+      );
     }
 
     if (!protocol) {
-      const noProtocol = 'DpmProtocol: Failed to configure DRPM protocol in local DWN - No Protocol';
-      Logger.error(noProtocol, config);
-      throw new Error(noProtocol + JSON.stringify(config, null, 2));
+      throw new Error(
+        `ProtocolConfigureError: Failed to configure local DWN - No Protocol Returned: ${stringify(config)}`
+      );
     }
 
     const { status: send } = await protocol.send(did);
 
     if(ResponseUtils.dwnFail({ status: send })) {
-      const badSend = 'DpmProtocol: Failed to send DRPM protocol to remote DWN';
+      const badSend = '';
       Logger.error(badSend, send);
-      throw new Error(badSend + JSON.stringify(send, null, 2));
+      throw new Error(`ProtocolSendError: Failed to configure remote DWN - Send Fail Status: ${stringify(send)}`);
     }
 
-    Logger.log('DpmProtocol: Configured DRPM protocol', send);
+    Logger.log('Protocol Configured!', send);
   }
 
   static async query() {
-    const { web5 } = await web5Connect();
+    const { web5 } = await DPM.connect();
     const { status, protocols = [] } = await web5.dwn.protocols.query({
       message : { filter: { protocol: drpm.protocol } }
     });
 
     if(ResponseUtils.dwnFail({ status })) {
-      const badStatus = 'DpmProtocol: Failed to query protocols from local DWN - Bad Status';
-      Logger.error(badStatus, status);
-      throw new Error(badStatus + JSON.stringify(status, null, 2));
+      throw new Error(
+        `ProtocolQueryError: Failed to query local DWN - Query Fail Status: ${stringify(status)}`
+      );
     }
 
     if (!protocols.length) {
-      const noProtocols = 'DpmProtocol: Failed to query protocols from local DWN - Bad Status';
-      Logger.error(noProtocols, status);
-      throw new Error(noProtocols + JSON.stringify(status, null, 2));
+      throw new Error(
+        `ProtocolQueryError: Failed to query local DWN - No Protocols Returned: ${stringify(status)}`
+      );
     }
 
-    const protocolJsons = await Promise.all(protocols.map(async protocol => {
-      return protocol.toJSON();
-    }));
-
-    Logger.log('Queried protocols from local DWN', protocolJsons);
+    const jsonProtocols = await Promise.all(protocols.map(async protocol => protocol.toJSON()));
+    Logger.log(`Queried ${jsonProtocols.length} Protocol(s)!`, stringify(jsonProtocols));
   }
 }

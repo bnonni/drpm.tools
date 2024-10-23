@@ -1,7 +1,8 @@
 import { DidDht, DidWeb, UniversalResolver } from '@web5/dids';
-import { DidBtc } from '../did-btc.js';
+import { DidBtc } from './did-btc.js';
 
-const DID_METHOD_MAP: any = {};
+export const DidResolver = new UniversalResolver({ didResolvers: [DidDht, DidWeb, DidBtc] });
+export const DID_METHOD_MAP: any = {};
 
 export class DrpmResolver {
   public didResolvers: Array<any> = [DidDht, DidWeb, DidBtc];
