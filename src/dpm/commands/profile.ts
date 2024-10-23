@@ -1,7 +1,7 @@
 import { Web5 } from '@web5/api';
 import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { cp, readFile, writeFile } from 'fs/promises';
-import { DEFAULT_DATAPATH, DEFAULT_PASSWORD, DEFAULT_PROFILE, DRPM_HOME, DRPM_HOME_BAK_DIR, DRPM_PROFILE_PATH } from '../../config.js';
+import { DEFAULT_DATAPATH, DEFAULT_PASSWORD, DEFAULT_PROFILE, DRPM_HOME, DRPM_HOME_BAK_DIR, DRPM_PROFILE_GLOBAL } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
 import { ProfileCreateParams, ProfileData, ProfileOptions } from '../../utils/types.js';
@@ -20,9 +20,9 @@ export class ProfileCommand {
       await ensureDir(DRPM_HOME);
     }
 
-    if(!await exists(DRPM_PROFILE_PATH)) {
-      await ensureFile(DRPM_PROFILE_PATH);
-      await writeFile(DRPM_PROFILE_PATH, stringify(DEFAULT_PROFILE));
+    if(!await exists(DRPM_PROFILE_GLOBAL)) {
+      await ensureFile(DRPM_PROFILE_GLOBAL);
+      await writeFile(DRPM_PROFILE_GLOBAL, stringify(DEFAULT_PROFILE));
     }
   }
 
@@ -95,7 +95,7 @@ export class ProfileCommand {
 
     Logger.log(`Creating new profile ...`);
     await ensureDir(DRPM_HOME_BAK_DIR);
-    await cp(DRPM_PROFILE_PATH, `${DRPM_PROFILE_PATH}.bak`);
+    await cp(DRPM_PROFILE_GLOBAL, `${DRPM_PROFILE_GLOBAL}.bak`);
 
     const dwnEndpoints = [dwnEndpoint];
     const dataPath = profile.web5DataPath ?? DEFAULT_DATAPATH;
@@ -119,13 +119,13 @@ export class ProfileCommand {
 
   // Function to load existing profile or create a new one
   static async load(): Promise<ProfileData> {
-    const profile = await readFile(DRPM_PROFILE_PATH, 'utf8');
+    const profile = await readFile(DRPM_PROFILE_GLOBAL, 'utf8');
     return JSON.parse(profile);
   }
 
   // Function to save profile data to the file
   static async save(profile: ProfileData): Promise<void> {
-    await writeFile(DRPM_PROFILE_PATH, stringify(profile));
+    await writeFile(DRPM_PROFILE_GLOBAL, stringify(profile));
   }
 
   static async get(options: ProfileOptions): Promise<void> {

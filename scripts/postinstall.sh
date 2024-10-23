@@ -171,27 +171,28 @@ start_drg_server() {
     fi
 }
 
-
 # Check list of required env vars
 do_check_drpm_env_vars() {
     REQUIRED_ENV_VARS=(
         SHELLRC_FILE
         DRPM_HOME
-        LOCAL_OS
-        GLOBAL_DRPMRC_FILE
-        LOCAL_DRPMRC_FILE
-        GLOBAL_NPMRC_FILE
-        LOCAL_NPMRC_FILE
+        DRPM_DRG_DIR
+        OS_TYPE
+        NPMRC_LOCAL
+        NPMRC_GLOBAL
+        DRPMRC_LOCAL
+        DRPMRC_GLOBAL
+        DRPM_PROFILE_LOCAL
+        DRPM_PROFILE_GLOBAL
         DRPM_NGINX_DIR
         DRPM_DRG_HOSTNAME
         DRPM_DRG_URL
         DRPM_DRG_PORT_DEFAULT
-        DRPM_DRG_PORT_FALLBACK
-        DRPM_DRG_PREFIX
+        DRPM_PREFIX
         DRPM_DPK_PREFIX
         DRPM_NPMRC_PREFIXES
+        DRPM_REGISTRYD_PID_FILE
         DRPM_REGISTRYD_PID
-        DRPM_REGISTRYD_PID_FILE_NAME
         DRPM_POSTINSTALL_GLOABL
         DRPM_POSTINSTALL_LOCAL
     )
@@ -206,44 +207,28 @@ do_check_drpm_env_vars() {
 # Check if dotfiles are installed
 check_and_install_drpm_dotfiles() {
     # Check if local .drpmrc exists, download if not
-    local CWD_DRPMRC_FILE="$PWD/.drpmrc"
-    if [[ ! -f $CWD_DRPMRC_FILE || ! -f $GLOBAL_DRPMRC_FILE ]]; then
-        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$CWD_DRPMRC_FILE"
-        echo "Downloaded .drpmrc to $CWD_DRPMRC_FILE"
-        
-        # Source local .drpmrc and print message
-        source "$CWD_DRPMRC_FILE"
-        echo "Sourced local .drpmrc ($CWD_DRPMRC_FILE)"
-        
-        # Copy local .drpmrc to $DRPM_HOME and print message
-        cp "$CWD_DRPMRC_FILE" "$DRPM_HOME"
-        echo "Copied local .drpmrc to $DRPM_HOME"
+    if [[ ! -f "$DRPMRC_GLOBAL" ]]; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$DRPMRC_GLOBAL"
+        echo "Downloaded .drpmrc to $DRPMRC_GLOBAL"
+        source "$DRPMRC_GLOBAL"
+        echo "Sourced .drpmrc at $DRPMRC_GLOBAL"
     else
         echo ".drpmrc exists, continuing ..."
     fi
 
-    local CWD_DRPM_PROFILE="$PWD/.drpm_profile"
-    if [[ ! -f $CWD_DRPM_PROFILE || ! -f $GLOBAL_DRPM_PROFILE ]]; then
-        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpm_profile -o "$CWD_DRPM_PROFILE"
-        echo "Downloaded .drpm_profile to $CWD_DRPM_PROFILE"
-        
-        # Copy local .drpmrc to $DRPM_HOME and print message
-        cp "$CWD_DRPM_PROFILE" "$DRPM_HOME"
-        echo "Copied local .drpm_profile to $DRPM_HOME"
+    if [[ ! -f "$DRPM_PROFILE_GLOBAL" ]]; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpm_profile -o "$DRPM_PROFILE_GLOBAL"
+        echo "Downloaded .drpm_profile to $DRPM_PROFILE_GLOBAL"
     else
         echo ".drpm_profile exists, continuing ..."
     fi
 
     # Check if rc file requires new line, add source statement to it and print message
-    SOURCE_DRPMRC="source $GLOBAL_DRPMRC_FILE"
-    if ! grep -qE "$SHELLRC_FILE" "$SOURCE_DRPMRC"; then
+    if grep -q "source $HOME/.drpm/.drpmrc" "$SHELLRC_FILE"; then
         [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
-        backup_file "$SHELLRC_FILE" "$DRPM_HOME/$SHELLRC_FILE.bak"
-        echo "$SOURCE_DRPMRC" >> "$SHELLRC_FILE"
-        echo "Updated $SHELLRC_FILE."
-        echo "To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
-    else
-        echo "$PREFIX exists in .npmrc, continuing ..."
+        backup_file "$SHELLRC_FILE" "$DRPM_HOME/bak/$SHELLRC_FILE.bak"
+        echo "source $HOME/.drpm/.drpmrc" >> "$SHELLRC_FILE"
+        echo "Updated $SHELLRC_FILE. To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
     fi
 }
 
@@ -256,22 +241,22 @@ pre_main_setup() {
     do_check_drpm_env_vars
     
     # Check if the postinstall script has already run
-    DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
+    DRPM_POSTINSTALL_GLOBAL="$DRPM_HOME/.postinstall"
     DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
-    if [[ -f "$DRPM_POSTINSTALL_GLOABL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
+    if [[ -f "$DRPM_POSTINSTALL_GLOBAL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
         if ! $FORCE; then
             echo "Global or Local postinstall has already run, exiting..."
             exit 0
         else
             echo "Force flag set, forcing postinstall ..."
-            rm -rf "$DRPM_POSTINSTALL_GLOABL" "$DRPM_POSTINSTALL_LOCAL"
+            rm -rf "$DRPM_POSTINSTALL_GLOBAL" "$DRPM_POSTINSTALL_LOCAL"
         fi
     fi
 }
 
 main() {
     # Check if global .npmrc installed properly
-    do_check_and_install_npmrc "$GLOBAL_NPMRC_FILE"
+    do_check_and_install_npmrc "$NPMRC_LOCAL"
 
     # Start the DRG registry server
     start_drg_server
