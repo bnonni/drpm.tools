@@ -1,5 +1,5 @@
 import { Record } from '@web5/api';
-import { DPM } from '../../dpm/dpm5.js';
+import { DPM5 } from '../../dpm/dpm5.js';
 import { DRPM_DWN_URL } from '../../config.js';
 import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';
@@ -231,7 +231,7 @@ export class DManager {
 
   static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM.connect();
+      const { web5, did } = await DPM5.connect();
       const { record, status: create } = await web5.dwn.records.create({
         store   : true,
         data    : metadata,
@@ -280,7 +280,7 @@ export class DManager {
 
   static async createPackageRelease({ parentId, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM.connect();
+      const { web5, did } = await DPM5.connect();
       const { record = null, status } = await web5.dwn.records.create({
         data    : release,
         store   : true,
