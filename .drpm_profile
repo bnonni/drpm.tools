@@ -1,6 +1,23 @@
 {
-    "did": "",
-    "dwnEndpoints": [],
-    "web5DataPath": "",
-    "password": "insecure-static-password"
+    "dht": {
+        "did": "",
+        "dwnEndpoints": [],
+        "web5DataPath": "",
+        "password": "",
+        "recoveryPhrase": ""
+    },
+    "web": {
+        "did": "",
+        "dwnEndpoints": [],
+        "web5DataPath": "",
+        "password": "",
+        "recoveryPhrase": ""
+    },
+    "btc": {
+        "did": "",
+        "dwnEndpoints": [],
+        "web5DataPath": "",
+        "password": "",
+        "recoveryPhrase": ""
+    }
 }
