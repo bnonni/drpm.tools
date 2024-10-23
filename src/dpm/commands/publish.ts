@@ -1,6 +1,6 @@
 import { Record } from '@web5/api';
 import drpm from '../../utils/dwn/protocol.js';
-import { DPM } from '../dpm.js';
+import { DPM } from '../dpm5.js';
 import { Logger } from '../../utils/logger.js';
 
 const { web5, did } = await DPM.connect();

@@ -1,4 +1,4 @@
-export * from './cli/dpm.js';
+export * from './dpm/dpm5.js';
 
 export * from './drg/routes.js';
 export * from './drg/server.js';

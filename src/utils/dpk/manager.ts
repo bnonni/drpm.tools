@@ -1,5 +1,5 @@
 import { Record } from '@web5/api';
-import { DPM } from '../../cli/dpm.js';
+import { DPM } from '../../dpm/dpm5.js';
 import { DRPM_DWN_URL } from '../../config.js';
 import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';

@@ -2,7 +2,7 @@ import drpm from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
 import { stringify } from '../../utils/misc.js';
 import { ResponseUtils } from '../../utils/response.js';
-import { DPM } from '../dpm.js';
+import { DPM } from '../dpm5.js';
 
 export class ProtocolCommand {
   static async configure() {
