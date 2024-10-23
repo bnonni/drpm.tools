@@ -15,11 +15,7 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
-  "bin": {
-    "drpm": "./dist/esm/dpm/dpm.js",
-    "create-dpk": "echo TODO: Implement me!",
-    "init-dpk": "echo TODO: Implement me!"
-  },
+  "bin": "./dist/esm/dpm/dpm.js",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
