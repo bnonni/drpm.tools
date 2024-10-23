@@ -1,9 +1,9 @@
 import { Record } from '@web5/api';
 import drpm from '../../utils/dwn/protocol.js';
-import { DPM } from '../dpm5.js';
+import { DPM5 } from '../dpm5.js';
 import { Logger } from '../../utils/logger.js';
 
-const { web5, did } = await DPM.connect();
+const { web5, did } = await DPM5.connect();
 export class PublishCommand {
   static async package({ name, version, metadata }: { name: string; version: string; metadata: any }) {
     const { record = null, status } = await web5.dwn.records.create({

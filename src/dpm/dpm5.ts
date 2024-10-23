@@ -4,7 +4,7 @@ import { Logger } from '../utils/logger.js';
 import { cleanProfile } from '../utils/misc.js';
 import { ProfileCommand } from './commands/profile.js';
 
-export class Dpm5 {
+export class DPM5 {
   static async connect() {
     if(!await ProfileCommand.exists()) {
       throw new Error('DPM: No profile found. Please create one or update the existing one.');
