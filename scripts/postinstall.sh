@@ -278,15 +278,6 @@ drpmrc_setup() {
 }
 
 pre_main_setup() {
-    # Setup drpmrc env vars
-    drpmrc_setup
-
-    # Check if .drpmrc and .drpm_profile are installed locally
-    check_and_install_drpm_dotfiles
-
-    # Check if .drpmrc env vars installed properly
-    do_check_drpm_env_vars
-    
     # Check if the postinstall script has already run
     DRPM_POSTINSTALL_GLOBAL="$DRPM_HOME/.postinstall"
     DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
@@ -299,6 +290,15 @@ pre_main_setup() {
             rm -rf "$DRPM_POSTINSTALL_GLOBAL" "$DRPM_POSTINSTALL_LOCAL"
         fi
     fi
+    
+    # Setup drpmrc env vars
+    drpmrc_setup
+
+    # Check if .drpmrc and .drpm_profile are installed locally
+    check_and_install_drpm_dotfiles
+
+    # Check if .drpmrc env vars installed properly
+    do_check_drpm_env_vars
 }
 
 main() {
