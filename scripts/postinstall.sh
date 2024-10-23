@@ -248,8 +248,8 @@ drpmrc_setup() {
     if [[ -n "$XDG_CONFIG_HOME" ]]; then
         export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
     fi
-    [[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME"
-    export DRPM_DRG_DIR="$DRPM_HOME/@drg";
+    [[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME" "$DRPM_HOME/bak"
+    export DRPM_DRG_DIR="$DRPM_HOME/registry";
     [[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
     # Initialize global system variables
     export OS_TYPE="$(uname)"
@@ -261,16 +261,16 @@ drpmrc_setup() {
     export DRPM_PROFILE_GLOBAL="$DRPM_HOME/.drpm_profile"
     # Initialize drpm variables
     export DRPM_NGINX_DIR="$PWD/build/nginx"
-    export DRPM_DRG_HOSTNAME="local.drpm.tools"
-    export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME"
+    export DRPM_DRG_HOSTNAME="localhost"
     export DRPM_DRG_PORT_DEFAULT=2092
+    export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME:$DRPM_DRG_PORT_DEFAULT/";
     export DRPM_PREFIX='@drpm:registry';
     export DRPM_DPK_PREFIX='dpk:registry';
     export DRPM_NPMRC_PREFIXES=(
         "$DRPM_PREFIX=$DRPM_DRG_URL"
         "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
     )
-    export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registryd.pid"
+    export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registry/registryd.pid"
     [[ ! -f "$DRPM_REGISTRYD_PID_FILE" ]] && touch "$DRPM_REGISTRYD_PID_FILE"
     export DRPM_REGISTRYD_PID=$(cat $DRPM_REGISTRYD_PID_FILE 2>/dev/null || echo 0)
     export DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
@@ -292,7 +292,7 @@ pre_main_setup() {
     DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
     if [[ -f "$DRPM_POSTINSTALL_GLOBAL" || -f "$DRPM_POSTINSTALL_LOCAL" ]]; then
         if ! $FORCE; then
-            echo "Global or Local postinstall has already run, exiting..."
+            echo "Postinstall has already run, exiting..."
             exit 0
         else
             echo "Force flag set, forcing postinstall ..."
