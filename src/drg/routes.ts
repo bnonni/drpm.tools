@@ -84,8 +84,8 @@ drg.use((req: Request, _: Response, next: NextFunction) => {
   next();
 });
 
-drg.use('/health', (_: Request, res: Response) => {
-  res.status(200).json({ ok: true, message: 'DRG is up and running!' });
+drg.get(['/', '/health'], (_: Request, res: Response) => {
+  res.status(200).json({ ok: true, message: 'Registry is up and running!' });
 });
 
 // "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"
