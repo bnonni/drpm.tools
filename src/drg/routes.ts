@@ -4,14 +4,14 @@ import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { ensureDir } from 'fs-extra';
 import { join } from 'path';
-import { DRPM_DRG_DIR, DRPM_DRG_URL } from '../config.js';
-import { DIntegrity } from '../utils/dpk/integrity.js';
+import { DRPM_DRG_DIR } from '../config.js';
 import { DManager } from '../utils/dpk/manager.js';
 import { DRegistryUtils } from '../utils/dpk/registry-utils.js';
 import { DRegistry } from '../utils/dpk/registry.js';
 import { Logger } from '../utils/logger.js';
 import { stringify } from '../utils/misc.js';
 import { ResponseUtils } from '../utils/response.js';
+import { DPM5 } from '../dpm/dpm5.js';
 
 type RequestParams = Request['params'];
 
@@ -149,12 +149,11 @@ drg.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
   try {
     const { scope, name, method, id } = req.params ?? {};
     if(method) {
-      return res.status(404).json({ error: 'Method not yet supported' });
+      return res.status(404).json({ error: `Method ${method} not supported` });
     }
-    const packageMetadata = req.body;
-    Logger.log(`new packageMetadata=${stringify(packageMetadata)}`);
-
-    const dependency = !method ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;;
+    const metadata = req.body;
+    const version = metadata['dist-tags'].latest;
+    const dependency =`${scope}/${name}~${id}`;
     Logger.log(`${dependency} => ${stringify(req.params)}`);
 
     const missing = DRegistryUtils.checkReqParams(req.params) ?? [];
@@ -165,37 +164,46 @@ drg.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
     }
 
     const dpkPath = join(DRPM_DRG_DIR, name);
-    if(!dpkPath) {
-      await ensureDir(dpkPath);
-    }
+    await ensureDir(dpkPath);
 
     const metadataPath = `${dpkPath}/metadata.json`;
-    const dpkMetadata = await DRegistry.loadDpkMetadata(metadataPath);
-    Logger.log(`existing dpkMetadata=${stringify(dpkMetadata)}`);
-
-    const metadata = !dpkMetadata
-      ? DRegistryUtils.createMetadata(packageMetadata)
-      : DRegistryUtils.updateMetadata(dpkMetadata, packageMetadata);
-
-    Logger.log(`final metadata=${stringify(metadata)}`);
+    // const dpkMetadata = await DRegistry.loadDpkMetadata(metadataPath);
+    // Logger.log(`existing dpkMetadata=${stringify(dpkMetadata)}`);
 
     await DRegistry.saveMetadataToPath({ path: metadataPath, metadata });
     Logger.log(`Metadata saved to ${metadataPath}`);
+    const dpm5 = await DPM5.connect();
 
-    const response = await DManager.createPackage({ metadata });
+    const packageResponse = await DManager.createPackage({ metadata, dpm5 });
 
     // !method ? {} : await DManager.createPackageDidWeb({ metadata, did: `did:${method}:${id}`});
 
-    if(ResponseUtils.fail(response)) {
-      Logger.error(`DrgRoute: Failed to publish package metadata`, response.error);
-      return res.send(response.code).json({ error: response.error });
+    if(ResponseUtils.fail(packageResponse)) {
+      Logger.error(`DrgRoute: Failed to publish package metadata`, packageResponse.error);
+      return res.status(packageResponse.code).json({ error: packageResponse.error });
     }
 
-    const tarballUrl = !method
-      ? `${DRPM_DRG_URL}/${scope}/${name}~${id}/-/package.tgz?parentId=${response.data.id}`
-      : `${DRPM_DRG_URL}/${scope}/${name}~${method}~${id}/-/package.tgz?parentId=${response.data.id}`;
+    // const tarballUrl = !method
+    //   ? `${DRPM_DRG_URL}/${scope}/${name}~${id}/-/package.tgz?parentId=${response.data.id}`
+    //   : `${DRPM_DRG_URL}/${scope}/${name}~${method}~${id}/-/package.tgz?parentId=${response.data.id}`;
+    const release = metadata._attachments[`${dependency}-${version}.tgz`]?.data;
+    const tarballPath = join(dpkPath, `${name}-${version}.tgz`);
+    const tarball = await DRegistry.saveTarballToPath({ path: tarballPath, tarball: release });
+    if(!tarball) {
+      Logger.error(`DrgRoutes: Failed to save tarball to ${tarballPath}`);
+      return res.status(404).json({ error: 'Failed to save tarball.' });
+    }
+    const integrity = metadata.versions[version].dist.integrity;
+    const response = await DManager.createPackageRelease({ parentId: packageResponse.data, version, integrity, release, dpm5});
+    if(ResponseUtils.fail(response)) {
+      Logger.error(`DrgRoutes: Failed to upload tarball`, response.error);
+      return res.status(404).json({ error: response.error });
+    }
+    Logger.log('response', response);
+    Logger.log('response.data', response.data);
+    Logger.log(`Tarball uploaded successfully to ${tarballPath}`);
 
-    return res.status(201).json({tarballUrl});
+    return res.status(200).json({ message: 'Tarball uploaded successfully' });
   } catch (error: any) {
     Logger.error('Error during publish:', error);
     return res.status(404).json({ error: 'Failed to publish package metadata.' });
@@ -203,39 +211,39 @@ drg.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
 });
 
 // POST route to handle tarball upload without using multer
-drg.post(['/:scope/:name~:id/-/package.tgz', '/:scope/:name~:method~:id/-/package.tgz'], async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { name } = req.params;
-    const { parentId } = req.query as { parentId: string };
-    const version = req.body.version || DRegistryUtils.lookupCurrentVersion() || 'latest';
+// drg.post(['/:scope/:name~:id/-/package.tgz', '/:scope/:name~:method~:id/-/package.tgz'], async (req: Request, res: Response): Promise<any> => {
+//   try {
+//     const { name } = req.params;
+//     const { parentId } = req.query as { parentId: string };
+//     const version = req.body.version || DRegistryUtils.lookupCurrentVersion() || 'latest';
 
-    const dpkPath = join(DRPM_DRG_DIR, name);
-    if(!dpkPath) {
-      await ensureDir(dpkPath);
-    }
-    const tarballPath = join(dpkPath, `${name}-${version}.tgz`);
-    const tarball = await DRegistry.saveTarballToPath({ path: tarballPath, tarball: req.body });
-    if(!tarball) {
-      Logger.error(`DrgRoutes: Failed to save tarball to ${tarballPath}`);
-      return res.status(404).json({ error: 'Failed to save tarball.' });
-    }
-    const integrity = await DIntegrity.sha512IntegrityStream(req.body);
-    const release = req.body;
-    Logger.log(`Integrity=${integrity}`);
-    const response = await DManager.createPackageRelease({ parentId, version, integrity, release});
-    if(ResponseUtils.fail(response)) {
-      Logger.error(`DrgRoutes: Failed to upload tarball`, response.error);
-      return res.send(404).json({ error: response.error });
-    }
-    Logger.log('response', response);
-    Logger.log('response.data', response.data);
-    Logger.log(`Tarball uploaded successfully to ${tarballPath}`);
+//     const dpkPath = join(DRPM_DRG_DIR, name);
+//     if(!dpkPath) {
+//       await ensureDir(dpkPath);
+//     }
+//     const tarballPath = join(dpkPath, `${name}-${version}.tgz`);
+//     const tarball = await DRegistry.saveTarballToPath({ path: tarballPath, tarball: req.body });
+//     if(!tarball) {
+//       Logger.error(`DrgRoutes: Failed to save tarball to ${tarballPath}`);
+//       return res.status(404).json({ error: 'Failed to save tarball.' });
+//     }
+//     const integrity = await DIntegrity.sha512IntegrityStream(req.body);
+//     const release = req.body;
+//     Logger.log(`Integrity=${integrity}`);
+//     const response = await DManager.createPackageRelease({ parentId, version, integrity, release});
+//     if(ResponseUtils.fail(response)) {
+//       Logger.error(`DrgRoutes: Failed to upload tarball`, response.error);
+//       return res.send(404).json({ error: response.error });
+//     }
+//     Logger.log('response', response);
+//     Logger.log('response.data', response.data);
+//     Logger.log(`Tarball uploaded successfully to ${tarballPath}`);
 
-    res.status(200).json({ message: 'Tarball uploaded successfully' });
-  } catch (error: any) {
-    Logger.error('Error during tarball upload:', error);
-    res.status(500).json({ error: 'Failed to upload tarball.' });
-  }
-});
+//     res.status(200).json({ message: 'Tarball uploaded successfully' });
+//   } catch (error: any) {
+//     Logger.error('Error during tarball upload:', error);
+//     res.status(500).json({ error: 'Failed to upload tarball.' });
+//   }
+// });
 
 export default drg;

@@ -97,7 +97,6 @@ export class DRegistry {
 
   static async saveMetadataToPath({path, metadata}: {path: string; metadata: any}): Promise<boolean> {
     try {
-      await DRegistry.ensureDpkDir(path);
       await writeFile(path, JSON.stringify(metadata, null, 2));
       Logger.info(`Saved metadata to ${path}`);
       return true;
@@ -109,7 +108,6 @@ export class DRegistry {
 
   static async saveTarballToPath({path, tarball}: {path: string; tarball: any}): Promise<boolean> {
     try {
-      await DRegistry.ensureDpkDir(path);
       await pipeline(tarball, createWriteStream(path));
       Logger.info(`Saved tarball to ${path}`);
       return true;

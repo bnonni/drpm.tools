@@ -105,11 +105,12 @@ export class ProfileCommand {
       techPreview      : { dwnEndpoints },
       // agent            : await Web5UserAgent.create({ dataPath }),
     });
-
+    const method = did.split(':')?.[1] ?? 'dht';
     await this.save({
       did,
       password,
       dwnEndpoints,
+      default        : method,
       web5DataPath   : dataPath,
       recoveryPhrase : recoveryPhrase!,
     });
@@ -118,7 +119,9 @@ export class ProfileCommand {
   // Function to load existing profile or create a new one
   static async load(): Promise<ProfileData> {
     const profile = await readFile(DRPM_PROFILE_GLOBAL, 'utf8');
-    return JSON.parse(profile);
+    const parsedProfile = JSON.parse(profile);
+    const context = parsedProfile.default;
+    return parsedProfile[context];
   }
 
   // Function to save profile data to the file

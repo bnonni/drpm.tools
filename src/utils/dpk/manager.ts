@@ -1,5 +1,4 @@
 import { Record } from '@web5/api';
-import { DPM5 } from '../../dpm/dpm5.js';
 import { DRPM_DWN_URL } from '../../config.js';
 import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';
@@ -12,9 +11,9 @@ import { DRegistry } from './registry.js';
 
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
-type CreatePackageParams = {metadata: any;};
+type CreatePackageParams = {metadata: any; dpm5: any};
 // type CreatePackageDidWebParams = {metadata: any; did: string};
-type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any};
+type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any; dpm5: any};
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
@@ -229,9 +228,8 @@ export class DManager {
   //   }
   // }
 
-  static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
+  static async createPackage({ metadata, dpm5: {web5, did}}: CreatePackageParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM5.connect();
       const { record, status: create } = await web5.dwn.records.create({
         store   : true,
         data    : metadata,
@@ -271,16 +269,15 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: `${error}: ${create.detail}` });
       }
       Logger.debug('DManager: Package record sent!', send);
-      return DRegistryUtils.routeSuccess({ data });
+      return DRegistryUtils.routeSuccess({ data: record.id });
     } catch (error: any) {
       Logger.error('DManager: Error catch during DWebNode records create', error);
       return DRegistryUtils.routeFailure({ error: error.message });
     }
   }
 
-  static async createPackageRelease({ parentId, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
+  static async createPackageRelease({ parentId, version, integrity, release, dpm5: {web5, did} }: CreateReleaseParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM5.connect();
       const { record = null, status } = await web5.dwn.records.create({
         data    : release,
         store   : true,
@@ -310,8 +307,6 @@ export class DManager {
       }
 
       Logger.log('DManager: Release record created in local!', status);
-      const data = await record?.data.json();
-      Logger.debug('DManager: Release record data parsed!', data);
 
       const { status: send } = await record.send(did);
       if (ResponseUtils.dwnFail({ status: send })) {
@@ -320,7 +315,7 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: `${error}: ${send.detail}` });
       }
       Logger.debug('DManager: Release record sent to remote!', send);
-      return DRegistryUtils.routeSuccess({ data });
+      return DRegistryUtils.routeSuccess({ data: send });
     } catch (error: any) {
       Logger.error('DManager: Error catch during DWebNode records create', error);
       return DRegistryUtils.routeFailure({ error: error.message });

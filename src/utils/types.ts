@@ -120,6 +120,7 @@ export type ProfileData = {
     dwnEndpoints: string[];
     web5DataPath: string;
     recoveryPhrase: string;
+    default: string;
 };
 export type ProfileOptions = {
       did?: string;
