@@ -333,7 +333,7 @@ main() {
     do_check_and_install_npmrc "$NPMRC_LOCAL"
 
     # Start the DRG registry server
-    start_registry
+    # start_registry
 }
 
 # Parse command line arguments
@@ -352,5 +352,7 @@ fi
 pre_main_setup
 # Post setup main entry point
 main
+# Print message to run docker
+roomy_echo "Postinstall complete! To start the registry, please run the following command: sh ./build/docker.sh"
 # Exit cleanly
 exit 0
