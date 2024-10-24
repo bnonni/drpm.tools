@@ -24,7 +24,7 @@ if [[ "$npm_config_global" == "true" ]]; then
     GLOBAL_FLAG=true
 fi
 
- # Set SHELLRC to default value and check for shell type
+# Set SHELLRC to default value and check for shell type
 export SHELLRC_FILE="$HOME/.profile"
 case "$SHELL" in
     */zsh)
@@ -189,17 +189,17 @@ do_check_and_install_npmrc() {
 start_registry_nohup() {
     echo "Starting registry global with nohup ..."
     # shellcheck disable=SC2009
-    REGISTRYD_PID=$((cat $REGISTRYD_PID_FILE_NAME 2>/dev/null) || (pgrep -f $DRG_HOSTNAME) || (ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}') || (lsof -i :2092 | grep node | awk '{print $2}'))
+    DRPM_REGISTRYD_PID=$((cat "$DRPM_HOME/registry/registryd.pid" 2>/dev/null) || (pgrep -f $DRG_HOSTNAME) || (ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}') || (lsof -i :2092 | grep node | awk '{print $2}'))
 
-    if [[ -z "$REGISTRYD_PID" ]]; then
+    if [[ -z "$DRPM_REGISTRYD_PID" ]]; then
         roomy_echo "Starting registry ..."
         sh ./scripts/registryd/nohup.sh
     else
         echo ""
-        read -rp "Registry running, (pid=$REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER
+        read -rp "Registry running, (pid=$DRPM_REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER
         if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-            echo "Restarting registry process (pid=$REGISTRYD_PID) ..."
-            kill -9 "$REGISTRYD_PID"
+            echo "Restarting registry process (pid=$DRPM_REGISTRYD_PID) ..."
+            kill -9 "$DRPM_REGISTRYD_PID"
             sh ./scripts/registryd/nohup.sh
             echo "Registry restarted (pid=$(pgrep -f \"$DRG_HOSTNAME\"))"
         else

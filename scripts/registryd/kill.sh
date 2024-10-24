@@ -2,7 +2,7 @@
 
 set -e  # Exit immediately on any error
 
-REGISTRYD_PID_FILE_NAME="registryd.pid"
+DRPM_REGISTRYD_PID_FILE="registryd.pid"
 DRG_HOSTNAME="registry.drpm.tools"
 
 # Function to kill the registry process
@@ -19,9 +19,9 @@ kill_registryd_process() {
     # Attempt to kill the process
     if kill -9 "$PID" > /dev/null 2>&1; then
         echo "Successfully killed process $PID"
-        unset REGISTRYD_PID
-        rm -f "$REGISTRYD_PID_FILE_NAME"  # Remove the pid file
-        touch "$REGISTRYD_PID_FILE_NAME"   # Create a new empty pid file for future use
+        unset DRPM_REGISTRYD_PID
+        rm -f "$DRPM_REGISTRYD_PID_FILE"  # Remove the pid file
+        touch "$DRPM_REGISTRYD_PID_FILE"   # Create a new empty pid file for future use
         exit 0
     else
         echo "Failed to kill process $PID"
@@ -34,18 +34,18 @@ find_registryd_pid() {
     # Check if PID is provided as an argument
     if [[ -n "$1" ]]; then
         echo "Using provided PID: $1"
-        REGISTRYD_PID="$1"
+        DRPM_REGISTRYD_PID="$1"
     # Check if PID is in the environment
-    elif [[ -n "$REGISTRYD_PID" ]]; then
-        echo "Using environment PID: $REGISTRYD_PID"
-        REGISTRYD_PID="$REGISTRYD_PID"
+    elif [[ -n "$DRPM_REGISTRYD_PID" ]]; then
+        echo "Using environment PID: $DRPM_REGISTRYD_PID"
+        DRPM_REGISTRYD_PID="$DRPM_REGISTRYD_PID"
     # Search for PID in the registry.pid file
-    elif [[ -f "$REGISTRYD_PID_FILE_NAME" && -s "$REGISTRYD_PID_FILE_NAME" ]]; then
-        REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME)"
+    elif [[ -f "$DRPM_REGISTRYD_PID_FILE" && -s "$DRPM_REGISTRYD_PID_FILE" ]]; then
+        DRPM_REGISTRYD_PID="$(cat $DRPM_REGISTRYD_PID_FILE)"
     # Use other methods to find the PID (pgrep, lsof)
     else
         echo "Searching for PID via process name or port"
-        REGISTRYD_PID="$(pgrep -f $DRG_HOSTNAME || ps aux | grep $DRG_HOSTNAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
+        DRPM_REGISTRYD_PID="$(pgrep -f $DRG_HOSTNAME || ps aux | grep $DRG_HOSTNAME | awk '{print $2}' || lsof -i :2092 | grep node | awk '{print $2}')"
     fi    
 }
 
@@ -57,8 +57,8 @@ fi
 
 find_registryd_pid "$1"
 
-if [[ -n "$REGISTRYD_PID" && "$REGISTRYD_PID" -ne 0 ]]; then
-    kill_registryd_process "$REGISTRYD_PID"
+if [[ -n "$DRPM_REGISTRYD_PID" && "$DRPM_REGISTRYD_PID" -ne 0 ]]; then
+    kill_registryd_process "$DRPM_REGISTRYD_PID"
 else
     echo "No registry process found"
     exit 1
