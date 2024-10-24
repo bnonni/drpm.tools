@@ -220,10 +220,13 @@ start_registry_global() {
 }
 
 start_registry_local() {
+    echo "Starting registry local ..."
     if docker version >/dev/null 2>&1; then
         sh ./build/docker.sh
+        echo "Starting registry local with docker ..."
     else
         start_registry_nohup
+        echo "Starting registry local with nohup ..."
     fi
 }
 
