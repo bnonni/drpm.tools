@@ -174,6 +174,7 @@ add_prefixes_to_npmrc() {
 
 # Function to handle checks and installation
 do_check_and_install_npmrc() {
+    echo "Checking and installing .npmrc ..."
     local NPMRC_FILE="$1"
     ensure_npmrc_exists "$NPMRC_FILE"
     find_missing_prefixes "$NPMRC_FILE"
@@ -186,11 +187,9 @@ do_check_and_install_npmrc() {
 }
 
 start_registry_nohup() {
+    echo "Starting registry global with nohup ..."
     # shellcheck disable=SC2009
-    REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null \
-        || pgrep -f $DRG_HOSTNAME \
-        || ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}' \
-        || lsof -i :2092 | grep node | awk '{print $2}')"
+    REGISTRYD_PID=$((cat $REGISTRYD_PID_FILE_NAME 2>/dev/null) || (pgrep -f $DRG_HOSTNAME) || (ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}') || (lsof -i :2092 | grep node | awk '{print $2}'))
 
     if [[ -z "$REGISTRYD_PID" ]]; then
         roomy_echo "Starting registry ..."
@@ -210,9 +209,12 @@ start_registry_nohup() {
 }
 
 start_registry_global() {
+    echo "Starting registry global ..."
     if docker version >/dev/null 2>&1; then
+        echo "Starting registry global with docker ..."
         curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/build/docker.sh -o | sh
     else
+        echo "Starting registry global with nohup ..."
         start_registry_nohup
     fi
 }
@@ -227,6 +229,7 @@ start_registry_local() {
 
 # Function to start the DRPM registry if not running
 start_registry() {
+    echo "Starting registry ..."
     if [[ $GLOBAL || "$npm_config_global" == "true" ]]; then
         start_registry_global
     else
@@ -236,6 +239,7 @@ start_registry() {
 
 # Check list of required env vars
 do_check_drpm_env_vars() {
+    echo "Checking required environment variables ..."
     REQUIRED_ENV_VARS=(
         SHELLRC_FILE
         DRPM_HOME
@@ -268,6 +272,7 @@ do_check_drpm_env_vars() {
 
 # Check if dotfiles are installed
 check_and_install_drpm_dotfiles() {
+    echo "Checking and installing .drpmrc and .drpm_profile ..."
     # Check if local .drpmrc exists, download if not
     if [[ ! -f "$DRPMRC_GLOBAL" ]]; then
         curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/.drpmrc -o "$DRPMRC_GLOBAL"
@@ -286,15 +291,18 @@ check_and_install_drpm_dotfiles() {
     fi
 
     # Check if rc file requires new line, add source statement to it and print message
-    if grep -q "source $HOME/.drpm/.drpmrc" "$SHELLRC_FILE"; then
+    if ! grep -q "source $HOME/.drpm/.drpmrc" "$SHELLRC_FILE"; then
         [[ -s "$SHELLRC_FILE" && $(tail -c1 "$SHELLRC_FILE" | wc -l) -eq 0 ]] && echo >> "$SHELLRC_FILE"
         backup_file "$SHELLRC_FILE" "$DRPM_HOME/bak/$SHELLRC_FILE.bak"
         echo "source $HOME/.drpm/.drpmrc" >> "$SHELLRC_FILE"
         echo "Updated $SHELLRC_FILE. To remove, open $SHELLRC_FILE and remove the following line: $SOURCE_DRPMRC"
+    else
+        echo "Source statement exists in $SHELLRC_FILE, continuing ..."
     fi
 }
 
 pre_main_setup() {
+    echo "Starting pre-main setup ..."
     # Check if the postinstall script has already run
     DRPM_POSTINSTALL_GLOBAL="$DRPM_HOME/.postinstall"
     DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
