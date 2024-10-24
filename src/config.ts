@@ -33,7 +33,7 @@ export const DRPMRC_GLOBAL = process.env.DRPMRC_GLOBAL || `${DRPM_HOME}/.drpmrc`
 export const DRPM_PROFILE_LOCAL = process.env.DRPM_PROFILE_LOCAL || `${CWD}/.drpm_profile`;
 export const DRPM_PROFILE_GLOBAL = process.env.DRPM_PROFILE_GLOBAL || `${DRPM_HOME}/.drpm_profile`;
 export const NPMRC_PREFIXES = process.env.DRPM_NPMRC_PREFIXES || [`@${DRG_PREFIX}=${DRPM_DRG_URL}`, `${DRG_PREFIX}=${DRPM_DRG_URL}`];
-export const DRPM_DRG_DIR = process.env.DRPM_DRG_DIR || join(DRPM_HOME, `@drg`);
+export const DRPM_DRG_DIR = process.env.DRPM_DRG_DIR || join(DRPM_HOME, `registry`);
 export const REGISTRYD_PID_FILE = join(DRPM_HOME, 'registryd.pid');
 export const REGISTRYD_PID = await readFile(REGISTRYD_PID_FILE, 'utf8').catch(ensureFileData);
 export const DRPM_PROTOCOL = dwn.protocol ?? 'https://drpm.tools/protocols/drpm';

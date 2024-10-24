@@ -260,7 +260,7 @@ DRPM reuses the `package.json` and `package-lock.json` files for easy integratio
 - The express server parses API url path to construct a DRL (Decentralized Resource Locator)
 - DRPM requests the DPK from the DWN found in the DID doc assocaigted with the DID from the dependency version string
 - The registry server installs the DPK metadata and tarball into a local folder called `.registry` and passes the path to the tarball back to the `npm install` cli call
-- From there, `npm` handles the rest normally installing the tarball into `node_modules` under `@drg/{packageName}/{version}`
+- From there, `npm` handles the rest normally installing the tarball into `node_modules` under `@drpm/{packageName}/{version}`
 - Integrity hashes are produced using the DPK.tgz content ensuring the publisher cannot swap out code under a specific verion in the protocol path.
 - Additionally, DRPM allows developers to republish the code pulled from the remote DWN to their own DWN forever allowing them to secure an immutable copy
 - Once a release is published and copied to your own DWN, it can only be changed by the DWN owner.

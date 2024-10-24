@@ -198,14 +198,14 @@ drg.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<any> =
     return res.status(201).json({tarballUrl});
   } catch (error: any) {
     Logger.error('Error during publish:', error);
-    res.status(500).json({ error: 'Failed to publish package metadata.' });
+    return res.status(404).json({ error: 'Failed to publish package metadata.' });
   }
 });
 
 // POST route to handle tarball upload without using multer
 drg.post(['/:scope/:name~:id/-/package.tgz', '/:scope/:name~:method~:id/-/package.tgz'], async (req: Request, res: Response): Promise<any> => {
   try {
-    const { scope, name, method, id } = req.params;
+    const { name } = req.params;
     const { parentId } = req.query as { parentId: string };
     const version = req.body.version || DRegistryUtils.lookupCurrentVersion() || 'latest';
 
