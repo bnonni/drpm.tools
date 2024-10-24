@@ -3,7 +3,7 @@
 set -e
 
 DOCKER_CONTAINERS_FILE=containers.txt
-DOCKER_NETWORK=dpm-registry
+DOCKER_NETWORK=drpm-registry
 
 if ! docker network ls | grep $DOCKER_NETWORK >/dev/null 2>&1; then
     docker network create $DOCKER_NETWORK
@@ -19,7 +19,7 @@ if [[ -f $DOCKER_CONTAINERS_FILE ]]; then
     fi
 fi
 
-echo "Starting DPM registry container"
+echo "Starting DRPM registry container"
 registry_name=$(docker run --rm --network $DOCKER_NETWORK \
     --pull always --detach --publish 2092:2092 w3irdrobot:dpm-registry)
 

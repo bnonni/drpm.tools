@@ -99,7 +99,7 @@
     "registryd:docker": "sh build/docker.sh",
     "docker:build": "docker build -t dpm-registry .",
     "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
-    "postinstall": "if [[ \"$npm_config_global\" == \"true\" ]]; then echo 'global install detected'; curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/refs/heads/main/scripts/postinstall.sh | bash; else echo 'local install detected' && sh ./scripts/postinstall.sh; fi",
+    "postinstall": "if [[ \"$npm_config_global\" == \"true\" ]]; then echo 'global install detected'; curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/refs/heads/main/scripts/postinstall.sh | sh; else echo 'local install detected' && sh ./scripts/postinstall.sh; fi",
     "prepack": "npm run build && chmod +x ./dist/esm/dpm/dpm.js"
   },
   "dependencies": {

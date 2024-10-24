@@ -24,6 +24,49 @@ if [[ "$npm_config_global" == "true" ]]; then
     GLOBAL_FLAG=true
 fi
 
+ # Set SHELLRC to default value and check for shell type
+export SHELLRC_FILE="$HOME/.profile"
+case "$SHELL" in
+    */zsh)
+        export SHELLRC_FILE="$HOME/.zshrc"
+        ;;
+    */bash)
+        export SHELLRC_FILE="$HOME/.bashrc"
+        ;;
+esac
+# Set DRPM_HOME to default value and check for XDG_CONFIG_HOME
+export DRPM_HOME="$HOME/.drpm"
+if [[ -n "$XDG_CONFIG_HOME" ]]; then
+    export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
+fi
+[[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME" "$DRPM_HOME/bak"
+export DRPM_DRG_DIR="$DRPM_HOME/registry";
+[[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
+# Initialize global system variables
+export OS_TYPE="$(uname)"
+export NPMRC_LOCAL="$PWD/.npmrc"
+export NPMRC_GLOBAL="$HOME/.npmrc"
+export DRPMRC_LOCAL="$PWD/.drpmrc"
+export DRPMRC_GLOBAL="$DRPM_HOME/.drpmrc"
+export DRPM_PROFILE_LOCAL="$PWD/.drpm_profile"
+export DRPM_PROFILE_GLOBAL="$DRPM_HOME/.drpm_profile"
+# Initialize drpm variables
+export DRPM_NGINX_DIR="$PWD/build/nginx"
+export DRPM_DRG_HOSTNAME="localhost"
+export DRPM_DRG_PORT_DEFAULT=2092
+export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME:$DRPM_DRG_PORT_DEFAULT/";
+export DRPM_PREFIX='@drpm:registry';
+export DRPM_DPK_PREFIX='dpk:registry';
+export DRPM_NPMRC_PREFIXES=(
+    "$DRPM_PREFIX=$DRPM_DRG_URL"
+    "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
+)
+export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registry/registryd.pid"
+[[ ! -f "$DRPM_REGISTRYD_PID_FILE" ]] && touch "$DRPM_REGISTRYD_PID_FILE"
+export DRPM_REGISTRYD_PID=$(cat $DRPM_REGISTRYD_PID_FILE 2>/dev/null || echo 0)
+export DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
+export DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
+
 # Function to output cleaner info
 roomy_echo() {
     echo ""
@@ -142,32 +185,52 @@ do_check_and_install_npmrc() {
     fi
 }
 
-# Function to start the DRPM registry if not running
-start_drg_server() {
-    if docker version >/dev/null 2>&1; then
-        sh $SCRIPTS_DIR/registry.docker.sh
-    else
-        # shellcheck disable=SC2009
-        REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null || \
-            pgrep -f $DRG_HOSTNAME \
-            || ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}' \
-            || lsof -i :2092 | grep node | awk '{print $2}')"
+start_registry_nohup() {
+    # shellcheck disable=SC2009
+    REGISTRYD_PID="$(cat $REGISTRYD_PID_FILE_NAME 2>/dev/null \
+        || pgrep -f $DRG_HOSTNAME \
+        || ps aux | grep $DRG_HOSTNAME | grep -v grep | awk '{print $2}' \
+        || lsof -i :2092 | grep node | awk '{print $2}')"
 
-        if [[ -z "$REGISTRYD_PID" ]]; then
-            roomy_echo "Starting registry ..."
-            sh $SCRIPTS_DIR/registry.nohup.sh
+    if [[ -z "$REGISTRYD_PID" ]]; then
+        roomy_echo "Starting registry ..."
+        sh ./scripts/registryd/nohup.sh
+    else
+        echo ""
+        read -rp "Registry running, (pid=$REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER
+        if [[ "$ANSWER" =~ ^[yY]$ ]]; then
+            echo "Restarting registry process (pid=$REGISTRYD_PID) ..."
+            kill -9 "$REGISTRYD_PID"
+            sh ./scripts/registryd/nohup.sh
+            echo "Registry restarted (pid=$(pgrep -f \"$DRG_HOSTNAME\"))"
         else
-            echo ""
-            read -rp "Registry running, (pid=$REGISTRYD_PID). Would you like to restart the registry process? [y/N] " ANSWER
-            if [[ "$ANSWER" =~ ^[yY]$ ]]; then
-                echo "Restarting registry process (pid=$REGISTRYD_PID) ..."
-                kill -9 "$REGISTRYD_PID"
-                sh scripts/registry.nohup.sh
-                echo "Registry restarted (pid=$(pgrep -f \"$DRG_HOSTNAME\"))"
-            else
-                echo "Registry still running, continuing ..."
-            fi
+            echo "Registry still running, continuing ..."
         fi
+    fi
+}
+
+start_registry_global() {
+    if docker version >/dev/null 2>&1; then
+        curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/HEAD/build/docker.sh -o | sh
+    else
+        start_registry_nohup
+    fi
+}
+
+start_registry_local() {
+    if docker version >/dev/null 2>&1; then
+        sh ./build/docker.sh
+    else
+        start_registry_nohup
+    fi
+}
+
+# Function to start the DRPM registry if not running
+start_registry() {
+    if [[ $GLOBAL || "$npm_config_global" == "true" ]]; then
+        start_registry_global
+    else
+        start_registry_local
     fi
 }
 
@@ -197,10 +260,9 @@ do_check_drpm_env_vars() {
         DRPM_POSTINSTALL_LOCAL
     )
     for REQUIRED_ENV_VAR in "${REQUIRED_ENV_VARS[@]}"; do
-    if [ -z "${!REQUIRED_ENV_VAR}" ]; then
-        roomy_echo "$REQUIRED_ENV_VAR unset! Set it in your $SHELLRC_FILE."
-        exit 0
-    fi
+        if [ -z "${!REQUIRED_ENV_VAR}" ]; then
+            roomy_echo "$REQUIRED_ENV_VAR unset! Source the $DRPMRC_GLOBAL file."
+        fi
     done
 }
 
@@ -232,51 +294,6 @@ check_and_install_drpm_dotfiles() {
     fi
 }
 
-drpmrc_setup() {
-    # Set SHELLRC to default value and check for shell type
-    export SHELLRC_FILE="$HOME/.profile"
-    case "$SHELL" in
-        */zsh)
-            export SHELLRC_FILE="$HOME/.zshrc"
-            ;;
-        */bash)
-            export SHELLRC_FILE="$HOME/.bashrc"
-            ;;
-    esac
-    # Set DRPM_HOME to default value and check for XDG_CONFIG_HOME
-    export DRPM_HOME="$HOME/.drpm"
-    if [[ -n "$XDG_CONFIG_HOME" ]]; then
-        export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
-    fi
-    [[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME" "$DRPM_HOME/bak"
-    export DRPM_DRG_DIR="$DRPM_HOME/registry";
-    [[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
-    # Initialize global system variables
-    export OS_TYPE="$(uname)"
-    export NPMRC_LOCAL="$PWD/.npmrc"
-    export NPMRC_GLOBAL="$HOME/.npmrc"
-    export DRPMRC_LOCAL="$PWD/.drpmrc"
-    export DRPMRC_GLOBAL="$DRPM_HOME/.drpmrc"
-    export DRPM_PROFILE_LOCAL="$PWD/.drpm_profile"
-    export DRPM_PROFILE_GLOBAL="$DRPM_HOME/.drpm_profile"
-    # Initialize drpm variables
-    export DRPM_NGINX_DIR="$PWD/build/nginx"
-    export DRPM_DRG_HOSTNAME="localhost"
-    export DRPM_DRG_PORT_DEFAULT=2092
-    export DRPM_DRG_URL="http://$DRPM_DRG_HOSTNAME:$DRPM_DRG_PORT_DEFAULT/";
-    export DRPM_PREFIX='@drpm:registry';
-    export DRPM_DPK_PREFIX='dpk:registry';
-    export DRPM_NPMRC_PREFIXES=(
-        "$DRPM_PREFIX=$DRPM_DRG_URL"
-        "$DRPM_DPK_PREFIX=$DRPM_DRG_URL"
-    )
-    export DRPM_REGISTRYD_PID_FILE="$DRPM_HOME/registry/registryd.pid"
-    [[ ! -f "$DRPM_REGISTRYD_PID_FILE" ]] && touch "$DRPM_REGISTRYD_PID_FILE"
-    export DRPM_REGISTRYD_PID=$(cat $DRPM_REGISTRYD_PID_FILE 2>/dev/null || echo 0)
-    export DRPM_POSTINSTALL_GLOABL="$HOME/.postinstall"
-    export DRPM_POSTINSTALL_LOCAL="$PWD/.postinstall"
-}
-
 pre_main_setup() {
     # Check if the postinstall script has already run
     DRPM_POSTINSTALL_GLOBAL="$DRPM_HOME/.postinstall"
@@ -289,6 +306,8 @@ pre_main_setup() {
             echo "Force flag set, forcing postinstall ..."
             rm -rf "$DRPM_POSTINSTALL_GLOBAL" "$DRPM_POSTINSTALL_LOCAL"
         fi
+    else
+        echo "Postinstall has not run yet, continuing ..."
     fi
     
     # Setup drpmrc env vars
@@ -306,7 +325,7 @@ main() {
     do_check_and_install_npmrc "$NPMRC_LOCAL"
 
     # Start the DRG registry server
-    start_drg_server
+    start_registry
 }
 
 # Parse command line arguments
