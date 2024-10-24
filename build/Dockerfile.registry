@@ -8,7 +8,12 @@ COPY src src
 RUN NODE_ENV=production npm run build
 
 FROM node@sha256:c13b26e7e602ef2f1074aef304ce6e9b7dd284c419b35d89fcf3cc8e44a8def9 AS final
+ENV NODE_ENV=production
 WORKDIR /workspace
+RUN apk update && apk add --no-cache ca-certificates tini
+COPY package*.json ./
+RUN npm install --no-save --no-fund --ignore-scripts
 COPY --from=builder /workspace/dist/esm ./
 EXPOSE 2092
-CMD [ "node", "./dist/esm/drg/server.js" ]
+ENTRYPOINT [ "tini", "--" ]
+CMD [ "node", "./drg/server.js" ]
