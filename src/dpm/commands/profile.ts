@@ -1,17 +1,17 @@
 import { Web5 } from '@web5/api';
 import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { cp, readFile, writeFile } from 'fs/promises';
-import { DEFAULT_DATAPATH, DEFAULT_PASSWORD, DEFAULT_PROFILE, DRPM_HOME, DRPM_HOME_BAK_DIR, DRPM_PROFILE_GLOBAL } from '../../config.js';
+import {
+  DEFAULT_DATAPATH,
+  DEFAULT_PASSWORD,
+  DEFAULT_PROFILE,
+  DRPM_HOME,
+  DRPM_HOME_BAK_DIR,
+  DRPM_PROFILE_GLOBAL
+} from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
 import { ProfileCreateParams, ProfileData, ProfileOptions } from '../../utils/types.js';
-// import { Web5UserAgent } from '@web5/user-agent';
-
-
-//   static web5: Web5;
-// static did: string;
-// const {password, dwnEndpoint} = await ProfileCommand.load();
-
 
 export class ProfileCommand {
   static async setup() {
@@ -93,7 +93,7 @@ export class ProfileCommand {
 
     Logger.log(`Creating new profile ...`);
     await ensureDir(DRPM_HOME_BAK_DIR);
-    await cp(DRPM_PROFILE_GLOBAL, `${DRPM_PROFILE_GLOBAL}.bak`);
+    await cp(DRPM_PROFILE_GLOBAL, `${DRPM_HOME_BAK_DIR}/${DRPM_PROFILE_GLOBAL}.bak`);
 
     const dwnEndpoints = [dwnEndpoint];
     const dataPath = profile.web5DataPath ?? DEFAULT_DATAPATH;

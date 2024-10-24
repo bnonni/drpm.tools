@@ -1,5 +1,6 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 import { DrlBuilder } from './dwn/drl-builder.js';
+import { Request } from 'express';
 
 // Fetching
 export type ResponseInfo = {
@@ -130,3 +131,4 @@ export type ProfileOptions = {
       recoveryPhrase?: string;
 };
 export type ProfileCreateParams = { dwnEndpoint: string; password?: string; };
+export type RequestParams = Request['params'];

@@ -1,6 +1,4 @@
 import { Record } from '@web5/api';
-import { DRPM_DWN_URL } from '../../config.js';
-import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
 import dwn from '../dwn/protocol.js';
@@ -8,32 +6,16 @@ import { Logger } from '../logger.js';
 import { ResponseUtils } from '../response.js';
 import { DpkData, DpkDwnResponse, DpkRequest, DrgResponse } from '../types.js';
 import { DRegistry } from './registry.js';
+import { did, DWN_ENDPOINTS, web5 } from '../../config.js';
 
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
-type CreatePackageParams = {metadata: any; dpm5: any};
+type CreatePackageParams = {metadata: any;};
 // type CreatePackageDidWebParams = {metadata: any; did: string};
-type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any; dpm5: any};
+type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any;};
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
-  static async getDwnEndpoints(did: string) {
-    Logger.info(`DManager: DidResolver`, DidResolver);
-    const resolution = await DidResolver.resolve(did);
-    Logger.info(`DManager: resolution ${resolution}`);
-    const { didDocument } = resolution;
-    Logger.info(`DManager: Resolved didDocument ${didDocument}`);
-    const services = didDocument?.service;
-    const didServiceEndpoint = services?.find(
-      service => service.type === 'DecentralizedWebNode'
-    )?.serviceEndpoint ?? (
-      process.env.NODE_ENV === 'development'
-        ? ['http://localhost:3000']
-        : [DRPM_DWN_URL]
-    );
-    const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
-    return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
-  }
 
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<DrgResponse> {
@@ -152,7 +134,7 @@ export class DManager {
   // Fetch DPK from DWeb Node: either metadata or release
   static async readDpk({ did, dpk: { name, version, path }}: DpkRequest): Promise<DrgResponse> {
     try {
-      for (const endpoint of await DManager.getDwnEndpoints(did)) {
+      for (const endpoint of DWN_ENDPOINTS) {
         Logger.info(`DManager: Fetching DPK ${name}@${version} from ${endpoint} ...`);
 
         const builder = DrlBuilder.create({ did, endpoint });
@@ -228,7 +210,7 @@ export class DManager {
   //   }
   // }
 
-  static async createPackage({ metadata, dpm5: {web5, did}}: CreatePackageParams): Promise<DrgResponse> {
+  static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
     try {
       const { record, status: create } = await web5.dwn.records.create({
         store   : true,
@@ -276,7 +258,7 @@ export class DManager {
     }
   }
 
-  static async createPackageRelease({ parentId, version, integrity, release, dpm5: {web5, did} }: CreateReleaseParams): Promise<DrgResponse> {
+  static async createPackageRelease({ parentId, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
     try {
       const { record = null, status } = await web5.dwn.records.create({
         data    : release,

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import {
   DPK_VERSION_PREFIXES,
-  DRPM_DRG_DIR,
+  DRPM_REGISTRY_DIR,
   DRPM_DRG_URL,
   NPM_PACKAGE_JSON,
   PACKAGE_VERSION
@@ -39,7 +39,7 @@ export class DRegistryUtils {
     newMetadata.dist = !newMetadata.dist.tarball
       ? this.createDist(name, version)
       : newMetadata.dist;
-    const tgzPath = join(DRPM_DRG_DIR, name, `${name}-${version}.tgz`);
+    const tgzPath = join(DRPM_REGISTRY_DIR, name, `${name}-${version}.tgz`);
     newMetadata.dist.shasum = this.calculateShasum1(tgzPath);
     existingMetadata['dist-tags'].latest = version;
     existingMetadata.versions[version] = newMetadata;

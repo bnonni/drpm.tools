@@ -2,19 +2,19 @@
 import http from 'http';
 import { Logger } from '../utils/logger.js';
 import { DRPM_PORT, DRG_HOSTNAME, DRPM_DRG_URL } from '../config.js';
-import drg from './routes.js';
+import registry from './routes.js';
 process.title = DRG_HOSTNAME;
 
 /**
  * Get port from environment and store in Express.
  */
 const port = normalizePort(DRPM_PORT.toString());
-drg.set('port', port);
+registry.set('port', port);
 
 /**
  * Create HTTP server.
  */
-const server = http.createServer(drg);
+const server = http.createServer(registry);
 
 /**
  * Listen on provided port, on all network interfaces.
