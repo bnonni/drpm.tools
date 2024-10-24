@@ -309,9 +309,6 @@ pre_main_setup() {
     else
         echo "Postinstall has not run yet, continuing ..."
     fi
-    
-    # Setup drpmrc env vars
-    drpmrc_setup
 
     # Check if .drpmrc and .drpm_profile are installed locally
     check_and_install_drpm_dotfiles
