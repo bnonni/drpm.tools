@@ -6,10 +6,10 @@ import dwn from './utils/dwn/protocol.js';
 import { Logger } from './utils/logger.js';
 
 const parsePackageJson = async () => JSON.parse(await readFile(NPM_PACKAGE_JSON_PATH, 'utf8'));
-const ensureFileData = async () => {
-  await appendFile(REGISTRYD_PID_FILE, (process.ppid ?? 0).toString());
-  return await readFile(REGISTRYD_PID_FILE, 'utf8');
-};
+// const ensureFileData = async () => {
+//   await appendFile(REGISTRYD_PID_FILE, (process.ppid ?? 0).toString());
+//   return await readFile(REGISTRYD_PID_FILE, 'utf8');
+// };
 
 export const CWD = process.cwd();
 export const HOME = process.env.HOME || homedir();
@@ -34,8 +34,8 @@ export const DRPM_PROFILE_LOCAL = process.env.DRPM_PROFILE_LOCAL || `${CWD}/.drp
 export const DRPM_PROFILE_GLOBAL = process.env.DRPM_PROFILE_GLOBAL || `${DRPM_HOME}/.drpm_profile`;
 export const NPMRC_PREFIXES = process.env.DRPM_NPMRC_PREFIXES || [`@${DRG_PREFIX}=${DRPM_DRG_URL}`, `${DRG_PREFIX}=${DRPM_DRG_URL}`];
 export const DRPM_DRG_DIR = process.env.DRPM_DRG_DIR || join(DRPM_HOME, `@drg`);
-export const REGISTRYD_PID_FILE = join(DRPM_HOME, 'registryd.pid');
-export const REGISTRYD_PID = await readFile(REGISTRYD_PID_FILE, 'utf8').catch(ensureFileData);
+// export const REGISTRYD_PID_FILE = join(DRPM_HOME, 'registryd.pid');
+// export const REGISTRYD_PID = await readFile(REGISTRYD_PID_FILE, 'utf8').catch(ensureFileData);
 export const DRPM_PROTOCOL = dwn.protocol ?? 'https://drpm.tools/protocols/drpm';
 export const DRPM_PROTOCOL_B64URL = DrlUtils.base64urlEncode(DRPM_PROTOCOL) ?? 'aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt';
 export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL}`;
