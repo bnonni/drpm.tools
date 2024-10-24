@@ -14,12 +14,10 @@ import { ProfileCreateParams, ProfileData, ProfileOptions } from '../../utils/ty
 
 
 export class ProfileCommand {
-
   static async setup() {
     if(!await exists(DRPM_HOME)) {
       await ensureDir(DRPM_HOME);
     }
-
     if(!await exists(DRPM_PROFILE_GLOBAL)) {
       await ensureFile(DRPM_PROFILE_GLOBAL);
       await writeFile(DRPM_PROFILE_GLOBAL, stringify(DEFAULT_PROFILE));
