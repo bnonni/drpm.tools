@@ -1,6 +1,6 @@
 {
   "name": "drpm",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "type": "module",
   "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "main": "./dist/cjs/index.js",
@@ -89,7 +89,6 @@
     "tab:4-configure-protocol": "./dist/esm/cli/drpm.js protocol configure",
     "tab:5-start-registry": "node ./dist/esm/drg/server.js",
     "tab:6-get-did": "./dist/esm/cli/drpm.js profile get -d",
-    
     "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
