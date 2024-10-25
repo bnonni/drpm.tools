@@ -1,5 +1,7 @@
 import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/agent';
 import { DrlBuilder } from './dwn/drl-builder.js';
+import { Request } from 'express';
+import { PortableDid } from '@web5/dids';
 
 // Fetching
 export type ResponseInfo = {
@@ -120,12 +122,28 @@ export type ProfileData = {
     dwnEndpoints: string[];
     web5DataPath: string;
     recoveryPhrase: string;
+    portableDid?: PortableDid;
 };
+export type SupportedMethods = 'web' | 'dht' | 'btc';
+export type Profile = {
+    current: string;
+    dht: ProfileData;
+    web: ProfileData;
+    btc: ProfileData;
+    [key: string]: any;
+}
 export type ProfileOptions = {
       did?: string;
       password?: string;
-      dwnEndpoints?: string;
+      dwnEndpoint?: string;
       web5DataPath?: string
       recoveryPhrase?: string;
+      context?: string;
 };
-export type ProfileCreateParams = { dwnEndpoint: string; password?: string; };
+export type ProfileCreateParams = {
+    url?: string;
+    method: string;
+    dwnEndpoint: string;
+    password?: string;
+};
+export type RequestParams = Request['params'];

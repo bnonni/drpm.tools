@@ -1,8 +1,7 @@
 import { Request } from 'express';
 import {
   DPK_VERSION_PREFIXES,
-  DRPM_DRG_DIR,
-  DRPM_DRG_URL,
+  DRPM_REGISTRY_DIR,
   NPM_PACKAGE_JSON,
   PACKAGE_VERSION
 } from '../../config.js';
@@ -30,7 +29,7 @@ export class DRegistryUtils {
   static createDist(name: string, version: string): any {
     return {
       shasum  : '',
-      tarball : `http://${DRPM_DRG_URL}/@drpm/${name}/-/${name}-${version}.tgz`
+      tarball : `http://registry.drpm.software/@drpm/${name}/-/${name}-${version}.tgz`
     };
   }
 
@@ -39,7 +38,7 @@ export class DRegistryUtils {
     newMetadata.dist = !newMetadata.dist.tarball
       ? this.createDist(name, version)
       : newMetadata.dist;
-    const tgzPath = join(DRPM_DRG_DIR, name, `${name}-${version}.tgz`);
+    const tgzPath = join(DRPM_REGISTRY_DIR, name, `${name}-${version}.tgz`);
     newMetadata.dist.shasum = this.calculateShasum1(tgzPath);
     existingMetadata['dist-tags'].latest = version;
     existingMetadata.versions[version] = newMetadata;

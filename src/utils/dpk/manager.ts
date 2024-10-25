@@ -1,6 +1,4 @@
 import { Record } from '@web5/api';
-import { DPM5 } from '../../dpm/dpm5.js';
-import { DRPM_DWN_URL } from '../../config.js';
 import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
@@ -9,33 +7,30 @@ import { Logger } from '../logger.js';
 import { ResponseUtils } from '../response.js';
 import { DpkData, DpkDwnResponse, DpkRequest, DrgResponse } from '../types.js';
 import { DRegistry } from './registry.js';
+import { did, web5 } from '../../drg/server.js';
 
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
 type CreatePackageParams = {metadata: any;};
 // type CreatePackageDidWebParams = {metadata: any; did: string};
-type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any};
+type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any;};
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
-  static async getDwnEndpoints(did: string) {
-    Logger.info(`DManager: DidResolver`, DidResolver);
-    const resolution = await DidResolver.resolve(did);
-    Logger.info(`DManager: resolution ${resolution}`);
-    const { didDocument } = resolution;
+  static async getDwnEndpoints() {
+    const { didDocument } = await DidResolver.resolve(did);
     Logger.info(`DManager: Resolved didDocument ${didDocument}`);
     const services = didDocument?.service;
     const didServiceEndpoint = services?.find(
       service => service.type === 'DecentralizedWebNode'
     )?.serviceEndpoint ?? (
       process.env.NODE_ENV === 'development'
-        ? ['http://localhost:3000']
-        : [DRPM_DWN_URL]
+        ? ['http://localhost:3000/']
+        : ['https://dwn.drpm.tools']
     );
     const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
     return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
   }
-
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<DrgResponse> {
     try {
@@ -153,7 +148,7 @@ export class DManager {
   // Fetch DPK from DWeb Node: either metadata or release
   static async readDpk({ did, dpk: { name, version, path }}: DpkRequest): Promise<DrgResponse> {
     try {
-      for (const endpoint of await DManager.getDwnEndpoints(did)) {
+      for (const endpoint of await this.getDwnEndpoints()) {
         Logger.info(`DManager: Fetching DPK ${name}@${version} from ${endpoint} ...`);
 
         const builder = DrlBuilder.create({ did, endpoint });
@@ -231,7 +226,6 @@ export class DManager {
 
   static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM5.connect();
       const { record, status: create } = await web5.dwn.records.create({
         store   : true,
         data    : metadata,
@@ -271,7 +265,7 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: `${error}: ${create.detail}` });
       }
       Logger.debug('DManager: Package record sent!', send);
-      return DRegistryUtils.routeSuccess({ data });
+      return DRegistryUtils.routeSuccess({ data: record.id });
     } catch (error: any) {
       Logger.error('DManager: Error catch during DWebNode records create', error);
       return DRegistryUtils.routeFailure({ error: error.message });
@@ -280,7 +274,6 @@ export class DManager {
 
   static async createPackageRelease({ parentId, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
     try {
-      const { web5, did } = await DPM5.connect();
       const { record = null, status } = await web5.dwn.records.create({
         data    : release,
         store   : true,
@@ -310,8 +303,6 @@ export class DManager {
       }
 
       Logger.log('DManager: Release record created in local!', status);
-      const data = await record?.data.json();
-      Logger.debug('DManager: Release record data parsed!', data);
 
       const { status: send } = await record.send(did);
       if (ResponseUtils.dwnFail({ status: send })) {
@@ -320,7 +311,7 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: `${error}: ${send.detail}` });
       }
       Logger.debug('DManager: Release record sent to remote!', send);
-      return DRegistryUtils.routeSuccess({ data });
+      return DRegistryUtils.routeSuccess({ data: send });
     } catch (error: any) {
       Logger.error('DManager: Error catch during DWebNode records create', error);
       return DRegistryUtils.routeFailure({ error: error.message });

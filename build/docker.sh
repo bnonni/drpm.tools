@@ -21,7 +21,7 @@ fi
 
 echo "Starting DRPM registry container"
 registry_name=$(docker run --rm --network $DOCKER_NETWORK \
-    --pull always --detach --publish 2092:2092 w3irdrobot:dpm-registry)
+    --pull always --detach --publish 2092:2092 registry.digitalocean.com/nonni/drpm-registry)
 
 echo "Starting DWN container"
 dwn_name=$(docker run --rm --network $DOCKER_NETWORK \

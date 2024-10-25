@@ -40,8 +40,8 @@ if [[ -n "$XDG_CONFIG_HOME" ]]; then
     export DRPM_HOME="$XDG_CONFIG_HOME/drpm"
 fi
 [[ ! -d "$DRPM_HOME" ]] && mkdir -p "$DRPM_HOME" "$DRPM_HOME/bak"
-export DRPM_DRG_DIR="$DRPM_HOME/registry";
-[[ ! -d "$DRPM_DRG_DIR" ]] && mkdir -p "$DRPM_DRG_DIR"
+export DRPM_REGISTRY_DIR="$DRPM_HOME/registry";
+[[ ! -d "$DRPM_REGISTRY_DIR" ]] && mkdir -p "$DRPM_REGISTRY_DIR"
 # Initialize global system variables
 export OS_TYPE="$(uname)"
 export NPMRC_LOCAL="$PWD/.npmrc"
@@ -246,7 +246,7 @@ do_check_drpm_env_vars() {
     REQUIRED_ENV_VARS=(
         SHELLRC_FILE
         DRPM_HOME
-        DRPM_DRG_DIR
+        DRPM_REGISTRY_DIR
         OS_TYPE
         NPMRC_LOCAL
         NPMRC_GLOBAL
