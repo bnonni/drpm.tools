@@ -2,7 +2,6 @@ import { Request } from 'express';
 import {
   DPK_VERSION_PREFIXES,
   DRPM_REGISTRY_DIR,
-  DRPM_DRG_URL,
   NPM_PACKAGE_JSON,
   PACKAGE_VERSION
 } from '../../config.js';
@@ -30,7 +29,7 @@ export class DRegistryUtils {
   static createDist(name: string, version: string): any {
     return {
       shasum  : '',
-      tarball : `http://${DRPM_DRG_URL}/@drpm/${name}/-/${name}-${version}.tgz`
+      tarball : `http://registry.drpm.software/@drpm/${name}/-/${name}-${version}.tgz`
     };
   }
 

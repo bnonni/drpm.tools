@@ -1,4 +1,5 @@
 import { Record } from '@web5/api';
+import { DidResolver } from '../did/resolver.js';
 import { DRegistryUtils } from '../dpk/registry-utils.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
 import dwn from '../dwn/protocol.js';
@@ -6,7 +7,7 @@ import { Logger } from '../logger.js';
 import { ResponseUtils } from '../response.js';
 import { DpkData, DpkDwnResponse, DpkRequest, DrgResponse } from '../types.js';
 import { DRegistry } from './registry.js';
-import { did, DWN_ENDPOINTS, web5 } from '../../config.js';
+import { did, web5 } from '../../drg/server.js';
 
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
@@ -16,7 +17,20 @@ type CreateReleaseParams = {parentId: string; version: string; integrity: string
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
-
+  static async getDwnEndpoints() {
+    const { didDocument } = await DidResolver.resolve(did);
+    Logger.info(`DManager: Resolved didDocument ${didDocument}`);
+    const services = didDocument?.service;
+    const didServiceEndpoint = services?.find(
+      service => service.type === 'DecentralizedWebNode'
+    )?.serviceEndpoint ?? (
+      process.env.NODE_ENV === 'development'
+        ? ['http://localhost:3000/']
+        : ['https://dwn.drpm.tools']
+    );
+    const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
+    return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
+  }
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<DrgResponse> {
     try {
@@ -134,7 +148,7 @@ export class DManager {
   // Fetch DPK from DWeb Node: either metadata or release
   static async readDpk({ did, dpk: { name, version, path }}: DpkRequest): Promise<DrgResponse> {
     try {
-      for (const endpoint of DWN_ENDPOINTS) {
+      for (const endpoint of await this.getDwnEndpoints()) {
         Logger.info(`DManager: Fetching DPK ${name}@${version} from ${endpoint} ...`);
 
         const builder = DrlBuilder.create({ did, endpoint });

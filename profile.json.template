@@ -1,4 +1,5 @@
 {
+    "current": null,
     "dht": {
         "did": "",
         "dwnEndpoints": [],

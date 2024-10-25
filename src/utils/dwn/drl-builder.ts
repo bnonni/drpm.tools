@@ -1,4 +1,5 @@
-import { DRPM_DWN_URL, DRPM_PROTOCOL, DRPM_PROTOCOL_B64URL } from '../../config.js';
+import { DRPM_DWN_URL, DRPM_PROTOCOL_B64URL } from '../../config.js';
+import dwn from './protocol.js';
 import { Logger } from '../logger.js';
 import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from '../types.js';
 import { DrlUtils } from './drl-utils.js';
@@ -33,7 +34,7 @@ export class DrlBuilder {
 
   // Add encoded protocol to the path
   addProtocol({protocol}: {protocol?: string}): DrlBuilder {
-    const encodedProtocol = DrlUtils.base64urlEncode(protocol ?? DRPM_PROTOCOL);
+    const encodedProtocol = DrlUtils.base64urlEncode(protocol ?? dwn.protocol);
     this.path = `${this.path}/read/protocols/${encodedProtocol}`;
     return this;
   }

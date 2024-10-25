@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { program } from 'commander';
-import { DEFAULT_DATAPATH, PACKAGE_VERSION } from '../config.js';
+import { DEFAULT_WEB5DATAPATH, PACKAGE_VERSION } from '../config.js';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
 
 program.version(
-  `dpm v${PACKAGE_VERSION}\nDecentralized Package Manager CLI`,
+  `dpm v${PACKAGE_VERSION}\nDecentralized Registry Package Manager CLI`,
   '-v, --version',
   'Output the current version'
 );
@@ -21,18 +21,20 @@ program.version(
 const profileCommand = program
   .command('profile')
   .description('Interact with your DPM profile')
-  .addHelpText('afterAll', '\nCreate new profile\ndpm profile create -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet multiple fields at once\ndpm profile set -d did:example:abc123 -p "correct horse battery staple" -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet your did\ndpm profile set -d did:example:abc123 ')
-  .addHelpText('afterAll', '\nSet your password\ndpm profile set -p "correct horse battery staple"')
-  .addHelpText('afterAll', '\nSet your endpoint\ndpm profile set -e https://dwn.mydomain.org');
+  .addHelpText('afterAll', '\nCreate new profile\ndrpm profile create -e https://dwn.mydomain.org')
+  .addHelpText('afterAll', '\nSet multiple fields at once\ndrpm profile set -d did:example:abc123 -p "correct horse battery staple" -e https://dwn.mydomain.org')
+  .addHelpText('afterAll', '\nSet your did\ndrpm profile set -d did:example:abc123 ')
+  .addHelpText('afterAll', '\nSet your password\ndrpm profile set -p "correct horse battery staple"')
+  .addHelpText('afterAll', '\nSet your endpoint\ndrpm profile set -e https://dwn.mydomain.org');
 
 /* ---- PROFILE CREATE ---- */
 profileCommand
   .command('create')
   .description('Create a new DPM profile')
   .option('-p, --password <PASSWORD>', 'Secure password to protect your local DRPM DWN data')
-  .option('-e, --dwnEndpoints <ENDPOINT>',
+  .option('-m, --method <METHOD>', 'Did method to use for your profile; Accetps dht and web; (default: dht)')
+  .option('-u, --url <URL>', 'URL of for your did web; (e.g. did:web:example.com)')
+  .option('-e, --dwnEndpoint <ENDPOINT>',
     'Your Decentralized Web Node (DWN) endpoint; Only pass 1 endopoint, e.g. https://dwn.example.com or http://localhost:3000')
   .action(async (args) => await ProfileCommand.create(args));
 
@@ -42,7 +44,7 @@ profileCommand
   .description('Set your DPM profile')
   .option('-d, --did <DID>', 'Your Decentralized Identifier (DID)')
   .option('-p, --password <PASSWORD>', 'Secure password to protect your local DRPM DWN data')
-  .option('-e, --dwnEndpoints <ENDPOINT>',
+  .option('-e, --dwnEndpoint <ENDPOINT>',
     'Your Decentralized Web Node (DWN) endpoint; ' +
     'e.g. https://dwn.example.com, dwn.example.com or http://localhost:3000')
   .option('-w, --web5DataPath <WEB5DATAPATH>',
@@ -51,14 +53,21 @@ profileCommand
   .action(async (args) => await ProfileCommand.set(args));
 
 /* ---- PROFILE GET ---- */
-profileCommand.command('get')
+profileCommand
+  .command('get')
   .description('Get your DPM profile data. If no options passed, full profile will be printed.')
   .option('-d, --did', 'Get your Decentralized Identifier (DID)')
   .option('-p, --password', 'Get your password in plain text')
-  .option('-e, --dwnEndpoints', 'Get your Decentralized Web Node (DWN) endpoint')
-  .option('-w, --web5DataPath', `Get your web5 data storage path (default: ${DEFAULT_DATAPATH})`)
-
+  .option('-e, --dwnEndpoint', 'Get your Decentralized Web Node (DWN) endpoint')
+  .option('-w, --web5DataPath', `Get your web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
   .action(async (args) => await ProfileCommand.get(args));
+
+/* ---- PROFILE SWITCH ---- */
+profileCommand
+  .command('switch')
+  .description('Get your DPM profile data. If no options passed, full profile will be printed.')
+  .option('-m, --method', 'Profile to switch to (based on did method: dht, web, btc)')
+  .action(async (args) => await ProfileCommand.switch(args));
 /* ---- PROFILE ---- */
 
 /**

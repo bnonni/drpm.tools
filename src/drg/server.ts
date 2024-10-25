@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 import http from 'http';
 import { Logger } from '../utils/logger.js';
-import { DRPM_PORT, DRG_HOSTNAME, DRPM_DRG_URL } from '../config.js';
+import { DRPM_REGISTRY_URL } from '../config.js';
 import registry from './routes.js';
-process.title = DRG_HOSTNAME;
+import { Web5DRPM } from '../cli/commands/connect.js';
+process.title = 'registry.drpm.software';
+
+export const { web5, did } = await Web5DRPM.connect();
+
+if(!(web5 || did)) {
+  Logger.error('Failed to connect to Web5', web5, did);
+  process.exit(1);
+}
 
 /**
  * Get port from environment and store in Express.
  */
-const port = normalizePort(DRPM_PORT.toString());
+const port = normalizePort('2092');
 registry.set('port', port);
 
 /**
@@ -77,5 +85,5 @@ function onListening() {
   typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr?.port;
-  Logger.log(`Listening on ${DRPM_DRG_URL}`);
+  Logger.log(`Listening on ${DRPM_REGISTRY_URL}`);
 }

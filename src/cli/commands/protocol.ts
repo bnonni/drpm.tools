@@ -2,11 +2,11 @@ import drpm from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
 import { stringify } from '../../utils/misc.js';
 import { ResponseUtils } from '../../utils/response.js';
-import { DPM5 } from '../dpm5.js';
+import { Web5DRPM } from './connect.js';
 
 export class ProtocolCommand {
   static async configure() {
-    const { web5, did } = await DPM5.connect();
+    const { web5, did } = await Web5DRPM.connect();
     const { status: config, protocol = null } = await web5.dwn.protocols.configure({
       message : { definition: drpm }
     });
@@ -35,7 +35,7 @@ export class ProtocolCommand {
   }
 
   static async query() {
-    const { web5 } = await DPM5.connect();
+    const { web5 } = await Web5DRPM.connect();
     const { status, protocols = [] } = await web5.dwn.protocols.query({
       message : { filter: { protocol: drpm.protocol } }
     });

@@ -1,11 +1,11 @@
 import { Record } from '@web5/api';
 import drpm from '../../utils/dwn/protocol.js';
-import { DPM5 } from '../dpm5.js';
+import { Web5DRPM } from './connect.js';
 import { Logger } from '../../utils/logger.js';
 
-const { web5, did } = await DPM5.connect();
 export class PublishCommand {
   static async package({ name, version, metadata }: { name: string; version: string; metadata: any }) {
+    const { web5, did } = await Web5DRPM.connect();
     const { record = null, status } = await web5.dwn.records.create({
       store   : true,
       data    : metadata[version],
@@ -29,6 +29,7 @@ export class PublishCommand {
   }
 
   static async release({ version, dpk, integrity, parentId }: any) {
+    const { web5, did } = await Web5DRPM.connect();
     const { record, status } = await web5.dwn.records.create({
       message : {
         parentContextId : parentId,
@@ -51,50 +52,3 @@ export class PublishCommand {
     return {status: send, record};
   }
 }
-
-
-// async function queryPackages({name}) {
-//   const { status, records = [] } = await web5.web5.dwn.records.query({
-//     from    : did,
-//     message : {
-//       filter : {
-//         dataFormat   : 'application/json',
-//         schema       : dwnProtocol.types.package.schema,
-//         protocolPath : 'package',
-//         protocol     : dwnProtocol.protocol,
-//         tags         : { name },
-//       },
-//     },
-//   });
-
-//   const reads = await Promise.all(records.map(async (record) => {
-//     return await record.data.json();
-//   }));
-
-//   return { status, records, reads };
-// }
-
-// async function queryReleases({ version, integrity, parentId }) {
-//   const { status, records = [] } = await web5.web5.dwn.records.query({
-//     from    : did,
-//     message : {
-//       filter : {
-//         parentId,
-//         dataFormat   : 'application/json',
-//         schema       : dwnProtocol.types.release.schema,
-//         protocolPath : 'package/release',
-//         protocol     : dwnProtocol.protocol,
-//         tags         : {
-//           version,
-//           integrity
-//         },
-//       },
-//     },
-//   });
-
-//   const reads = await Promise.all(records.map(async (record) => {
-//     return await record.data.json();
-//   }));
-
-//   return { status, records, reads };
-// }

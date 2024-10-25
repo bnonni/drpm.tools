@@ -7,8 +7,7 @@
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "bin": {
-    "dpm": "./dist/esm/dpm/dpm.js",
-    "drpm": "./dist/esm/dpm/dpm.js",
+    "drpm": "./dist/esm/cli/drpm.js",
     "create-dpk": "echo TODO: Implement me!",
     "init-dpk": "echo TODO: Implement me!"
   },
@@ -83,9 +82,12 @@
     "dev": "nodemon",
     "start": "node ./dist/esm/drg/server.js",
     "clean": "rimraf dist coverage tests/compiled",
+    "wipe:DATA": "rimraf DATA",
     "wipe": "rimraf node_modules package-lock.json",
+    "tab:create-did": "./dist/esm/cli/drpm.js profile create -e http://localhost:3000",
+    "tab:configure-protocol": "./dist/esm/cli/drpm.js protocol configure",
     "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm && chmod +x ./dist/esm/dpm/dpm.js",
+    "build": "npm run build:cjs && npm run build:esm && chmod +x ./dist/esm/cli/drpm.js",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
@@ -95,8 +97,7 @@
     "registryd:docker": "sh build/docker.sh",
     "docker:build": "docker build -t dpm-registry .",
     "docker:run": "docker run -d -p 2092:2092 --name dpm-registry-container dpm-registry",
-    "postinstall": "if [[ \"$npm_config_global\" == \"true\" ]]; then echo 'global install detected'; curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/refs/heads/main/scripts/postinstall.sh | sh; else echo 'local install detected' && sh ./scripts/postinstall.sh; fi",
-    "prepack": "npm run build && chmod +x ./dist/esm/dpm/dpm.js"
+    "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js"
   },
   "dependencies": {
     "@tbd54566975/dwn-sdk-js": "^0.5.1",
@@ -112,7 +113,8 @@
     "did-btc-sdk": "^1.0.0",
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "chalk": "^5.3.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
@@ -128,7 +130,6 @@
     "@typescript-eslint/parser": "^8.5.0",
     "c8": "^10.1.2",
     "chai": "^5.1.1",
-    "chalk": "^5.3.0",
     "esbuild": "^0.23.1",
     "eslint-plugin-mocha": "^10.5.0",
     "express-http-proxy": "^2.1.1",
