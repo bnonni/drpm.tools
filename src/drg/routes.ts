@@ -46,22 +46,28 @@ registry.get(['/:scope/:name~:id', '/:scope/:name~:method~:id'], async (req: Req
       Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
       return res.status(404).json({ error: metadataResponse.error });
     }
+    console.log('metadataResponse', metadataResponse);
+    const data = metadataResponse.data;
+    console.log('data', data);
+    const version = data['dist-tags'].latest;
+    console.log('version', version);
+    const tgz = data._attachments[`${dependency}-${version}.tgz`].data;
+    console.log('tgz', tgz);
 
-    const version = metadataResponse?.data;
-    if(!version) {
-      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
-      return res.status(404).json({ error: 'Failed to find or fetch version' });
-    }
+    // if(!version) {
+    //   Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
+    //   return res.status(404).json({ error: 'Failed to find or fetch version' });
+    // }
 
-    const tarballResponse = await DManager.readDpk({ did, dpk: { name: dependency, version, path: 'package/release' } });
-    if(ResponseUtils.fail(tarballResponse)) {
-      Logger.error(`DrgRoutes: Failed to find or fetch tarball`, tarballResponse.error);
-      return res.status(404).json({ error: tarballResponse.error });
-    }
-    const tarballPath = tarballResponse?.data;
-    Logger.debug(`Sending tarball at path ${tarballPath}`);
+    // const tarballResponse = await DManager.readDpk({ did, dpk: { name: dependency, version, path: 'package/release' } });
+    // if(ResponseUtils.fail(tarballResponse)) {
+    //   Logger.error(`DrgRoutes: Failed to find or fetch tarball`, tarballResponse.error);
+    //   return res.status(404).json({ error: tarballResponse.error });
+    // }
+    // const tarballPath = tarballResponse?.data;
+    // Logger.debug(`Sending tarball at path ${tarballPath}`);
 
-    return res.sendFile(tarballPath, {
+    return res.status(200).sendFile(tgz, {
       headers : { 'Content-Type': 'application/octet-stream' }
     });
 

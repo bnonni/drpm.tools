@@ -36,14 +36,13 @@ export class DManager {
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<DrgResponse> {
     try {
-      const drl = builder.buildDrlQuery({ filters: { protocolPath: 'package', tags: [{ subKey: 'name', value: name }], }});
+      const drl = builder.buildDrlRead({ protocolPath: 'package', filters: { tags: [{ subKey: 'name', value: name }], }});
       Logger.debug(`DManager: Using DRL ${drl} to fetch DPK ${name} ...`);
 
       const response: Response = await fetch(drl);
       if (ResponseUtils.fetchFail(response)) {
         Logger.error('DManager: DWeb Node request failed', response);
         return DRegistryUtils.routeFailure({ error: response.statusText });
-
       }
 
       const data: DpkDwnResponse = await response.json();
@@ -51,27 +50,9 @@ export class DManager {
         Logger.error('DManager: DWeb Node request failed - no data', response);
         return DRegistryUtils.routeFailure({ error: 'No data returned'});
       }
+      // Logger.debug(`data`, data);
 
-      const { entries } = data ?? {};
-      if (!entries || !entries.length){
-        return DRegistryUtils.routeFailure({ error: 'No entries found' });
-      }
-
-      const entry = entries.length > 1
-        ? (entries.sort((a, b) => a.descriptor.dateCreated > b.descriptor.dateCreated ? -1 : 1))?.pop()
-        : entries?.pop();
-
-      if (!entry) {
-        return DRegistryUtils.routeFailure({ error: 'No entry found' });
-      }
-
-      const {latest: version, name: packageName} = entry?.descriptor.tags;
-      console.log('entry', entry);
-      if (!(version || packageName)) {
-        Logger.error(`DManager: No latest version ${version}`, response);
-      }
-
-      return DRegistryUtils.routeSuccess({ data: version });
+      return DRegistryUtils.routeSuccess({ data });
     } catch(error: any) {
       Logger.error('DManager: DWeb Node request error catch', error);
       return DRegistryUtils.routeFailure({ error: error.message });
