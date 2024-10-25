@@ -46,7 +46,7 @@ registry.get(['/:scope/:name~:id', '/:scope/:name~:method~:id'], async (req: Req
       Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
       return res.status(404).json({ error: metadataResponse.error });
     }
-    
+
     const data = metadataResponse.data;
     const version = data['dist-tags'].latest;
     const tgz = data._attachments[`${dependency}-${version}.tgz`].data;
