@@ -33,3 +33,5 @@ npm-debug.log*
 .registry*
 .dregistry*
 .postinstall
+
+profile.json
