@@ -1,24 +1,24 @@
 {
-  "current": "dht",
+  "current": null,
   "dht": {
-    "did": "",
-    "dwnEndpoints": [],
-    "web5DataPath": "",
-    "password": "",
-    "recoveryPhrase": ""
+      "did": "",
+      "dwnEndpoints": [],
+      "web5DataPath": "",
+      "password": "",
+      "recoveryPhrase": ""
   },
   "web": {
-    "did": "",
-    "dwnEndpoints": [],
-    "web5DataPath": "",
-    "password": "",
-    "recoveryPhrase": ""
+      "did": "",
+      "dwnEndpoints": [],
+      "web5DataPath": "",
+      "password": "",
+      "recoveryPhrase": ""
   },
   "btc": {
-    "did": "",
-    "dwnEndpoints": [],
-    "web5DataPath": "",
-    "password": "",
-    "recoveryPhrase": ""
+      "did": "",
+      "dwnEndpoints": [],
+      "web5DataPath": "",
+      "password": "",
+      "recoveryPhrase": ""
   }
 }
