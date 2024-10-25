@@ -14,8 +14,8 @@ export const NPM_PACKAGE_JSON = await parsePackageJson().catch(Logger.error);
 export const PACKAGE_VERSION = NPM_PACKAGE_JSON?.version ?? '1.0.0';
 
 export const DRPM_REGISTRY_URL = `http://localhost:2092`;
-export const DRPM_PROFILE = `${CWD}/profile.json`;
-export const DRPM_REGISTRY_DIR = join(CWD, 'registry');
+export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
+export const DRPM_REGISTRY_DIR = join(DRPM_HOME, 'registry');
 export const DRPM_PROTOCOL_B64URL = DrlUtils.base64urlEncode(dwn.protocol);
 export const DRPM_HOME_BAK_DIR = `${CWD}/bak`;
 export const DRPM_USER = userInfo()?.username;

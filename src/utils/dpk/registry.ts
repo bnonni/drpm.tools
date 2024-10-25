@@ -9,7 +9,7 @@ import { DRPM_REGISTRY_DIR } from '../../config.js';
 
 export class DRegistry {
   // Saves the tarball file to path $HOME/.drpm/registry/name/version/name-version.tgz
-  static async saveDpkTarball({ name, version, data }: DrgSaveDpkData): Promise<boolean> {
+  static async saveDpkTarball({ name, version, data }: DrgSaveDpkData): Promise<boolean | string> {
     const dpkAtVersionPath = this.getDpkVersionPath({name, version});
     try {
       await this.ensureDpkDir(dpkAtVersionPath);
@@ -23,7 +23,7 @@ export class DRegistry {
     try {
       Logger.log(`Saving tarball to ${dpkTarballPath} ...`);
       await pipeline(data, createWriteStream(dpkTarballPath));
-      return true;
+      return dpkTarballPath;
     } catch (error) {
       Logger.error(`DRegistry: Failed to save dpk tarball to ${dpkTarballPath} `, error);
       return false;

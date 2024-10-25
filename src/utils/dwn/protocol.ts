@@ -35,9 +35,13 @@ export default {
         name : {
           type : 'string'
         },
+        latest : {
+          type : 'string'
+        },
         $requiredTags : [
-          'name'
-        ]
+          'name',
+          'latest'
+        ],
       },
       $actions : [
         {
@@ -97,6 +101,9 @@ export default {
       },
       release : {
         $tags : {
+          name : {
+            type : 'string'
+          },
           version : {
             type : 'string'
           },
@@ -104,6 +111,7 @@ export default {
             type : 'string'
           },
           $requiredTags : [
+            'name',
             'version',
             'integrity'
           ]

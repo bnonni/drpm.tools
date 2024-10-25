@@ -3,15 +3,7 @@ import http from 'http';
 import { Logger } from '../utils/logger.js';
 import { DRPM_REGISTRY_URL } from '../config.js';
 import registry from './routes.js';
-import { Web5DRPM } from '../cli/commands/connect.js';
 process.title = 'registry.drpm.software';
-
-export const { web5, did } = await Web5DRPM.connect();
-
-if(!(web5 || did)) {
-  Logger.error('Failed to connect to Web5', web5, did);
-  process.exit(1);
-}
 
 /**
  * Get port from environment and store in Express.

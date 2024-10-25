@@ -4,31 +4,9 @@ import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { DManager } from '../utils/dpk/manager.js';
 import { DRegistryUtils } from '../utils/dpk/registry-utils.js';
-import { RequestParams } from '../utils/types.js';
 import { Logger } from '../utils/logger.js';
 import { stringify } from '../utils/misc.js';
 import { ResponseUtils } from '../utils/response.js';
-
-async function handleMetadataRequest(requestParams: RequestParams): Promise<any> {
-  const { name, method, id } = requestParams;
-  const did = !method ? `did:dht:${id}` : `did:${method}:${id}`;
-  Logger.debug(`Using DID ${did}`);
-  const response = await DManager.readDpk({ did, dpk: { name, path: 'package' } });
-  if (ResponseUtils.fail(response)) {
-    Logger.error(`DrgRoutes: Error fetching metadata`, response.error);
-    return DRegistryUtils.routeFailure({ error: response.error });
-  }
-  return DRegistryUtils.routeSuccess({ data: response.data });
-}
-
-async function handleTarballRequest({did, name, version}: {did: string; name: string; version: string}): Promise<any> {
-  const response = await DManager.readDpk({ did, dpk: { name, version, path: 'package/release' } });
-  if (ResponseUtils.fail(response)) {
-    Logger.error(`DrgRoutes: Error fetching tarball`, response.data);
-    return DRegistryUtils.routeFailure({ error: response.error });
-  }
-  return DRegistryUtils.routeSuccess({ data: response.data });
-}
 
 const registry = express();
 
@@ -53,34 +31,37 @@ registry.get(['/:scope/:name~:id', '/:scope/:name~:method~:id'], async (req: Req
     const dependency = !method ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;;
     Logger.log(`${dependency} => ${stringify(req.params)}`);
 
-    const missing = DRegistryUtils.checkReqParams(req.params) ?? [];
+    const missing = DRegistryUtils.checkReqParams({scope, name, id}) ?? [];
     if(missing.length > 0) {
       const missingList = missing.join(', ');
       Logger.error(`DrgRoutes: Missing required params - ${missingList}`);
       return res.status(404).json({ error: `Missing required params: ${missingList}` });
     }
-    const metadataResponse = await handleMetadataRequest(req.params);
-    if(ResponseUtils.fail(metadataResponse)) {
-      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
-      return res.send(404).json({ error: metadataResponse.error });
-    }
-    const metadata = metadataResponse?.data;
-    const dpkDistTags = metadata?.['dist-tags'];
-    const version = dpkDistTags?.latest ?? DRegistryUtils.lookupDependencyVersion({dependency})?.version;
-    if(!version) {
-      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
-      return res.send(404).json({ error: 'Failed to find or fetch version' });
-    }
+
     const did = !method ? `did:dht:${id}` : `did:${method}:${id}`;
     Logger.debug(`Using DID ${did}`);
-    const tarballResponse = await handleTarballRequest({did, name, version});
+
+    const metadataResponse = await DManager.readDpk({ did, dpk: { name: dependency, path: 'package' } });
+    if(ResponseUtils.fail(metadataResponse)) {
+      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
+      return res.status(404).json({ error: metadataResponse.error });
+    }
+
+    const version = metadataResponse?.data;
+    if(!version) {
+      Logger.error(`DrgRoutes: Failed to find or fetch version`, metadataResponse.error);
+      return res.status(404).json({ error: 'Failed to find or fetch version' });
+    }
+
+    const tarballResponse = await DManager.readDpk({ did, dpk: { name: dependency, version, path: 'package/release' } });
     if(ResponseUtils.fail(tarballResponse)) {
       Logger.error(`DrgRoutes: Failed to find or fetch tarball`, tarballResponse.error);
-      return res.send(404).json({ error: tarballResponse.error });
+      return res.status(404).json({ error: tarballResponse.error });
     }
-    const tarballPath = metadataResponse?.data;
+    const tarballPath = tarballResponse?.data;
     Logger.debug(`Sending tarball at path ${tarballPath}`);
-    return res.status(200).sendFile(tarballPath, {
+
+    return res.sendFile(tarballPath, {
       headers : { 'Content-Type': 'application/octet-stream' }
     });
 
@@ -117,7 +98,13 @@ registry.put('/:scope/:name~:id', async (req: Request, res: Response): Promise<a
     }
     const release = metadata._attachments[`${dependency}-${version}.tgz`]?.data;
     const integrity = metadata.versions[version].dist.integrity;
-    const response = await DManager.createPackageRelease({ parentId: packageResponse.data, version, integrity, release});
+    const response = await DManager.createPackageRelease({
+      parentId : packageResponse.data,
+      name     : metadata.name,
+      version,
+      integrity,
+      release
+    });
     if(ResponseUtils.fail(response)) {
       Logger.error(`DrgRoutes: Failed to upload tarball`, response.error);
       return res.status(404).json({ error: response.error });

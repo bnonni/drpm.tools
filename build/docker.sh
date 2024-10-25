@@ -3,7 +3,7 @@
 set -e
 
 DOCKER_CONTAINERS_FILE=containers.txt
-DOCKER_NETWORK=drpm-registry
+DOCKER_NETWORK=drpm-network
 
 if ! docker network ls | grep $DOCKER_NETWORK >/dev/null 2>&1; then
     docker network create $DOCKER_NETWORK
@@ -19,14 +19,16 @@ if [[ -f $DOCKER_CONTAINERS_FILE ]]; then
     fi
 fi
 
-echo "Starting DRPM registry container"
-registry_name=$(docker run --rm --network $DOCKER_NETWORK \
-    --pull always --detach --publish 2092:2092 registry.digitalocean.com/nonni/drpm-registry)
+# echo "Starting DRPM registry container"
+# registry_name=$(docker run --rm --network $DOCKER_NETWORK \
+#     --pull always --detach --publish 2092:2092 --name drpm-registry \
+#     registry.digitalocean.com/nonni/drpm-registry)
 
 echo "Starting DWN container"
 dwn_name=$(docker run --rm --network $DOCKER_NETWORK \
     --pull always --detach --volume dwn-data:/dwn-server/data \
-    --publish 3000:3000 ghcr.io/tbd54566975/dwn-server:main)
+    --publish 3000:3000 --name dwn-server \
+    ghcr.io/tbd54566975/dwn-server:main)
 
-echo "$registry_name" > "$DOCKER_CONTAINERS_FILE"
+# echo "$registry_name" > "$DOCKER_CONTAINERS_FILE"
 echo "$dwn_name" >> "$DOCKER_CONTAINERS_FILE"

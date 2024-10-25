@@ -1,7 +1,7 @@
 import { Record } from '@web5/api';
 import drpm from '../../utils/dwn/protocol.js';
-import { Web5DRPM } from './connect.js';
 import { Logger } from '../../utils/logger.js';
+import { Web5DRPM } from './connect.js';
 
 export class PublishCommand {
   static async package({ name, version, metadata }: { name: string; version: string; metadata: any }) {

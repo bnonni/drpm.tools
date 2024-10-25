@@ -1,0 +1,26 @@
+{
+  "current": "dht",
+  "dht": {
+    "password": "charge exhibit oven wine donor bulb",
+    "did": "did:dht:umrapzbqwwp67m79koe5yf7x9h7kbzuctt4g6encchptm66dfkfo",
+    "recoveryPhrase": "radio flash history employ elder protect exotic aisle friend screen steak illness",
+    "dwnEndpoints": [
+      "http://localhost:3000"
+    ],
+    "web5DataPath": "/Users/bryan/Projects/TBD/bnonni/drpm/drpm.tools/DATA/DHT/AGENT"
+  },
+  "web": {
+    "did": "",
+    "dwnEndpoints": [],
+    "web5DataPath": "",
+    "password": "",
+    "recoveryPhrase": ""
+  },
+  "btc": {
+    "did": "",
+    "dwnEndpoints": [],
+    "web5DataPath": "",
+    "password": "",
+    "recoveryPhrase": ""
+  }
+}

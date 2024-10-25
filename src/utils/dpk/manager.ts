@@ -7,13 +7,15 @@ import { Logger } from '../logger.js';
 import { ResponseUtils } from '../response.js';
 import { DpkData, DpkDwnResponse, DpkRequest, DrgResponse } from '../types.js';
 import { DRegistry } from './registry.js';
-import { did, web5 } from '../../drg/server.js';
+import { Web5DRPM } from '../../cli/commands/connect.js';
+
+const { web5, did } = await Web5DRPM.connect();
 
 type ReadPackageParams = {builder: DrlBuilder; name: string};
 type ReadReleaseParams = ReadPackageParams & {version: string};
 type CreatePackageParams = {metadata: any;};
 // type CreatePackageDidWebParams = {metadata: any; did: string};
-type CreateReleaseParams = {parentId: string; version: string; integrity: string; release: any;};
+type CreateReleaseParams = {parentId: string; name: string; version: string; integrity: string; release: any;};
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
@@ -34,7 +36,7 @@ export class DManager {
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<DrgResponse> {
     try {
-      const drl = builder.buildDrlQuery({ filters: { protocolPath: 'package' }});
+      const drl = builder.buildDrlQuery({ filters: { protocolPath: 'package', tags: [{ subKey: 'name', value: name }], }});
       Logger.debug(`DManager: Using DRL ${drl} to fetch DPK ${name} ...`);
 
       const response: Response = await fetch(drl);
@@ -43,14 +45,12 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: response.statusText });
 
       }
-      Logger.debug(`DManager: DWeb Node response=`, response);
 
       const data: DpkDwnResponse = await response.json();
       if (!data) {
         Logger.error('DManager: DWeb Node request failed - no data', response);
         return DRegistryUtils.routeFailure({ error: 'No data returned'});
       }
-      Logger.debug(`DManager: DWeb Node response data=`, data);
 
       const { entries } = data ?? {};
       if (!entries || !entries.length){
@@ -66,14 +66,12 @@ export class DManager {
       }
 
       const {latest: version, name: packageName} = entry?.descriptor.tags;
-
-      if (!version) {
+      console.log('entry', entry);
+      if (!(version || packageName)) {
         Logger.error(`DManager: No latest version ${version}`, response);
-      } else if (name !== packageName) {
-        Logger.error(`DManager: Response name ${packageName} does not match requested name ${name}`, response);
       }
 
-      return DRegistryUtils.routeSuccess({ data: entry });
+      return DRegistryUtils.routeSuccess({ data: version });
     } catch(error: any) {
       Logger.error('DManager: DWeb Node request error catch', error);
       return DRegistryUtils.routeFailure({ error: error.message });
@@ -112,12 +110,13 @@ export class DManager {
         return DRegistryUtils.routeFailure({ error: 'No tarball data returned' });
       }
 
-      if(!await DRegistry.saveDpkTarball({ name, version, data })) {
+      const tgzPath = await DRegistry.saveDpkTarball({ name: name.replace('@drpm/', '').split('~')[0], version, data });
+      if(!tgzPath) {
         Logger.error('DManager: Failed to save tarball');
         return DRegistryUtils.routeFailure({ error: 'Failed to save tarball' });
       }
 
-      return DRegistryUtils.routeSuccess({ data: response });
+      return DRegistryUtils.routeSuccess({ data: tgzPath });
     } catch(error: any) {
       Logger.error('DManager: DWeb Node request failed', error);
       return DRegistryUtils.routeFailure({ error: error.message });
@@ -166,7 +165,7 @@ export class DManager {
           continue;
         }
 
-        return DRegistryUtils.routeSuccess({ data: response });
+        return response;
       }
 
       return DRegistryUtils.routeFailure({ error: 'All DWeb Node requests failed' });
@@ -226,6 +225,7 @@ export class DManager {
 
   static async createPackage({ metadata }: CreatePackageParams): Promise<DrgResponse> {
     try {
+      console.log('metadata', metadata);
       const { record, status: create } = await web5.dwn.records.create({
         store   : true,
         data    : metadata,
@@ -237,7 +237,7 @@ export class DManager {
           protocol     : dwn.protocol,
           tags         : {
             name   : metadata.name,
-            latest : metadata.version
+            latest : metadata['dist-tags'].latest
           },
         },
       });
@@ -272,7 +272,7 @@ export class DManager {
     }
   }
 
-  static async createPackageRelease({ parentId, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
+  static async createPackageRelease({ parentId, name, version, integrity, release }: CreateReleaseParams): Promise<DrgResponse> {
     try {
       const { record = null, status } = await web5.dwn.records.create({
         data    : release,
@@ -285,6 +285,7 @@ export class DManager {
           protocolPath    : 'package/release',
           protocol        : dwn.protocol,
           tags            : {
+            name,
             version,
             integrity
           }

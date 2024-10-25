@@ -32,6 +32,7 @@ export class ProtocolCommand {
     }
 
     Logger.log('Protocol Configured!', send);
+    process.exit(0);
   }
 
   static async query() {
@@ -54,5 +55,6 @@ export class ProtocolCommand {
 
     const jsonProtocols = await Promise.all(protocols.map(async protocol => protocol.toJSON()));
     Logger.log(`Queried ${jsonProtocols.length} Protocol(s)!`, stringify(jsonProtocols));
+    process.exit(0);
   }
 }

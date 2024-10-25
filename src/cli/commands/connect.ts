@@ -13,11 +13,11 @@ export class Web5DRPM {
   static async connect() {
     const profile = await ProfileCommand.load() ?? {};
     if(profile.current === 'web') {
-      Logger.info(`Connecting with web profile: ${cleanProfile(profile.web)} ...`);
+      Logger.info(`Connecting with web profile: ${cleanProfile(profile.web)}`);
       return await Web5DRPM.didWeb(profile.web);
     }
     if(profile.current === 'dht') {
-      Logger.info(`Connecting with dht profile: ${cleanProfile(profile.dht)} ...`);
+      Logger.info(`Connecting with dht profile: ${cleanProfile(profile.dht)}`);
       return await Web5DRPM.didDht(profile.dht);
     }
     throw new Error('No profile found');

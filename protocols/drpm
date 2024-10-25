@@ -3,6 +3,7 @@
     "published": true,
     "types": {
         "package": {
+            "schema": "https://drpm.tools/schemas/package",
             "dataFormats": [
                 "application/json"
             ]

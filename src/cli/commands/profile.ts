@@ -16,13 +16,22 @@ import { readFile, writeFile } from 'fs/promises';
 import {
   DEFAULT_PASSWORD,
   DEFAULT_PROFILE,
-  DEFAULT_WEB5DATAPATH,
-  DRPM_HOME,
-  DRPM_PROFILE
+  DEFAULT_WEB5DATAPATH
 } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
 import { Profile, ProfileCreateParams, ProfileData, ProfileOptions } from '../../utils/types.js';
+
+const DRPM_HOME = `${process.cwd()}/.drpm`;
+const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
+
+if(!(await exists(DRPM_HOME) || await exists(DRPM_PROFILE))) {
+  (async () => {
+    await ensureDir(DRPM_HOME);
+    await ensureFile(DRPM_PROFILE);
+    await writeFile(DRPM_PROFILE, stringify(DEFAULT_PROFILE));
+  })();
+}
 
 export class DidWebFacade extends DidWeb {
   public static async create<TKms extends CryptoApi | undefined = undefined>({
@@ -44,23 +53,12 @@ export class DidWebFacade extends DidWeb {
 }
 
 export class ProfileCommand {
-  static async setup() {
-    if(!await exists(DRPM_HOME)) {
-      await ensureDir(DRPM_HOME);
-    }
-    if(!await exists(DRPM_PROFILE)) {
-      await ensureFile(DRPM_PROFILE);
-      await writeFile(DRPM_PROFILE, stringify(DEFAULT_PROFILE));
-    }
-  }
-
   static valid(data?: Profile): boolean | Profile {
     if(!data) {
       Logger.error('ProfileError: No profile data found.');
       return false;
     }
     const { did, password, dwnEndpoints, web5DataPath } = data?.[data?.current] ?? {};
-    Logger.info('Profile data:', data);
     // Check for empty or invalid DID
     if (!did || did.trim() === '') {
       Logger.error('ProfileError: DID cannot be blank.');
@@ -151,16 +149,15 @@ export class ProfileCommand {
   static async create({ password, dwnEndpoint, method }: ProfileCreateParams): Promise<void> {
     try {
       method ??= 'dht';
-      await this.setup();
       if(!dwnEndpoint) {
         throw new Error('DWN endpoint is required to create a new profile.');
       }
       const profile = await this.load();
-      if(this.valid(profile)) {
-        throw new Error(`Profile already setup and valid for ${method} context.`);
-      }
+      // if(this.valid(profile)) {
+      //   throw new Error(`Profile already setup and valid for ${method} context.`);
+      // }
       password ??= createPassword();
-      const partialProfile = await this.dht('password', dwnEndpoint);
+      const partialProfile = await this.dht(password, dwnEndpoint);
       await this.save({...profile, ...partialProfile});
       Logger.log(`New DRPM ${method} profile created: ${stringify(partialProfile)}`);
     } catch (error: any) {
@@ -172,7 +169,6 @@ export class ProfileCommand {
   // Function to load existing profile or create a new one
   static async load(): Promise<Profile> {
     const profile = await readFile(DRPM_PROFILE, 'utf8');
-    Logger.debug('Profile loaded:', profile);
     return JSON.parse(profile);
   }
 
@@ -182,14 +178,14 @@ export class ProfileCommand {
   }
 
   static async get(options: ProfileOptions): Promise<void> {
-    await this.setup();
     const profile = await this.load();
-    const profileKeys = Object.keys(options);
+    const data = profile[profile.current ?? 'dht'];
+    const profileKeys = Object.keys(data);
     !profileKeys.length
-      ? Logger.log(`Profile: ${stringify(profile)}`)
+      ? Logger.info(`Profile: ${stringify(profile)}`)
       : profileKeys.forEach((key) => {
         if (options[key as keyof ProfileOptions]) {
-          Logger.log(`${key}: ${profile[key as keyof ProfileData]}`);
+          Logger.info(`${data[key as keyof ProfileData]}`);
         }
       });
   }
@@ -197,7 +193,6 @@ export class ProfileCommand {
   static async set({
     did, password, dwnEndpoint, web5DataPath, recoveryPhrase
   }: ProfileOptions): Promise<void> {
-    await this.setup();
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];
@@ -217,7 +212,6 @@ export class ProfileCommand {
   }
 
   static async switch({ method }: { method: string }): Promise<void> {
-    await this.setup();
     const profile = await this.load();
     if(!profile[method]) {
       throw new Error(`Profile for ${method} does not exist.`);
