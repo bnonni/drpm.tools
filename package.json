@@ -100,7 +100,6 @@
     "docker:push": "docker push registry.digitalocean.com/nonni/drpm-registry",
     "docker:build": "docker build -f build/Dockerfile.registry -t registry.digitalocean.com/nonni/drpm-registry .",
     "docker:run": "docker run -d --rm --network drpm-network -p 2092:2092 --name drpm-registry registry.digitalocean.com/nonni/drpm-registry",
-    "postinstall": "npm run build",
     "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js"
   },
   "dependencies": {
