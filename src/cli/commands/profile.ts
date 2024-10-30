@@ -14,10 +14,10 @@ import {
   DEFAULT_PASSWORD,
   DEFAULT_PROFILE,
   DEFAULT_WEB5DATAPATH,
-  DRPM_HOME,
   DRPM_PROFILE
 } from '../drpm.js';
 import { ConnectCommand } from './connect.js';
+import { DRPM_HOME } from '../../config.js';
 
 export class ProfileCommand {
   static async needSetup(): Promise<boolean> {

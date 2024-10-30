@@ -3,9 +3,9 @@
 import { program } from 'commander';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
+import { DRPM_HOME } from '../config.js';
 
 export const CLI_VERSION = '3.0.1';
-export const DRPM_HOME = `${process.cwd()}/.drpm`;
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
 export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
 export const DEFAULT_PASSWORD = 'insecure-static-password';
