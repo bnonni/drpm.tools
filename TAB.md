@@ -77,8 +77,11 @@ npm publish
 
 * Checkout your newly published package record and package/release record via browser:
 
-* Package record: `http://localhost:3000/did:dht:<insert-your-id>/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package?filter.tags.name=@drpm/dpk1~<insert-your-id>`
-* Package/release record: `http://localhost:3000/did:dht:<insert-your-id>/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/dpk1~<insert-your-id>`
+* Package record:
+`http://localhost:3000/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package?filter.tags.name=@drpm/dpk1~dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy`
+
+* Package/release record:
+`http://localhost:3000/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/dpk1~dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy`
 
 * Create dpk2
 

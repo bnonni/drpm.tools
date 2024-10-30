@@ -14,8 +14,7 @@ registry.use((req: Request, _: Response, next: NextFunction) => {
   next();
 });
 
-// GET route to handle health check
-registry.use(['/', '/health'], healthCheck);
+registry.get(['/', '/health'], healthCheck);
 
 // GET route to handle npm install
 // E.g. list dpk in dependencies "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0"

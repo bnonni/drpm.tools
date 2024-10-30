@@ -16,4 +16,4 @@ RUN npm install --no-save --no-fund --ignore-scripts
 COPY --from=builder /workspace/dist/esm ./
 EXPOSE 2092
 ENTRYPOINT [ "tini", "--" ]
-CMD [ "node", "./drg/server.js" ]
+CMD [ "node", "./registry/server.js" ]

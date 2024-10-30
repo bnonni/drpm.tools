@@ -98,7 +98,7 @@ export type CreateReleaseParams = {
     name: string;
     version: string;
     integrity: string;
-    release: Buffer
+    release: any
 };
 export type DependencyParam = { dependency: string };
 export type PrefixResponse = {

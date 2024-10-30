@@ -14,7 +14,7 @@ if [[ -f "./registry.pid" ]]; then
     REGISTRYD_PID="$(cat ./registry.pid 2>/dev/null)"
 else
     echo "No registry.pid file found, starting registry ..."
-    nohup node ./dist/esm/drg/server.js > ./registry.nohup.out 2>&1 &
+    nohup node ./dist/esm/registry/server.js > ./registry.nohup.out 2>&1 &
     REGISTRYD_PID="$!"
     echo "$REGISTRYD_PID" > "./registry.pid"
 fi

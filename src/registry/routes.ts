@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { pipeline } from 'stream/promises';
+import { pack } from 'tar-stream';
+import zlib from 'zlib';
 import { DManager } from '../utils/dpk/manager.js';
 import { Logger } from '../utils/logger.js';
 import { stringify } from '../utils/misc.js';
@@ -64,15 +67,22 @@ export const npmInstall = async (req: Request, res: Response): Promise<any> => {
 export const npmPublish = async (req: Request, res: Response): Promise<any> => {
   try {
     const { scope, name, method, id } = req.params ?? {};
+
     if(method) {
       return res.status(404).json({ error: `Method ${method} not supported` });
     }
+
     const metadata = req.body;
     const version = metadata['dist-tags'].latest;
-    const dependency =`${scope}/${name}~${id}`;
-    Logger.log(`${dependency} => ${stringify(req.params)}`);
+    const attachment = Buffer.from(metadata._attachments[`${scope}/${name}~${id}-${version}.tgz`]?.data, 'base64');
+    const integrity = metadata.versions[version].dist.integrity;
 
-    const missing = RegistryUtils.checkReqParams(req.params) ?? [];
+    Logger.log('metadata', metadata);
+    Logger.log('version', version);
+    Logger.log('attachment', attachment);
+    Logger.log('integrity', integrity);
+
+    const missing = RegistryUtils.checkReqParams({name, id}) ?? [];
     if(missing.length > 0) {
       const missingList = missing.join(', ');
       Logger.error(`RegistryRoutes: Missing required params - ${missingList}`);
@@ -89,8 +99,21 @@ export const npmPublish = async (req: Request, res: Response): Promise<any> => {
     }
     Logger.log('Package metadata published successfully!');
 
-    const release = Buffer.from(req.body._attachments[`${dependency}-${version}.tgz`]?.data, 'base64');
-    const integrity = req.body.versions[version].dist.integrity;
+    const tarPack = pack();
+    const gzip = zlib.createGzip();
+
+    tarPack.entry({ name: `${name}~${id}-${version}.tgz` }, attachment);
+    tarPack.finalize();
+
+    const chunks: Buffer[] = [];
+    await pipeline(tarPack, gzip, async (source) => {
+      for await (const chunk of source) {
+        chunks.push(chunk); // Collect chunks into an array
+      }
+    });
+    const release = Buffer.concat(chunks);
+
+    Logger.info('release', release);
     const relRes = await DManager.createPackageRelease({
       name,
       version,

@@ -86,10 +86,10 @@ export class DManager {
 
       Logger.debug(`DManager: DWeb Node request success`, response);
 
-      if (response.headers.get('content-type') !== 'application/octet-stream') {
-        Logger.error('DManager: DWeb Node request error - bad content-type', response);
-        return RegistryUtils.routeFailure({ error: `Bad content-type: ${response.headers.get('content-type')}` });
-      }
+      // if (response.headers.get('content-type') !== 'application/octet-stream') {
+      //   Logger.error('DManager: DWeb Node request error - bad content-type', response);
+      //   return RegistryUtils.routeFailure({ error: `Bad content-type: ${response.headers.get('content-type')}` });
+      // }
 
       const data = response.body;
       if (!data) {
@@ -266,7 +266,7 @@ export class DManager {
         message : {
           published       : true,
           parentContextId : parentId,
-          dataFormat      : 'application/octet-stream',
+          dataFormat      : 'application/gzip',
           schema          : dwn.types.release.schema,
           protocolPath    : 'package/release',
           protocol        : dwn.protocol,
