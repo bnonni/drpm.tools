@@ -34,4 +34,5 @@ npm-debug.log*
 .dregistry*
 .postinstall
 
-profile.json
+.drpm/profile.json
+.drpm/registry

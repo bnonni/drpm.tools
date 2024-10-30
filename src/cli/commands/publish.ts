@@ -1,11 +1,11 @@
 import { Record } from '@web5/api';
 import drpm from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
-import { Web5DRPM } from './connect.js';
+import { ConnectCommand } from './connect.js';
 
 export class PublishCommand {
   static async package({ name, version, metadata }: { name: string; version: string; metadata: any }) {
-    const { web5, did } = await Web5DRPM.connect();
+    const { web5, did } = await ConnectCommand.connect();
     const { record = null, status } = await web5.dwn.records.create({
       store   : true,
       data    : metadata[version],
@@ -29,7 +29,7 @@ export class PublishCommand {
   }
 
   static async release({ version, dpk, integrity, parentId }: any) {
-    const { web5, did } = await Web5DRPM.connect();
+    const { web5, did } = await ConnectCommand.connect();
     const { record, status } = await web5.dwn.records.create({
       message : {
         parentContextId : parentId,

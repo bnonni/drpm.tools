@@ -2,8 +2,8 @@
 import http from 'http';
 import { Logger } from '../utils/logger.js';
 import { DRPM_REGISTRY_URL } from '../config.js';
-import registry from './routes.js';
-process.title = 'registry.drpm.software';
+import registry from './index.js';
+process.title = 'registry.drpm.tools';
 
 /**
  * Get port from environment and store in Express.

@@ -3,7 +3,7 @@ import { DrlBuilder } from './dwn/drl-builder.js';
 import { Request } from 'express';
 import { PortableDid } from '@web5/dids';
 
-// Fetching
+// DWN & HTTP Request/Response Types
 export type ResponseInfo = {
     ok: boolean;
     code: number;
@@ -55,7 +55,7 @@ export type DwnRecordDescriptor =
     | DwnMessageDescriptor[DwnInterface.RecordsWrite]
     | DwnMessageDescriptor[DwnInterface.RecordsDelete];
 
-// DrlBuilder
+// DRL Types
 export type BaseDrl = {
     did: string;
     endpoint?: string;
@@ -70,25 +70,53 @@ export type DrlFiltersParams = {
 };
 export type DrlReadParams = { [key: string]: any; } & DrlFiltersParams;
 
-// Drg
-export type DrgSaveDpkData = {
+// Registry Types
+export type RegistrySaveDpkData = {
     name: string;
     version: string;
     data: any
 };
-export type DrgGetDpkPath = {
+export type RegistryGetDpkPath = {
     name: string;
     version: string
 };
-export interface DrgResponse {
+export interface RegistryResponse {
     ok: true | false;
     code: number;
     status: string;
     error?: string;
     data?: any;
 };
+export type ReadPackageParams = {
+    builder: DrlBuilder;
+    name: string
+};
+export type ReadReleaseParams = ReadPackageParams & { version: string };
+export type CreatePackageParams = { metadata: DpkMetadata };
+export type CreateReleaseParams = {
+    parentId: string;
+    name: string;
+    version: string;
+    integrity: string;
+    release: Buffer
+};
+export type DependencyParam = { dependency: string };
+export type PrefixResponse = {
+    prefix: string;
+    version: string
+};
+export type RouteSuccessParams = {
+    code?: number;
+    status?: string;
+    data: any
+};
+export type RouteFailureParams = {
+    code?: number;
+    status?: string;
+    error: any
+};
 
-// Dpk
+// Dpk Types
 export type DIntegrityFormat = 'stream' | 'file';
 export type DIntegrityData = ReadableStream<Uint8Array> | string;
 export type DIntegrityParams = {

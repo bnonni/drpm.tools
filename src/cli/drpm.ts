@@ -1,14 +1,37 @@
 #!/usr/bin/env node
+
 import { program } from 'commander';
-import { DEFAULT_WEB5DATAPATH, PACKAGE_VERSION } from '../config.js';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
 
-program.version(
-  `dpm v${PACKAGE_VERSION}\nDecentralized Registry Package Manager CLI`,
-  '-v, --version',
-  'Output the current version'
-);
+export const CLI_VERSION = '3.0.1';
+export const DRPM_HOME = `${process.cwd()}/.drpm`;
+export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
+export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
+export const DEFAULT_PASSWORD = 'insecure-static-password';
+export const DEFAULT_PROFILE = {
+  default : 'dht',
+  dht     : {
+    did            : '',
+    dwnEndpoints   : [],
+    recoveryPhrase : '',
+    password       : `dht-${DEFAULT_PASSWORD}`
+  },
+  web : {
+    did            : '',
+    dwnEndpoints   : [],
+    recoveryPhrase : '',
+    password       : `web-${DEFAULT_PASSWORD}`
+  },
+  btc : {
+    did            : '',
+    dwnEndpoints   : [],
+    recoveryPhrase : '',
+    password       : `btc-${DEFAULT_PASSWORD}`
+  }
+};
+
+program.version(`dpm v${CLI_VERSION}\nDecentralized Registry Package Manager CLI`, '-v, --version', 'Output the current version');
 
 /**
  * -------- PROFILE -------- *
@@ -49,7 +72,7 @@ profileCommand
     'e.g. https://dwn.example.com, dwn.example.com or http://localhost:3000')
   .option('-w, --web5DataPath <WEB5DATAPATH>',
     'Desired path location to store your web5 data (keys, dwn data, etc.); ' +
-    'Must be an absolute path. default: $HOME/.drpm/DATA')
+    'Must be an absolute path. default: $CWD/.drpm/DATA')
   .action(async (args) => await ProfileCommand.set(args));
 
 /* ---- PROFILE GET ---- */
