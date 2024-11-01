@@ -1,58 +1,63 @@
-import { AgentDidApi, AgentDidResolverCache, DwnDidStore } from '@web5/agent';
-import { Web5 } from '@web5/api';
-import { CryptoApi, LocalKeyManager } from '@web5/crypto';
-import {
-  BearerDid,
-  DidDht,
-  DidDocument,
-  DidJwk,
-  DidJwkCreateOptions,
-  DidVerificationMethod,
-  DidWeb
-} from '@web5/dids';
-import { Web5UserAgent } from '@web5/user-agent';
+import { DidJwk } from '@web5/dids';
 import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
+import { DidWebAgent } from '../../utils/did/did-web-facade.js';
+import { Logger } from '../../utils/logger.js';
+import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
+import {
+  Profile,
+  ProfileCreateParams,
+  ProfileData,
+  ProfileOptions
+} from '../../utils/types.js';
 import {
   DEFAULT_PASSWORD,
   DEFAULT_PROFILE,
-  DEFAULT_WEB5DATAPATH
-} from '../../config.js';
-import { Logger } from '../../utils/logger.js';
-import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
-import { Profile, ProfileCreateParams, ProfileData, ProfileOptions } from '../../utils/types.js';
+  DEFAULT_WEB5DATAPATH,
+  DRPM_PROFILE
+} from '../drpm.js';
+import { ConnectCommand } from './connect.js';
+import { DRPM_HOME } from '../../config.js';
 
-const DRPM_HOME = `${process.cwd()}/.drpm`;
-const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
+export class ProfileCommand {
+  static async needSetup(): Promise<boolean> {
+    return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
+  }
 
-if(!(await exists(DRPM_HOME) || await exists(DRPM_PROFILE))) {
-  (async () => {
+  static async setup(): Promise<void> {
     await ensureDir(DRPM_HOME);
     await ensureFile(DRPM_PROFILE);
     await writeFile(DRPM_PROFILE, stringify(DEFAULT_PROFILE));
-  })();
-}
-
-export class DidWebFacade extends DidWeb {
-  public static async create<TKms extends CryptoApi | undefined = undefined>({
-    keyManager = new LocalKeyManager(),
-    options = {}
-  }: {
-  keyManager?: TKms;
-  options?: DidJwkCreateOptions<TKms>;
-} = {}): Promise<BearerDid> {
-    throw new Error('Method not implemented.' + keyManager + options);
   }
 
-  public static async getSigningMethod({ didDocument }: {
-  didDocument: DidDocument;
-  methodId?: string;
-}): Promise<DidVerificationMethod> {
-    throw new Error('Method not implemented.' + didDocument);
+  static async createDht(password: string, dwnEndpoint: string): Promise<Partial<Profile>> {
+    const data = {
+      password,
+      did            : '',
+      recoveryPhrase : '',
+      dwnEndpoints   : [dwnEndpoint],
+      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`,
+    };
+    const { did, recoveryPhrase } = await ConnectCommand.didDht({ data });
+    return {current: 'dht', dht: {...data, did, recoveryPhrase: recoveryPhrase!}};
   }
-}
 
-export class ProfileCommand {
+  static async createWeb(url: string, dwnEndpoint: string): Promise<Partial<Profile>> {
+    const defaultRecovery = 'default-recovery-phrase';
+    const data = {
+      recoveryPhrase : defaultRecovery,
+      dwnEndpoints   : [dwnEndpoint],
+      did            : `did:web:${url}`,
+      password       : createPassword(),
+      portableDid    : await DidJwk.create(),
+      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/WEB/AGENT`,
+    };
+    const agent = await DidWebAgent.create({ dataPath: data.web5DataPath, portableDid: data.portableDid });
+    const { recoveryPhrase = defaultRecovery } = await ConnectCommand.didWeb({ agent, data });
+    return { current: 'web', web: { ...data, recoveryPhrase } };
+  }
+
+  // Function to validate profile data
   static valid(data?: Profile): boolean | Profile {
     if(!data) {
       Logger.error('ProfileError: No profile data found.');
@@ -83,37 +88,7 @@ export class ProfileCommand {
     return true;
   }
 
-  static async web(url: string, dwnEndpoint: string): Promise<Partial<Profile>> {
-    const data = {
-      did            : `did:web:${url}`,
-      dwnEndpoints   : [dwnEndpoint],
-      portableDid    : await DidJwk.create(),
-      password       : createPassword(),
-      recoveryPhrase : '',
-      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/WEB/${url}/AGENT`,
-    };
-    const agent = await Web5UserAgent.create({
-      dataPath : data.web5DataPath,
-      agentDid : await BearerDid.import({ portableDid: data.portableDid }),
-      didApi   : new AgentDidApi({
-        store         : new DwnDidStore(),
-        didMethods    : [DidDht, DidJwk, DidWebFacade],
-        resolverCache : new AgentDidResolverCache({
-          location : `${data.web5DataPath}/DID_RESOLVERCACHE`
-        }),
-      })
-    });
-    const { recoveryPhrase } = await Web5.connect({
-      agent,
-      password         : data.password,
-      connectedDid     : data.did,
-      sync             : 'off',
-      didCreateOptions : { dwnEndpoints: data.dwnEndpoints },
-      techPreview      : { dwnEndpoints: data.dwnEndpoints }
-    });
-    return {current: 'web', web: {...data, recoveryPhrase: recoveryPhrase!}};
-  }
-
+  // Function to check if a profile exists
   static async exists(method?: string): Promise<boolean | Profile> {
     try {
       const profile = await this.load();
@@ -129,25 +104,10 @@ export class ProfileCommand {
     }
   }
 
-  static async dht(password: string, dwnEndpoint: string): Promise<Partial<Profile>> {
-    const data = {
-      password,
-      did            : '',
-      recoveryPhrase : '',
-      dwnEndpoints   : [dwnEndpoint],
-      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`,
-    };
-    const { did, recoveryPhrase } = await Web5.connect({
-      password,
-      sync             : 'off',
-      didCreateOptions : { dwnEndpoints: [dwnEndpoint] },
-      techPreview      : { dwnEndpoints: [dwnEndpoint] },
-    });
-    return {current: 'dht', dht: {...data, did, recoveryPhrase: recoveryPhrase!}};
-  }
-
+  // Function to create a new profile
   static async create({ password, dwnEndpoint, method }: ProfileCreateParams): Promise<void> {
     try {
+      if(await this.needSetup()) await this.setup();
       method ??= 'dht';
       if(!dwnEndpoint) {
         throw new Error('DWN endpoint is required to create a new profile.');
@@ -157,7 +117,7 @@ export class ProfileCommand {
       //   throw new Error(`Profile already setup and valid for ${method} context.`);
       // }
       password ??= createPassword();
-      const partialProfile = await this.dht(password, dwnEndpoint);
+      const partialProfile = await this.createDht(password, dwnEndpoint);
       await this.save({...profile, ...partialProfile});
       Logger.log(`New DRPM ${method} profile created: ${stringify(partialProfile)}`);
     } catch (error: any) {
@@ -177,6 +137,7 @@ export class ProfileCommand {
     await writeFile(DRPM_PROFILE, stringify(profile));
   }
 
+  // Function to get profile data
   static async get(options: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const data = profile[profile.current ?? 'dht'];
@@ -190,9 +151,8 @@ export class ProfileCommand {
       });
   }
 
-  static async set({
-    did, password, dwnEndpoint, web5DataPath, recoveryPhrase
-  }: ProfileOptions): Promise<void> {
+  // Function to update profile data
+  static async set({ did, password, dwnEndpoint, web5DataPath, recoveryPhrase }: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];

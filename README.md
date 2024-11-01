@@ -69,7 +69,33 @@ Npmjs packages are published under usernames or organization names. Devs can pub
 
 ## Usage
 
-To use DRPM, pick a mode below and follow the steps.
+To install or publish a dpk, follow the appropriate steps below:
+
+### Installing DPKs
+
+To install a dpk from your dwn into an existing project:
+
+1. Run the registry server on localhost:2092
+```sh
+npm install
+npm run install:cli
+npm run registryd:start
+```
+2. Manually add the package name to package.json dependencies
+```json
+{
+  "dependencies": {
+    "@drpm/packageName~methodSpecificId": "[prefix]M.m.p"
+  }
+}
+```
+3. Run `npm install` in the root directory of your package\
+
+### Publishing DPKs
+
+To publish a dpk to your dwn:
+
+1. 
 
 ### Quick Mode
 

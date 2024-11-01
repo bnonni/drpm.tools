@@ -2,11 +2,11 @@ import drpm from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
 import { stringify } from '../../utils/misc.js';
 import { ResponseUtils } from '../../utils/response.js';
-import { Web5DRPM } from './connect.js';
+import { ConnectCommand } from './connect.js';
 
 export class ProtocolCommand {
   static async configure() {
-    const { web5, did } = await Web5DRPM.connect();
+    const { web5, did } = await ConnectCommand.connect();
     const { status: config, protocol = null } = await web5.dwn.protocols.configure({
       message : { definition: drpm }
     });
@@ -31,12 +31,12 @@ export class ProtocolCommand {
       throw new Error(`ProtocolSendError: Failed to configure remote DWN - Send Fail Status: ${stringify(send)}`);
     }
 
-    Logger.log('Protocol Configured!', send);
+    Logger.log(`Protocol configured: ${stringify({...send, ...protocol?.['_metadata']})}`);
     process.exit(0);
   }
 
   static async query() {
-    const { web5 } = await Web5DRPM.connect();
+    const { web5 } = await ConnectCommand.connect();
     const { status, protocols = [] } = await web5.dwn.protocols.query({
       message : { filter: { protocol: drpm.protocol } }
     });
