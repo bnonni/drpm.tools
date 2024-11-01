@@ -7,9 +7,7 @@
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "bin": {
-    "drpm": "./dist/esm/cli/drpm.js",
-    "create-dpk": "echo TODO: Implement me!",
-    "init-dpk": "echo TODO: Implement me!"
+    "drpm": "./dist/esm/cli/drpm.js"
   },
   "exports": {
     ".": {
