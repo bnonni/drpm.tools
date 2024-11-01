@@ -73,7 +73,7 @@ profileCommand
     'e.g. https://dwn.example.com, dwn.example.com or http://localhost:3000')
   .option('-w, --web5DataPath <WEB5DATAPATH>',
     'Desired path location to store your web5 data (keys, dwn data, etc.); ' +
-    'Must be an absolute path. default: $CWD/.drpm/DATA')
+    `Must be an absolute path. default: ${process.cwd()}/DATA`)
   .action(async (args) => await ProfileCommand.set(args));
 
 /* ---- PROFILE GET ---- */
