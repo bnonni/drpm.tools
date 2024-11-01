@@ -81,6 +81,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node ./dist/esm/registry/server.js",
+    "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",
     "tab:1-setup-npmrc": "[[ -f ~/.npmrc ]] && cp ~/.npmrc ~/.npmrc.drpm.bak || cp .npmrc ~/.npmrc",
@@ -94,13 +95,14 @@
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json && chmod +x ./dist/esm/cli/drpm.js",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
-    "registryd:nohup": "sh scripts/registryd/nohup.sh",
-    "registryd:pid": "sh scripts/registryd/pid.sh",
-    "registryd:kill": "sh scripts/registryd/kill.sh",
+    "install:cli": "npm run build && ln -s $(pwd)/dist/esm/cli/drpm.js /usr/local/bin/drpm",
+    "registryd:start": "sh scripts/registryd/start-restart.sh",
+    "registryd:stop": "sh scripts/registryd/stop.sh",
+    "registryd:restart": "npm run registryd:start -- -f",
+    "registryd:info": "sh scripts/registryd/info.sh",
     "docker:push": "docker push registry.digitalocean.com/nonni/drpm-registry",
     "docker:build": "docker build -f build/Dockerfile.registry -t registry.digitalocean.com/nonni/drpm-registry .",
-    "docker:run": "docker run -d --rm --network drpm-network -p 2092:2092 --name drpm-registry registry.digitalocean.com/nonni/drpm-registry",
-    "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js"
+    "docker:run": "docker run -d --rm --network drpm-network -p 2092:2092 --name drpm-registry registry.digitalocean.com/nonni/drpm-registry"
   },
   "dependencies": {
     "@tbd54566975/dwn-sdk-js": "^0.5.1",

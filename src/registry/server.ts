@@ -2,7 +2,7 @@
 import http from 'http';
 import { Logger } from '../utils/logger.js';
 import { DRPM_REGISTRY_URL } from '../config.js';
-import registry from './index.js';
+import registry from './registry.js';
 process.title = 'registry.drpm.tools';
 
 /**
@@ -45,6 +45,7 @@ function normalizePort(val: string): number | string | false {
 /**
  * Event listener for HTTP server "error" event.
  */
+// eslint-disable-next-line no-undef
 function onError(error: NodeJS.ErrnoException) {
   if (error.syscall !== 'listen') {
     throw error;

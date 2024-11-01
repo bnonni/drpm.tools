@@ -5,12 +5,13 @@ import { DidResolver } from '../did/resolver.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
 import dwn from '../dwn/protocol.js';
 import { Logger } from '../logger.js';
+import { stringify } from '../misc.js';
 import { ResponseUtils } from '../response.js';
 import {
   CreatePackageParams,
   CreateReleaseParams,
-  DpkData,
   DpkDwnResponse,
+  DpkMetadata,
   DpkRequest,
   ReadPackageParams,
   ReadReleaseParams,
@@ -23,9 +24,9 @@ const { web5, did } = await RegistryConnect.connect();
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
-  static async getDwnEndpoints() {
-    const { didDocument } = await DidResolver.resolve(did);
-    Logger.info(`DManager: Resolved didDocument ${didDocument}`);
+  static async getDwnEndpoints(didToResolve: string = did): Promise<string[]> {
+    const { didDocument } = await DidResolver.resolve(didToResolve) ?? {};
+    Logger.info(`DManager: Resolved didDocument=${stringify(didDocument)}`);
     const services = didDocument?.service;
     const didServiceEndpoint = services?.find(
       service => service.type === 'DecentralizedWebNode'
@@ -37,9 +38,40 @@ export class DManager {
     const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
     return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
   }
+
+  static async readPackageRecord({name}: {name: string}): Promise<RegistryResponse> {
+    for (const endpoint of await this.getDwnEndpoints()) {
+      Logger.info(`DManager: Fetching DPK ${name} from ${endpoint} ...`);
+
+      const drl = DrlBuilder
+        .create({ did, endpoint })
+        .buildDrlRead({
+          protocolPath : 'package',
+          filters      : { tags: [{ subKey: 'name', value: name }] }
+        });
+
+      const response: Response = await fetch(drl);
+      if (ResponseUtils.fetchFail(response)) {
+        Logger.error('DManager: DWeb Node request failed', response);
+        return RegistryUtils.routeFailure({ error: response.statusText });
+      }
+
+      const metadata: DpkMetadata = await response.json();
+      if (!metadata) {
+        Logger.error('DManager: DWeb Node request failed - no metadata', response);
+        return RegistryUtils.routeFailure({ error: 'No data returned'});
+      }
+
+      return RegistryUtils.routeSuccess({ data: { ...metadata, endpoint } });
+    }
+
+    return RegistryUtils.routeFailure({ error: 'All DWeb Node requests failed' });
+  }
+
   // Fetch DPK metadata from DWeb Node DRPM protocol at /package protocol path
   static async readPackage({ builder, name }: ReadPackageParams): Promise<RegistryResponse> {
     try {
+
       const drl = builder.buildDrlRead({ protocolPath: 'package', filters: { tags: [{ subKey: 'name', value: name }], }});
       Logger.debug(`DManager: Using DRL ${drl} to fetch DPK ${name} ...`);
 
@@ -54,7 +86,6 @@ export class DManager {
         Logger.error('DManager: DWeb Node request failed - no data', response);
         return RegistryUtils.routeFailure({ error: 'No data returned'});
       }
-      // Logger.debug(`data`, data);
 
       return RegistryUtils.routeSuccess({ data });
     } catch(error: any) {
@@ -86,10 +117,10 @@ export class DManager {
 
       Logger.debug(`DManager: DWeb Node request success`, response);
 
-      // if (response.headers.get('content-type') !== 'application/octet-stream') {
-      //   Logger.error('DManager: DWeb Node request error - bad content-type', response);
-      //   return RegistryUtils.routeFailure({ error: `Bad content-type: ${response.headers.get('content-type')}` });
-      // }
+      if (response.headers.get('content-type') !== 'application/gzip') {
+        Logger.error('DManager: DWeb Node request error - bad content-type', response);
+        return RegistryUtils.routeFailure({ error: `Bad content-type: ${response.headers.get('content-type')}` });
+      }
 
       const data = response.body;
       if (!data) {
@@ -97,36 +128,9 @@ export class DManager {
         return RegistryUtils.routeFailure({ error: 'No tarball data returned' });
       }
 
-      // const tgzPath = await DRegistry.saveDpkTarball({ name: name.replace('@drpm/', '').split('~')[0], version, data });
-      // if(!tgzPath) {
-      //   Logger.error('DManager: Failed to save tarball');
-      //   return RegistryUtils.routeFailure({ error: 'Failed to save tarball' });
-      // }
-
       return RegistryUtils.routeSuccess({ data });
     } catch(error: any) {
       Logger.error('DManager: DWeb Node request failed', error);
-      return RegistryUtils.routeFailure({ error: error.message });
-    }
-  }
-
-  static async readBoth({ did, dpk: { name, version }}: DpkRequest): Promise<RegistryResponse> {
-    try {
-      const responses: DpkData = {};
-
-      for(const path of ['package', 'package/release']) {
-        const response: RegistryResponse = await this.readDpk({ did, dpk: { name, version, path }});
-
-        if(ResponseUtils.fail(response)) {
-          Logger.error(`DManager: DWeb Node ${path} request error`, response);
-          return RegistryUtils.routeFailure({ error: response.error });
-        }
-        responses[path] = response.data;
-      }
-
-      return RegistryUtils.routeSuccess({ data: responses });
-    } catch(error: any) {
-      Logger.error('DManager: DWeb Node request error catch', error);
       return RegistryUtils.routeFailure({ error: error.message });
     }
   }

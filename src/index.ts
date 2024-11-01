@@ -12,7 +12,7 @@ export * from './utils/did/resolver.js';
 export * from './utils/did/did-btc.js';
 
 export * from './registry/utils.js';
-export * from './registry/routes.js';
+export * from './registry/registry.js';
 export * from './registry/server.js';
 
 export * from './cli/drpm.js';

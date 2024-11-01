@@ -63,10 +63,7 @@ export type BaseDrl = {
 export type DrlQueryFilter = { subKey?: string; value: string };
 export type DrlAddQueryFilterParams = { key: string } & DrlQueryFilter;
 export type DrlFiltersParams = {
-    filters:
-        | Record<string, string
-        | Array<DrlQueryFilter>
-        | DrlQueryFilter>;
+    filters: Record<string, string | Array<DrlQueryFilter> | DrlQueryFilter>;
 };
 export type DrlReadParams = { [key: string]: any; } & DrlFiltersParams;
 
