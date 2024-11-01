@@ -81,7 +81,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node ./dist/esm/registry/server.js",
-    "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js",
+    "prepack": "npm run build && npm run cli:version && chmod +x ./dist/esm/cli/drpm.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",
     "tab:1-setup-npmrc": "[[ -f ~/.npmrc ]] && cp ~/.npmrc ~/.npmrc.drpm.bak || cp .npmrc ~/.npmrc",
@@ -95,7 +95,8 @@
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.esm.json && chmod +x ./dist/esm/cli/drpm.js",
     "build:tests": "npm run build && tsc -p tests/tsconfig.json",
-    "install:cli": "npm run build && ln -s $(pwd)/dist/esm/cli/drpm.js /usr/local/bin/drpm",
+    "cli:install-local": "[[ ! -f /usr/local/bin/drpm ]] && npm run build && ln -s $(pwd)/dist/esm/cli/drpm.js /usr/local/bin/drpm || echo 'DRPM CLI already installed!\n'",
+    "cli:version": "npm run build && sh scripts/cli/version.sh",
     "registryd:start": "sh scripts/registryd/start-restart.sh",
     "registryd:stop": "sh scripts/registryd/stop.sh",
     "registryd:restart": "npm run registryd:start -- -f",
