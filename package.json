@@ -7,7 +7,7 @@
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "bin": {
-    "drpm": "./dist/esm/cli/drpm.js"
+    "drpm": "dist/esm/cli/drpm.js"
   },
   "exports": {
     ".": {
