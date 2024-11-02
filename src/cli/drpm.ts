@@ -66,7 +66,7 @@ profile
         drpm profile set -p "correct horse battery staple"    # Set the password
         drpm profile set -e https://dwn.mydomain.org          # Set the DWN endpoint
   `)
-  .action(async (args) => await ProfileCommand.set(args));
+  .action(ProfileCommand.set);
 
 /* ---- PROFILE GET ---- */
 profile
@@ -74,7 +74,7 @@ profile
   .description('Get your DPM profile data. If no options passed, full profile will be printed.')
   .option('-d, --did', 'Get the DID')
   .option('-p, --password', 'Get the password in plain text')
-  .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Get the recovery phrase (for agent key recovery)')
+  .option('-r, --recoveryPhrase', 'Get the recovery phrase (for agent key recovery)')
   .option('-e, --dwnEndpoints', 'Get the DWN endpoints')
   .option('-w, --web5DataPath', `Get the web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
   .addHelpText('after', `
@@ -84,8 +84,9 @@ profile
       drpm profile get -p    # Print the profile password
       drpm profile get -e    # Print the profile DWN endpoints
       drpm profile get -w    # Print the profile web5 data path
+      drpm profile get -r    # Print the profile recovery phrase
     `)
-  .action(async (args) => await ProfileCommand.get(args));
+  .action(ProfileCommand.get);
 
 
 /* ---- PROFILE SWITCH ---- */

@@ -2,12 +2,12 @@ import dwn from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
 import { ResponseUtils } from '../../utils/response.js';
 import { CreatePackageParams, CreateReleaseParams } from '../../utils/types.js';
-import { DrpmConnect } from './connect.js';
+import { ConnectCommand } from './connect.js';
 
 export class DrpmPublish {
   static async package({ metadata }: CreatePackageParams) {
     try {
-      const { web5, did } = await DrpmConnect.connect();
+      const { web5, did } = await ConnectCommand.connect();
       const { record = null, status } = await web5.dwn.records.create({
         store   : true,
         data    : metadata,
@@ -55,7 +55,7 @@ export class DrpmPublish {
 
   static async release({ parentId, name, version, integrity, release }: CreateReleaseParams): Promise<any> {
     try {
-      const { web5, did } = await DrpmConnect.connect();
+      const { web5, did } = await ConnectCommand.connect();
       const { record = null, status } = await web5.dwn.records.create({
         store   : true,
         data    : release,
