@@ -1,19 +1,14 @@
 import { DidJwk } from '@web5/dids';
 import { exists } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
-import { DEFAULT_PASSWORD, DEFAULT_WEB5DATAPATH, DRPM_HOME, DRPM_PROFILE, DrpmProfile } from '../../drpm/profile.js';
-import { DidWebAgent } from '../../utils/did/did-web-facade.js';
-import { Logger } from '../../utils/logger.js';
-import { cleanProfile, createPassword, stringify } from '../../utils/misc.js';
-import {
-  Profile,
-  ProfileCreateParams,
-  ProfileData,
-  ProfileOptions
-} from '../../utils/types.js';
-import { ConnectCommand } from './connect.js';
+import { DEFAULT_PASSWORD, DEFAULT_WEB5DATAPATH, DRPM_HOME, DRPM_PROFILE } from '../config.js';
+import { DidWebAgent } from '../utils/did/did-web-facade.js';
+import { Logger } from '../utils/logger.js';
+import { cleanProfile, createPassword, stringify } from '../utils/misc.js';
+import { Profile, ProfileCreateParams, ProfileData, ProfileOptions } from '../utils/types.js';
+import { DrpmWeb5 } from './web5.js';
 
-export class ProfileCommand extends DrpmProfile {
+export class DrpmProfile {
   static async needSetup(): Promise<boolean> {
     return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
   }
@@ -26,7 +21,7 @@ export class ProfileCommand extends DrpmProfile {
       dwnEndpoints   : [dwnEndpoint],
       web5DataPath   : `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`,
     };
-    const { did, recoveryPhrase } = await ConnectCommand.didDht({ data });
+    const { did, recoveryPhrase } = await DrpmWeb5.connectDht({ data });
     return {current: 'dht', dht: {...data, did, recoveryPhrase: recoveryPhrase!}};
   }
 
@@ -41,7 +36,7 @@ export class ProfileCommand extends DrpmProfile {
       web5DataPath   : `${DEFAULT_WEB5DATAPATH}/WEB/AGENT`,
     };
     const agent = await DidWebAgent.create({ dataPath: data.web5DataPath, portableDid: data.portableDid });
-    const { recoveryPhrase = defaultRecovery } = await ConnectCommand.didWeb({ agent, data });
+    const { recoveryPhrase = defaultRecovery } = await DrpmWeb5.connectWeb({ agent, data });
     return { current: 'web', web: { ...data, recoveryPhrase } };
   }
 
@@ -93,13 +88,13 @@ export class ProfileCommand extends DrpmProfile {
   }
 
   // Function to create a new profile
-  static async create({ password, dwnEndpoint, method }: ProfileCreateParams): Promise<void> {
+  static async create({ password, dwnEndpoints, method }: ProfileCreateParams): Promise<void> {
     try {
       if(await this.needSetup()) {
         throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
       }
       method ??= 'dht';
-      if(!dwnEndpoint) {
+      if(!dwnEndpoints) {
         throw new Error('DWN endpoint is required to create a new profile.');
       }
       const profile = await this.load();
@@ -107,7 +102,7 @@ export class ProfileCommand extends DrpmProfile {
       //   throw new Error(`Profile already setup and valid for ${method} context.`);
       // }
       password ??= createPassword();
-      const partialProfile = await this.createDht(password, dwnEndpoint);
+      const partialProfile = await this.createDht(password, dwnEndpoints);
       await this.save({...profile, ...partialProfile});
       Logger.log(`New DRPM ${method} profile created: ${stringify(partialProfile)}`);
     } catch (error: any) {
@@ -130,30 +125,31 @@ export class ProfileCommand extends DrpmProfile {
   // Function to get profile data
   static async get(options: ProfileOptions): Promise<void> {
     const profile = await this.load();
-    const data = profile[profile.current ?? 'dht'];
-    const profileKeys = Object.keys(data);
-    !profileKeys.length
-      ? Logger.info(`Profile: ${stringify(profile)}`)
-      : profileKeys.forEach((key) => {
-        if (options[key as keyof ProfileOptions]) {
-          Logger.info(`${data[key as keyof ProfileData]}`);
+    const current = profile.current ?? 'dht';
+    const data = profile[current];
+    const optionKeys = Object.keys(options);
+    !optionKeys.length
+      ? Logger.plain(`${current.toUpperCase()} Profile:\n${cleanProfile(data)}`)
+      : optionKeys.forEach((key) => {
+        if (data[key as keyof ProfileOptions]) {
+          Logger.plain(`${key}: ${data[key as keyof ProfileData]}`);
+        } else {
+          Logger.error(`ProfileError: ${key} not found in profile.`);
         }
       });
   }
 
   // Function to update profile data
-  static async set({ did, password, dwnEndpoint, web5DataPath, recoveryPhrase }: ProfileOptions): Promise<void> {
+  static async set({ did, password, dwnEndpoints, web5DataPath, recoveryPhrase }: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];
     const updatedData = {
       did            : did ?? data.did,
       password       : password ?? data.password,
-      dwnEndpoints   : !dwnEndpoint
+      dwnEndpoints   : !dwnEndpoints
         ? data.dwnEndpoints
-        : !dwnEndpoint.startsWith('http')
-          ? [`https://${dwnEndpoint}`]
-          : [dwnEndpoint],
+        : dwnEndpoints.split(','),
       web5DataPath   : web5DataPath ?? data.web5DataPath,
       recoveryPhrase : recoveryPhrase ?? data.recoveryPhrase,
     };
@@ -161,12 +157,12 @@ export class ProfileCommand extends DrpmProfile {
     Logger.log(`Profile updated: ${cleanProfile(updatedData)}`);
   }
 
-  static async switch({ method }: { method: string }): Promise<void> {
+  static async switch({ dht, web, btc }: { dht: string, web: string, btc: string }): Promise<void> {
     const profile = await this.load();
-    if(!profile[method]) {
-      throw new Error(`Profile for ${method} does not exist.`);
-    }
-    await this.save({...profile, current: method});
-    Logger.log(`Switched to ${method} profile.`);
+    console.log('dht, web, btc', dht, web, btc);
+    profile.current = dht ? 'dht' : web ? 'web' : btc ? 'btc' : profile.current;
+    await this.save(profile);
+    const data = profile[profile.current];
+    Logger.log(`Switched to ${profile.current} profile: ${cleanProfile(data)}`);
   }
 }

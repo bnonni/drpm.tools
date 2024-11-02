@@ -46,7 +46,7 @@ export class ConnectCommand {
         techPreview      : { dwnEndpoints }
       });
     } catch (error: any) {
-      Logger.error('ConnectCommand: Failed to connect to Web5 using DidWeb', error);
+      Logger.error('DrpmConnect: Failed to connect to Web5 using DidWeb', error);
       process.exit(1);
     }
   }
@@ -61,7 +61,7 @@ export class ConnectCommand {
         techPreview      : { dwnEndpoints },
       });
     } catch (error: any) {
-      Logger.error('ConnectCommand: Failed to connect to Web5 using DidDHT', error);
+      Logger.error('DrpmConnect: Failed to connect to Web5 using DidDHT', error);
       process.exit(1);
     }
   }

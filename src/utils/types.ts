@@ -172,3 +172,4 @@ export type ProfileCreateParams = {
     password?: string;
 };
 export type RequestParams = Request['params'];
+export type CreatePackageDidWebParams = {metadata: any; did: string};

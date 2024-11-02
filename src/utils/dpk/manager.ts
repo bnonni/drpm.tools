@@ -1,5 +1,5 @@
 import { Record } from '@web5/api';
-import { RegistryConnect } from '../../registry/connect.js';
+import { DrpmConnect } from '../../cli/commands/connect.js';
 import { RegistryUtils } from '../../registry/utils.js';
 import { DidResolver } from '../did/resolver.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
@@ -18,9 +18,7 @@ import {
   RegistryResponse
 } from '../types.js';
 
-const { web5, did } = await RegistryConnect.connect();
-
-// type CreatePackageDidWebParams = {metadata: any; did: string};
+const { web5, did } = await DrpmConnect.connect();
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method

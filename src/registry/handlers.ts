@@ -19,18 +19,14 @@ export class RegistryHandlers {
 
   public static async install(req: Request, res: Response): Promise<any> {
     try {
-      const { scope, name, method, id } = req.params ?? {};
-      const dependency = !method ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;;
+      const { scope, name, method = 'dht', id } = req.params ?? {};
+      const dependency = method === 'dht' ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;;
       Logger.log(`Installing ${dependency} ...`);
 
-      if(method) {
-        Logger.log('Deleting req param method ...');
-        delete req.params.method;
-      }
-      const missing = RegistryUtils.checkReqParams(req.params) ?? [];
+      const missing = RegistryUtils.checkReqParams({scope, name, method, id}) ?? [];
       if(missing.length > 0) {
         const missingList = missing.join(', ');
-        Logger.error(`RegistryRoutes: Missing required params - ${missingList}`);
+        Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);
         return res.status(404).json({ error: `Missing required params: ${missingList}` });
       }
 
@@ -38,20 +34,20 @@ export class RegistryHandlers {
       const {data} = response ?? {};
       if(ResponseUtils.fail(response)) {
         const {code, error} = response;
-        Logger.error(`RegistryRoutes: Failed to find or fetch version`, response.error);
+        Logger.error(`RegistryHandlers: Failed to find or fetch version`, response.error);
         return res.status(code).json({ error });
       }
 
       const isValid = Object.keys(data).some(key => ['dist-tags', 'versions'].includes(key));
       if(!isValid) {
-        Logger.error(`RegistryRoutes: Invalid metadata`, data);
+        Logger.error(`RegistryHandlers: Invalid metadata`, data);
         return res.status(404).json({ error: 'Invalid metadata: missing keys "dist-tags" and "versions"' });
       }
 
       const {'dist-tags': distTags, versions, endpoint} = data;
       const version = distTags.latest;
 
-      const did = !method ? `did:dht:${id}` : `did:${method}:${id}`;
+      const did = `did:${method}:${id}`;
       Logger.debug(`Using ${did} to find dwnEndpoints ...`);
 
       versions[version].dist.tarball = DrlBuilder
@@ -77,16 +73,16 @@ export class RegistryHandlers {
 
   public static async publish(req: Request, res: Response): Promise<any> {
     try {
-      const { scope, name, method, id } = req.params ?? {};
+      const { scope, name, method = 'dht', id } = req.params ?? {};
 
-      if(method) {
+      if(method !== 'dht') {
         return res.status(404).json({ error: `Unsupported DID method ${method}. DRPM only supports DHT method at this time` });
       }
 
       const metadata = req.body;
       const isValid = Object.keys(metadata).some(key => ['dist-tags', 'versions'].includes(key));
       if(!isValid) {
-        Logger.error(`RegistryRoutes: Invalid metadata`, metadata);
+        Logger.error(`RegistryHandlers: Invalid metadata`, metadata);
         return res.status(404).json({ error: 'Invalid metadata: missing keys "dist-tags" and "versions"' });
       }
       const { 'dist-tags': distTags, _attachments, versions } = metadata;
@@ -97,7 +93,7 @@ export class RegistryHandlers {
       const missing = RegistryUtils.checkReqParams({name, id}) ?? [];
       if(missing.length > 0) {
         const missingList = missing.join(', ');
-        Logger.error(`RegistryRoutes: Missing required params - ${missingList}`);
+        Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);
         return res.status(404).json({
           error : `Missing required params: ${missingList}`
         });
@@ -136,7 +132,7 @@ export class RegistryHandlers {
 
       if(ResponseUtils.fail(relRes)) {
         const {error, code} = relRes;
-        Logger.error(`RegistryRoutes: Failed to upload tarball`, error);
+        Logger.error(`RegistryHandlers: Failed to upload tarball`, error);
         return res.status(code).json({ error });
       }
 
@@ -171,7 +167,7 @@ export const npmInstall = async (req: Request, res: Response): Promise<any> => {
     const missing = RegistryUtils.checkReqParams(req.params) ?? [];
     if(missing.length > 0) {
       const missingList = missing.join(', ');
-      Logger.error(`RegistryRoutes: Missing required params - ${missingList}`);
+      Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);
       return res.status(404).json({ error: `Missing required params: ${missingList}` });
     }
 
@@ -179,13 +175,13 @@ export const npmInstall = async (req: Request, res: Response): Promise<any> => {
     const {data} = response ?? {};
     if(ResponseUtils.fail(response)) {
       const {code, error} = response;
-      Logger.error(`RegistryRoutes: Failed to find or fetch version`, response.error);
+      Logger.error(`RegistryHandlers: Failed to find or fetch version`, response.error);
       return res.status(code).json({ error });
     }
 
     const isValid = Object.keys(data).some(key => ['dist-tags', 'versions'].includes(key));
     if(!isValid) {
-      Logger.error(`RegistryRoutes: Invalid metadata`, data);
+      Logger.error(`RegistryHandlers: Invalid metadata`, data);
       return res.status(404).json({ error: 'Invalid metadata: missing keys "dist-tags" and "versions"' });
     }
 
@@ -227,7 +223,7 @@ export const npmPublish = async (req: Request, res: Response): Promise<any> => {
     const metadata = req.body;
     const isValid = Object.keys(metadata).some(key => ['dist-tags', 'versions'].includes(key));
     if(!isValid) {
-      Logger.error(`RegistryRoutes: Invalid metadata`, metadata);
+      Logger.error(`RegistryHandlers: Invalid metadata`, metadata);
       return res.status(404).json({ error: 'Invalid metadata: missing keys "dist-tags" and "versions"' });
     }
     const { 'dist-tags': distTags, _attachments, versions } = metadata;
@@ -238,7 +234,7 @@ export const npmPublish = async (req: Request, res: Response): Promise<any> => {
     const missing = RegistryUtils.checkReqParams({name, id}) ?? [];
     if(missing.length > 0) {
       const missingList = missing.join(', ');
-      Logger.error(`RegistryRoutes: Missing required params - ${missingList}`);
+      Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);
       return res.status(404).json({
         error : `Missing required params: ${missingList}`
       });
@@ -277,7 +273,7 @@ export const npmPublish = async (req: Request, res: Response): Promise<any> => {
 
     if(ResponseUtils.fail(relRes)) {
       const {error, code} = relRes;
-      Logger.error(`RegistryRoutes: Failed to upload tarball`, error);
+      Logger.error(`RegistryHandlers: Failed to upload tarball`, error);
       return res.status(code).json({ error });
     }
 

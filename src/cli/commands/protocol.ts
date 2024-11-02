@@ -13,13 +13,13 @@ export class ProtocolCommand {
 
     if(ResponseUtils.dwnFail({ status: config })) {
       throw new Error(
-        `ProtocolConfigureError: Failed to configure local DWN - Configure Fail Status: ${stringify(config)}`
+        `DrpmProtocolConfigure: Failed to configure local DWN - Configure Fail Status: ${stringify(config)}`
       );
     }
 
     if (!protocol) {
       throw new Error(
-        `ProtocolConfigureError: Failed to configure local DWN - No Protocol Returned: ${stringify(config)}`
+        `DrpmProtocolConfigure: Failed to configure local DWN - No Protocol Returned: ${stringify(config)}`
       );
     }
 
@@ -28,7 +28,7 @@ export class ProtocolCommand {
     if(ResponseUtils.dwnFail({ status: send })) {
       const badSend = '';
       Logger.error(badSend, send);
-      throw new Error(`ProtocolSendError: Failed to configure remote DWN - Send Fail Status: ${stringify(send)}`);
+      throw new Error(`DrpmProtocolConfigure: Failed to configure remote DWN - Send Fail Status: ${stringify(send)}`);
     }
 
     Logger.log(`Protocol configured: ${stringify({...send, ...protocol?.['_metadata']})}`);
@@ -43,13 +43,13 @@ export class ProtocolCommand {
 
     if(ResponseUtils.dwnFail({ status })) {
       throw new Error(
-        `ProtocolQueryError: Failed to query local DWN - Query Fail Status: ${stringify(status)}`
+        `DrpmProtocolQuery: Failed to query local DWN - Query Fail Status: ${stringify(status)}`
       );
     }
 
     if (!protocols.length) {
       throw new Error(
-        `ProtocolQueryError: Failed to query local DWN - No Protocols Returned: ${stringify(status)}`
+        `DrpmProtocolQuery: Failed to query local DWN - No Protocols Returned: ${stringify(status)}`
       );
     }
 

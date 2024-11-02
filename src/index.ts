@@ -7,7 +7,7 @@ export * from './cli/commands/protocol.js';
 export * from './cli/commands/publish.js';
 export * from './cli/commands/run.js';
 
-export * from './registry/connect.js';
+export * from './drpm/registry-connect.js';
 export * from './registry/handlers.js';
 export * from './registry/registry.js';
 export * from './registry/server.js';
