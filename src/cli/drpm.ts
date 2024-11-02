@@ -6,7 +6,7 @@ import { ProtocolCommand } from './commands/protocol.js';
 import { readFile } from 'fs/promises';
 import { homedir } from 'os';
 
-export const CLI_VERSION = await readFile('../.version', 'utf8').catch(() => 'latest');
+export const CLI_VERSION = await readFile('../.version', 'utf8');
 export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
 export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
