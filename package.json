@@ -80,6 +80,7 @@
     "dev": "nodemon",
     "start": "node ./dist/esm/registry/server.js",
     "prepack": "npm run build && npm run cli:version && chmod +x ./dist/esm/cli/drpm.js",
+    "postinstall": "node ./scripts/postinstall/setup.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",
     "tab:1-setup-npmrc": "[[ -f ~/.npmrc ]] && cp ~/.npmrc ~/.npmrc.drpm.bak || cp .npmrc ~/.npmrc",

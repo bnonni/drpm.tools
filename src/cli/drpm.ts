@@ -3,10 +3,10 @@
 import { program } from 'commander';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
-import { DRPM_HOME } from '../config.js';
 import { readFile } from 'fs/promises';
 
-export const CLI_VERSION = await readFile('../.version', 'utf8').catch(() => '4.0.0');
+export const DRPM_HOME = `${process.env.HOME}/.config/drpm`;
+export const CLI_VERSION = await readFile('../../.version', 'utf8').catch(() => '4.0.0');
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
 export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
 export const DEFAULT_PASSWORD = 'insecure-static-password';

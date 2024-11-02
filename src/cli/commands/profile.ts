@@ -1,5 +1,5 @@
 import { DidJwk } from '@web5/dids';
-import { ensureDir, ensureFile, exists } from 'fs-extra';
+import { exists } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
 import { DidWebAgent } from '../../utils/did/did-web-facade.js';
 import { Logger } from '../../utils/logger.js';
@@ -12,22 +12,15 @@ import {
 } from '../../utils/types.js';
 import {
   DEFAULT_PASSWORD,
-  DEFAULT_PROFILE,
   DEFAULT_WEB5DATAPATH,
+  DRPM_HOME,
   DRPM_PROFILE
 } from '../drpm.js';
 import { ConnectCommand } from './connect.js';
-import { DRPM_HOME } from '../../config.js';
 
 export class ProfileCommand {
   static async needSetup(): Promise<boolean> {
     return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
-  }
-
-  static async setup(): Promise<void> {
-    await ensureDir(DRPM_HOME);
-    await ensureFile(DRPM_PROFILE);
-    await writeFile(DRPM_PROFILE, stringify(DEFAULT_PROFILE));
   }
 
   static async createDht(password: string, dwnEndpoint: string): Promise<Partial<Profile>> {
@@ -107,7 +100,9 @@ export class ProfileCommand {
   // Function to create a new profile
   static async create({ password, dwnEndpoint, method }: ProfileCreateParams): Promise<void> {
     try {
-      if(await this.needSetup()) await this.setup();
+      if(await this.needSetup()) {
+        throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
+      }
       method ??= 'dht';
       if(!dwnEndpoint) {
         throw new Error('DWN endpoint is required to create a new profile.');

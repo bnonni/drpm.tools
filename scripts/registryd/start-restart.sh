@@ -5,7 +5,7 @@ set -e
 
 # Set script variables
 DRPM_REGISTRYD_FORCE_RESTART=false
-DRPM_REGISTRY_DIR=".drpm/registry"
+DRPM_REGISTRY_DIR=".drpm"
 DRPM_REGISTRYD_PID_FILE="$DRPM_REGISTRY_DIR/registry.pid"
 DRPM_REGISTRYD_PNAME="registry.drpm.tools"
 DRPM_REGISTRYD_PID=$(pgrep -f "$DRPM_REGISTRYD_PNAME" || echo 0)
