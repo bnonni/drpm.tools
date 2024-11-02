@@ -4,9 +4,9 @@ import { ProfileData } from './types.js';
 
 export const stringify = (data: any): string => JSON.stringify(data, null, 2);
 
-export const hidePassword = (data: any): {} => ({...data, password: '***************'});
+export const hideSensitive = (data: any): {} => ({...data, password: '***************', recovertyPhrase: '***************'});
 
-export const cleanProfile = (profile: Partial<ProfileData>): {} => stringify(hidePassword(profile));
+export const cleanProfile = (profile: Partial<ProfileData>): {} => stringify(hideSensitive(profile));
 
 export const createPassword = (n: number = 6): string => {
   const mnemonic = generateMnemonic(english, 128).split(' ');

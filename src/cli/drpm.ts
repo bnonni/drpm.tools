@@ -53,11 +53,13 @@ program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Package Manager CLI
 const profileCommand = program
   .command('profile')
   .description('Interact with your DPM profile')
-  .addHelpText('afterAll', '\nCreate new profile\ndrpm profile create -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet multiple fields at once\ndrpm profile set -d did:example:abc123 -p "correct horse battery staple" -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet your did\ndrpm profile set -d did:example:abc123 ')
-  .addHelpText('afterAll', '\nSet your password\ndrpm profile set -p "correct horse battery staple"')
-  .addHelpText('afterAll', '\nSet your endpoint\ndrpm profile set -e https://dwn.mydomain.org');
+  .addHelpText('after', `
+    Examples:
+      drpm profile create           # Create a new profile
+      drpm profile set              # Set your profile
+      drpm profile get              # Get your profile
+      drpm profile switch           # Switch your profile
+    `);
 
 /* ---- PROFILE CREATE ---- */
 profileCommand
@@ -66,8 +68,17 @@ profileCommand
   .option('-p, --password <PASSWORD>', 'Secure password to protect your local DRPM DWN data')
   .option('-m, --method <METHOD>', 'Did method to use for your profile; Accetps dht and web; (default: dht)')
   .option('-u, --url <URL>', 'URL of for your did web; (e.g. did:web:example.com)')
-  .option('-e, --dwnEndpoint <ENDPOINT>',
-    'Your Decentralized Web Node (DWN) endpoint; Only pass 1 endopoint, e.g. https://dwn.example.com or http://localhost:3000')
+  .option('-e, --dwnEndpoint <ENDPOINT>', 'URL for your DWN endpoint; Only pass 1 endopoint, e.g. https://dwn.example.com or http://localhost:3000')
+  .addHelpText('after', `
+      Examples:
+        drpm profile create -e https://dwn.mydomain.org    # Create new profile
+        drpm profile set -d did:example:abc123             # Set your did
+        drpm profile set -p "correct horse battery staple" # Set your password
+        drpm profile set -e https://dwn.mydomain.org       # Set your dwn endpoint
+        drpm profile get -d                                # Get your did
+        drpm profile get -p                                # Get your password
+        drpm profile get -e                                # Get your dwn endpoint
+      `)
   .action(async (args) => await ProfileCommand.create(args));
 
 /* ---- PROFILE SET ---- */
@@ -92,6 +103,14 @@ profileCommand
   .option('-p, --password', 'Get your password in plain text')
   .option('-e, --dwnEndpoint', 'Get your Decentralized Web Node (DWN) endpoint')
   .option('-w, --web5DataPath', `Get your web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
+  .addHelpText('after', `
+    Examples:
+      drpm profile get              # Get full profile
+      drpm profile get -d           # Get your DID
+      drpm profile get -p           # Get your password
+      drpm profile get -e           # Get your DWN endpoint
+      drpm profile get -w           # Get your web5 data path
+    `)
   .action(async (args) => await ProfileCommand.get(args));
 
 /* ---- PROFILE SWITCH ---- */

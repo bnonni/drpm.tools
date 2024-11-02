@@ -136,12 +136,12 @@ export class ProfileCommand {
   static async get(options: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const data = profile[profile.current ?? 'dht'];
-    const profileKeys = Object.keys(data);
-    !profileKeys.length
-      ? Logger.info(`Profile: ${stringify(profile)}`)
-      : profileKeys.forEach((key) => {
+    const optionKeys = Object.keys(options);
+    !optionKeys.length
+      ? Logger.info(`Profile: ${stringify(data)}`)
+      : optionKeys.forEach((key) => {
         if (options[key as keyof ProfileOptions]) {
-          Logger.info(`${data[key as keyof ProfileData]}`);
+          Logger.info(`${cleanProfile({ [key]: data[key as keyof ProfileData] })}`);
         }
       });
   }
