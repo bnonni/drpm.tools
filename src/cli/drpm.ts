@@ -8,13 +8,13 @@ import { homedir } from 'os';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const packageJsonPath = join(__dirname, '..', 'package.json');
-const CLI_VERSION = await readFile(packageJsonPath, 'utf8')
+const packageJsonPath = join(__dirname, '..', '..', 'package.json');
+
+export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
+export const CLI_VERSION = await readFile(packageJsonPath, 'utf8')
   .then(data => JSON.parse(data).version)
   .catch(() => 'latest');
-
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
 export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
 export const DEFAULT_PASSWORD = 'insecure-static-password';

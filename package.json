@@ -90,7 +90,7 @@
     "tab:5-start-registry": "node ./dist/registry/server.js",
     "tab:6-get-did": "./dist/cli/drpm.js profile get -d",
     "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
