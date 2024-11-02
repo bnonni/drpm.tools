@@ -37,7 +37,7 @@ export class Registry {
   private setupRoutes(): void {
     // Assuming registry has specific routes
     this.app.use(handlers); // Use routes from handlers
-   }
+  }
 
   // Start the server for development or production
   public start(): void {
