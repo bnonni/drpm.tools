@@ -1,6 +1,6 @@
 {
   "name": "drpm",
-  "version": "4.2.4",
+  "version": "4.2.3",
   "type": "module",
   "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "main": "./dist/cjs/index.js",
@@ -79,7 +79,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node ./dist/registry/server.js",
-    "prepack": "npm run cli:version && npm run build && chmod +x ./dist/cli/drpm.js",
+    "prepack": "npm run build && npm run cli:version && chmod +x ./dist/cli/drpm.js",
     "postinstall": "curl -fsSL https://raw.githubusercontent.com/bnonni/drpm.tools/refs/heads/main/setup.sh | sh",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",

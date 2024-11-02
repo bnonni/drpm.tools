@@ -13,6 +13,7 @@ fi
 DRPM_REGISTRYPID_FILE="$CONFIG_DRPM_DIR/registry.pid"
 DRPM_REGISTRY_OUT_FILE="$CONFIG_DRPM_DIR/registry.out"
 DRPM_PROFILE="$CONFIG_DRPM_DIR/profile.json"
+DRPM_VERSION_FILE="$CONFIG_DRPM_DIR/.version"
 
 # Ensure CONFIG_DRPM_DIR exists
 if [[ ! -d "$CONFIG_DRPM_DIR" ]]; then
@@ -30,6 +31,13 @@ fi
 if [[ ! -f "$DRPM_REGISTRY_OUT_FILE" ]]; then
     touch "$DRPM_REGISTRY_OUT_FILE"
     echo "DRPM registry.out created: $DRPM_REGISTRY_OUT_FILE"
+fi
+
+# Ensure DRPM_VERSION_FILE exists
+if [[ ! -f "$DRPM_VERSION_FILE" ]]; then
+    VERSION=$(jq -r '.version' package.json || echo "4.2.3")
+    echo "$VERSION" >> "$DRPM_VERSION_FILE"
+    echo "DRPM .version created: $DRPM_VERSION_FILE"
 fi
 
 # Ensure DRPM_PROFILE exists, and create it with default JSON content if it doesn’t

@@ -9,6 +9,7 @@ const CONFIG_DRPM_DIR = platform() === 'win32'
   : join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), DRPM_DIR);
 const DRPM_REGISTRYPID_FILE = join(CONFIG_DRPM_DIR, 'registry.pid');
 const DRPM_REGISTRY_OUT_FILE = join(CONFIG_DRPM_DIR, 'registry.out');
+const DRPM_VERSION_FILE = join(CONFIG_DRPM_DIR, '.version');
 const DRPM_PROFILE = join(CONFIG_DRPM_DIR, 'profile.json');
 
 if (!await exists(CONFIG_DRPM_DIR)) {
@@ -24,6 +25,11 @@ if (!await exists(DRPM_REGISTRYPID_FILE)) {
 if (!await exists(DRPM_REGISTRY_OUT_FILE)) {
   await ensureFile(DRPM_REGISTRY_OUT_FILE);
   console.log(`DRPM registry.out created: ${DRPM_REGISTRY_OUT_FILE}`);
+}
+
+if (!await exists(DRPM_VERSION_FILE)) {
+  await ensureFile(DRPM_VERSION_FILE);
+  console.log(`DRPM .version created: ${DRPM_VERSION_FILE}`);
 }
 
 if (!await exists(DRPM_PROFILE)) {
