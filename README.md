@@ -67,6 +67,22 @@ Developers can discover packages here just like npmjs.com, except explorer.drpm.
 
 Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
+## Setup
+
+You have two options for setting up DRPM:
+  1. Locally in an npm project
+  2. Globally in your local env
+
+See the below guides for each setup process.
+
+### Local
+
+In this context, "local" means you are installing DRPM into your current npm project.
+To setup DPRM locally:
+
+1. `npm install drpm`
+2. 
+
 ## Usage
 
 To install or publish a dpk, follow the appropriate steps below:
@@ -91,51 +107,9 @@ npm run registryd:start
 ```
 3. Run `npm install` in the root directory of your package\
 
-### Publishing DPKs
+### Publish
 
-To publish a dpk to your dwn:
-
-1. 
-
-### Quick Mode
-
-1. Create a new dpk project using the `npx` cli and open it in an IDE (**note**: `code` command for VSCode users only).
-2. Create a new profile (see `npx dpm help` for details).
-3. Make sure the required `.drpm_profile` details set (see `$HOME/.drpm/.drpm_profile`). (**note**: required information in `.drpm_profile` includes `"did"`, `"password"`, `"dwnEndpoint"`)
-4. Publish `my-dpk` using the dpm cli
-5. Edit the code, bump the version and re-publish `my-dpk`
-
-```sh
-npx create-dpk my-dpk
-code my-dpk
-npx dpm profile create
-npx dpm publish
-# change some code in index.ts then run
-npm version patch && npx dpm publish
-```
-
-### Details Mode
-
-1. Install `drpm` globally: `npm i -g drpm`
-2. Or install `drpm` to an existing project: `npm i --save drpm`
-3. On `postinstall`, drpm should setup the local env and the registry server. (**note**: make sure its running by visiting `http://localhost:2092`)
-4. Use the `dpm` cli to create a profile: `dpm profile create`
-5. Use dpm cli to init a new dpk: `dpm init my-dpk`
-6. Use the `dpm` cli to publish to your DWN: `dpm publish package /path/to/package`
-7. Run `npm install @drpm/my-dpk~yourId`
-8. Open package.json and inspect the dependencies object for that package name and version
-
-```sh
-npm i -g drpm
-open -a 'Brave Browser' http://localhost:2092 # mac only command using brave browser
-dpm profile create
-dpm init my-dpk
-cd my-dpk
-dpm publish package
-dpm init ../new-dpk && cd ../new-dpk
-dpm profile get -d # outputs your did (e.g. did:dht:tqa1ep34zbg3kwrt89irbj6sib333ps1ued5frwbug39meq3a4oy)
-npm install @drpm/my-dpk~tqa1ep34zbg3kwrt89irbj6sib333ps1ued5frwbug39meq3a4oy
-```
+COMING SOON!
 
 ## Details
 
