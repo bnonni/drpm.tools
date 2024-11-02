@@ -160,7 +160,7 @@ export type Profile = {
 export type ProfileOptions = {
       did?: string;
       password?: string;
-      dwnEndpoint?: string;
+      dwnEndpoints?: string;
       web5DataPath?: string
       recoveryPhrase?: string;
       context?: string;
@@ -168,7 +168,7 @@ export type ProfileOptions = {
 export type ProfileCreateParams = {
     url?: string;
     method: string;
-    dwnEndpoint: string;
+    dwnEndpoints: string;
     password?: string;
 };
 export type RequestParams = Request['params'];

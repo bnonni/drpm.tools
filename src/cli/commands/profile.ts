@@ -93,13 +93,13 @@ export class ProfileCommand extends DrpmProfile {
   }
 
   // Function to create a new profile
-  static async create({ password, dwnEndpoint, method }: ProfileCreateParams): Promise<void> {
+  static async create({ password, dwnEndpoints, method }: ProfileCreateParams): Promise<void> {
     try {
       if(await this.needSetup()) {
         throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
       }
       method ??= 'dht';
-      if(!dwnEndpoint) {
+      if(!dwnEndpoints) {
         throw new Error('DWN endpoint is required to create a new profile.');
       }
       const profile = await this.load();
@@ -107,7 +107,7 @@ export class ProfileCommand extends DrpmProfile {
       //   throw new Error(`Profile already setup and valid for ${method} context.`);
       // }
       password ??= createPassword();
-      const partialProfile = await this.createDht(password, dwnEndpoint);
+      const partialProfile = await this.createDht(password, dwnEndpoints);
       await this.save({...profile, ...partialProfile});
       Logger.log(`New DRPM ${method} profile created: ${stringify(partialProfile)}`);
     } catch (error: any) {
@@ -130,30 +130,31 @@ export class ProfileCommand extends DrpmProfile {
   // Function to get profile data
   static async get(options: ProfileOptions): Promise<void> {
     const profile = await this.load();
-    const data = profile[profile.current ?? 'dht'];
-    const profileKeys = Object.keys(data);
-    !profileKeys.length
-      ? Logger.info(`Profile: ${stringify(profile)}`)
-      : profileKeys.forEach((key) => {
-        if (options[key as keyof ProfileOptions]) {
-          Logger.info(`${data[key as keyof ProfileData]}`);
+    const current = profile.current ?? 'dht';
+    const data = profile[current];
+    const optionKeys = Object.keys(options);
+    !optionKeys.length
+      ? Logger.plain(`${current.toUpperCase()} Profile:\n${cleanProfile(data)}`)
+      : optionKeys.forEach((key) => {
+        if (data[key as keyof ProfileOptions]) {
+          Logger.plain(`${key}: ${data[key as keyof ProfileData]}`);
+        } else {
+          Logger.error(`ProfileError: ${key} not found in profile.`);
         }
       });
   }
 
   // Function to update profile data
-  static async set({ did, password, dwnEndpoint, web5DataPath, recoveryPhrase }: ProfileOptions): Promise<void> {
+  static async set({ did, password, dwnEndpoints, web5DataPath, recoveryPhrase }: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];
     const updatedData = {
       did            : did ?? data.did,
       password       : password ?? data.password,
-      dwnEndpoints   : !dwnEndpoint
+      dwnEndpoints   : !dwnEndpoints
         ? data.dwnEndpoints
-        : !dwnEndpoint.startsWith('http')
-          ? [`https://${dwnEndpoint}`]
-          : [dwnEndpoint],
+        : dwnEndpoints.split(','),
       web5DataPath   : web5DataPath ?? data.web5DataPath,
       recoveryPhrase : recoveryPhrase ?? data.recoveryPhrase,
     };
@@ -161,12 +162,12 @@ export class ProfileCommand extends DrpmProfile {
     Logger.log(`Profile updated: ${cleanProfile(updatedData)}`);
   }
 
-  static async switch({ method }: { method: string }): Promise<void> {
+  static async switch({ dht, web, btc }: { dht: string, web: string, btc: string }): Promise<void> {
     const profile = await this.load();
-    if(!profile[method]) {
-      throw new Error(`Profile for ${method} does not exist.`);
-    }
-    await this.save({...profile, current: method});
-    Logger.log(`Switched to ${method} profile.`);
+    console.log('dht, web, btc', dht, web, btc);
+    profile.current = dht ? 'dht' : web ? 'web' : btc ? 'btc' : profile.current;
+    await this.save(profile);
+    const data = profile[profile.current];
+    Logger.log(`Switched to ${profile.current} profile: ${cleanProfile(data)}`);
   }
 }

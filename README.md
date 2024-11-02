@@ -1,29 +1,29 @@
-# Decentralized Registry Package Manager
+# Decentralized Registry Package Manager (DRPM)
 
 <img src="/assets/img/animal/wolf.webp" height=250 width=250 />
 
-Decentralized Registry Package Manager - npm for the DWeb. Publish a Decentralized Package to your Decentralized Web Node using DRPM!
+DRPM is npm for the DWeb. Install and publish Decentralized Packages to your Decentralized Web Node using DRPM!
 
 ## Table of Contents
 
-- [Vocabulary](#vocabulary)
-  - [Web5 Vocab](#web5-vocab)
-  - [DRPM Vocab](#drpm-vocab)
-  - [Other Vocab](#other-vocab)
-- [Summary](#summary)
-- [Goals](#goals)
-- [Usage](#usage)
-- [Details](#details)
-  - [Namespace](#namespace)
-  - [DID Methods](#did-methods)
-  - [NPM Compatible](#npm-compatible)
-  - [Runtime (Register/Hooks)](#runtime-registerhooks)
-- [Tools](#tools)
-  - [Decentralized Registry (DRG)](#decentralized-registry-drg)
-  - [Decentralized Package Manager (DPM)](#decentralized-package-manager-dpm)
-  - [Dependencies](#dependencies)
-  - [Decentralized Package Import](#decentralized-package-import-dpi)
-- [Project Resources](#project-resources)
+* [Vocabulary](#vocabulary)
+  * [Web5 Vocab](#web5-vocab)
+  * [DRPM Vocab](#drpm-vocab)
+  * [Other Vocab](#other-vocab)
+* [Summary](#summary)
+* [Goals](#goals)
+* [Setup & Usage](#setup--usage)
+* [Details](#details)
+  * [Dependencies](#dependencies)
+  * [Namespace](#namespace)
+  * [DID Methods](#did-methods)
+  * [NPM Compatible](#npm-compatible)
+  * [Runtime (Register/Hooks)](#runtime-registerhooks)
+* [Tools](#tools)
+  * [Decentralized Registry (DRG)](#decentralized-registry-drg)
+  * [Decentralized Package Manager (DPM)](#decentralized-package-manager-dpm)
+  * [Decentralized Package Import](#decentralized-package-import-dpi)
+* [Project Resources](#project-resources)
 
 ## Vocabulary
 
@@ -31,23 +31,23 @@ Acronyms galore! But what does it all mean!?
 
 ### Web5 Vocab
 
-- DID = Decentralized Identifier
-- DWN = Decentralized Web Node
-- DWA = Decentralized Web App
+* DID = Decentralized Identifier
+* DWN = Decentralized Web Node
+* DWA = Decentralized Web App
 
 ### DRPM Vocab
 
-- DRG = Decentralized Registry
-- DPK = Decentralized Package
-- DPM = Decentralized Package Manager
-- DRPM = Decentralized Registry Package Manager
-- DMI = Decentralized Module Import
-- DPI = Decentralized Package Import (alt name for DMI)
+* DRG = Decentralized Registry
+* DPK = Decentralized Package
+* DPM = Decentralized Package Manager
+* DRPM = Decentralized Registry Package Manager
+* DMI = Decentralized Module Import
+* DPI = Decentralized Package Import (alt name for DMI)
 
 ### Other Vocab
 
-- NPK = Node Package
-- NPM = Node Package Manager
+* NPK = Node Package
+* NPM = Node Package Manager
 
 ## Summary
 
@@ -61,71 +61,96 @@ This service object will contain a DWN endpoint. This endpoint is used to query 
 
 ## Goals
 
-The goal of DRPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs and list it on [explorer.drpm.tools](https://explorer.drpm.tools).
+The goal of DRPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs.
 
 Developers can discover packages here just like npmjs.com, except explorer.drpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.
 
 Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
-## Setup
+## Setup & Usage
 
-You have two options for setting up DRPM:
-  1. Locally in an npm project
-  2. Globally in your local env
-
-See the below guides for each setup process.
-
-### Local
-
-In this context, "local" means you are installing DRPM into your current npm project.
-To setup DPRM locally:
-
-1. `npm install drpm`
-2. 
-
-## Usage
-
-To install or publish a dpk, follow the appropriate steps below:
-
-### Installing DPKs
-
-To install a dpk from your dwn into an existing project:
-
-1. Run the registry server on localhost:2092
-```sh
-npm install
-npm run install:cli
-npm run registryd:start
-```
-2. Manually add the package name to package.json dependencies
-```json
-{
-  "dependencies": {
-    "@drpm/packageName~methodSpecificId": "[prefix]M.m.p"
-  }
-}
-```
-3. Run `npm install` in the root directory of your package\
-
-### Publish
-
-COMING SOON!
+For setup, see [SETUP.md](/docs/SETUP.md).
+For usage, sett [USAGE.md](/docs/USAGE.md).
 
 ## Details
 
 The below sections outline various details differntiating DRPM, explaining how it works and why its an improvement on the current centralized soltutions.
 
+### Dependencies
+
+DRPM reuses the `package.json` and `package-lock.json` files for easy integration to the normal `npm` dev env. The same principals apply: the entries in each file ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution
+
+* DRPM intercepts `npm install` and redirects the GET calls to a registry running on `localhost:2092`
+* This registry is a simple express server mimicing the paths used by npm to `GET` pacakges from `registry.npmjs.org`
+* The express server parses API url path to construct a DRL (Decentralized Resource Locator)
+* DRPM requests the DPK from the DWN found in the DID doc assocaigted with the DID from the dependency version string
+* The registry server installs the DPK metadata and tarball into a local folder called `.registry` and passes the path to the tarball back to the `npm install` cli call
+* From there, `npm` handles the rest normally installing the tarball into `node_modules` under `@drpm/{packageName}/{version}`
+* Integrity hashes are produced using the DPK.tgz content ensuring the publisher cannot swap out code under a specific verion in the protocol path.
+* Additionally, DRPM allows developers to republish the code pulled from the remote DWN to their own DWN forever allowing them to secure an immutable copy
+* Once a release is published and copied to your own DWN, it can only be changed by the DWN owner.
+* To see the custom registry server, check out [/src/registry/index.ts](/src/registry/index.ts)
+* See below for examples entries in `package.json` and `package-lock.json`
+
+Example package.json
+
+```json
+{
+    "dependencies": {
+        "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0",
+        "@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^4.21.1", 
+        "@drpm/react~web~dwn.nonni.org": "^18.3.1", // Example of did:web
+        "@drpm/next~btc~xg4x-ay5y-q5zq-232": "^15.0.2", // Example of did:btc
+    }
+}
+```
+
+Example package-lock.json
+
+```json
+{
+    "node_modules/@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
+      "version": "4.21.1",
+      "resolved": "http://dwn.nonni.org/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo&filter.tags.version=4.21.1",
+      "integrity": "sha512-7oag0DgteUmGA5Hg2ixMjW4ogs+q59v3ir/5I38PqueZsO49t5Y9TPIF+0Zz1ZJRHPYM43eok73pv0BlhxpOrw==",
+      "license": "ISC",
+      "dependencies": {}
+    },
+    "node_modules/@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
+      "version": "6.1.0",
+      "resolved": "http://dwn.nonni.org/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo&filter.tags.version=4.21.1",
+      "integrity": "sha512-7oag0DgteUmGA5Hg2ixMjW4ogs+q59v3ir/5I38PqueZsO49t5Y9TPIF+0Zz1ZJRHPYM43eok73pv0BlhxpOrw==",
+      "license": "ISC",
+      "dependencies": {}
+    },
+    "node_modules/@drpm/react~web~dwn.nonni.org": {
+        "version": "18.3.1",
+        "resolved": "http://dwn.nonni.org/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/react~web~dwn.nonni.org&filter.tags.version=18.3.1",
+      "integrity": "sha512-7oag0DgteUmGA5Hg2ixMjW4ogs+q59v3ir/5I38PqueZsO49t5Y9TPIF+0Zz1ZJRHPYM43eok73pv0BlhxpOrw==",
+      "license": "ISC",
+      "dependencies": {}
+    },
+    "node_modules/@drpm/next~btc~xg4x-ay5y-q5zq-232": {
+        "version": "15.0.2",
+       "resolved": "http://dwn.nonni.org/did:dht:dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy/read/protocols/aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt/package/release?filter.tags.name=@drpm/next~btc~xg4x-ay5y-q5zq-232&filter.tags.version=15.0.2",
+      "integrity": "sha512-7oag0DgteUmGA5Hg2ixMjW4ogs+q59v3ir/5I38PqueZsO49t5Y9TPIF+0Zz1ZJRHPYM43eok73pv0BlhxpOrw==",
+      "license": "ISC",
+      "dependencies": {}
+    }
+}
+```
+
 ### Namespace
 
 In DRPM, packages are published to DWNs referenced by DIDs. Any entity can have a DID: user, org, device, etc. This unlimits the namespace and eliminates gatekeeping and censorship.
 
-- NPM User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
-- NPM Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
-- NPM Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
+* NPM User [npmjs.com/~bnonni](https://npmjs.com/~bnonni)
+* NPM Organization: [npmjs.com/org/web5](https://npmjs.com/org/web5)
+* NPM Package: [npmjs.com/package/tool5](npmjs.com/package/tool5)
 
-- DRPM User [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
-- DRPM Organization [did:web:drpm.tools](https://drpm.tools/.well-known/did)
-- DRPM Package [@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
+* DRPM User [did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](https://nonni.org/.well-known/did)
+* DRPM Organization [did:web:drpm.tools](https://drpm.tools/.well-known/did)
+* DRPM Package [@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo](http://nonni.org/did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo/query?filter.tags.name=tool5&filter.tags.version=1.1.2)
 
 ### DID Methods
 
@@ -227,9 +252,15 @@ node --import ./dist/esm/src/register.js ./path/to/your/script.js
 
 Below are sections outlining the tools included in this repo as part of DRPM.
 
+### Explorer
+
+COMING SOON! [explorer.drpm.tools](https://explorer.drpm.tools)
+
+The DRPM Explorer will be a listing service similar to npmjs.org where devs can create profiles with their DIDs and list their DPKs for discovery.
+
 ### Decentralized Registry (DRG)
 
-TODO
+COMING SOON!
 
 ### Decentralized Package Manager (DPM)
 
@@ -249,66 +280,6 @@ Example require
 
 ```js
 const express = require('@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo');
-```
-
-### Dependencies
-
-DRPM reuses the `package.json` and `package-lock.json` files for easy integration to the normal `npm` dev env. The same principals apply: the entries in each file ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution
-
-- DRPM intercepts `npm install` and redirects the GET calls to a registry running on `localhost:2092`
-- This registry is a simple express server mimicing the paths used by npm to `GET` pacakges from `registry.npmjs.org`
-- The express server parses API url path to construct a DRL (Decentralized Resource Locator)
-- DRPM requests the DPK from the DWN found in the DID doc assocaigted with the DID from the dependency version string
-- The registry server installs the DPK metadata and tarball into a local folder called `.registry` and passes the path to the tarball back to the `npm install` cli call
-- From there, `npm` handles the rest normally installing the tarball into `node_modules` under `@drpm/{packageName}/{version}`
-- Integrity hashes are produced using the DPK.tgz content ensuring the publisher cannot swap out code under a specific verion in the protocol path.
-- Additionally, DRPM allows developers to republish the code pulled from the remote DWN to their own DWN forever allowing them to secure an immutable copy
-- Once a release is published and copied to your own DWN, it can only be changed by the DWN owner.
-- To see the custom registry server, check out [/src/registry/index.ts](/src/registry/index.ts)
-- See below for examples entries in `package.json` and `package-lock.json`
-
-Example package.json
-
-```json
-{
-    "dependencies": {
-        "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^6.1.0",
-        "@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": "^4.21.1", 
-        "@drpm/react~web~dwn.nonni.org": "^18.3.1", // Example of did:web
-        "@drpm/next~btc~xg4x-ay5y-q5zq-232": "^2.1.1", // Example of did:btc
-    }
-}
-```
-
-Example package-lock.json
-
-```json
-{
-    "@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
-        "version": "4.21.1",
-        "resolved": "",
-        "integrity": "",
-        "license": ""
-    },
-    "@drpm/tool5~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo": {
-        "version": "6.1.0",
-        "resolved": "",
-        "integrity": "",
-        "license": ""
-    },
-    "@drpm/react~web~dwn.nonni.org": {
-        "version": "0.1.0",
-        "resolved": "",
-        "integrity": "",
-        "license": ""
-    },
-    "@drpm/next~btc~xg4x-ay5y-q5zq-232": {
-        "version": "0.1.0",
-        "resolved": "",
-        "integrity": "",
-        "license": ""
-    }
-}
 ```
 
 ## Project Resources

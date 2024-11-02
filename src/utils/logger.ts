@@ -47,6 +47,10 @@ export class Logger implements Partial<Console> {
     console.warn(chalk.red('security') + ':', message, ...args);
   }
 
+  public static plain(message?: unknown, ...args: unknown[]): void {
+    console.log(message, ...args);
+  }
+
   public static log(message?: unknown, ...args: unknown[]): void {
     switch (NODE_ENV) {
       case 'test':

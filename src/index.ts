@@ -9,8 +9,8 @@ export * from './cli/commands/run.js';
 
 export * from './drpm/registry-connect.js';
 export * from './registry/handlers.js';
-export * from './registry/registry.js';
 export * from './registry/server.js';
+export * from './registry/registry.js';
 export * from './registry/utils.js';
 
 export * from './utils/did/did-btc.js';

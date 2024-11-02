@@ -36,3 +36,4 @@ npm-debug.log*
 
 .drpm/profile.json
 .drpm/registry
+.ignore
