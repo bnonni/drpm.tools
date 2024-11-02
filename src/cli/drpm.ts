@@ -40,14 +40,16 @@ const profile = program
 profile
   .command('create')
   .description('Create a new DPM profile')
-  .option('-p, --password <PASSWORD>', 'Provide a custom password (protects local DWN data)')
-  .option('-m, --method <METHOD>', 'Provide a custom did method (default: dht)')
-  .option('-u, --url <URL>', 'Provide did web URL (e.g. example.com => did:web:example.com)')
-  .option('-e, --dwnEndpoints <ENDPOINTS>', 'Provide one or more DWN endpoints to use')
+  .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints to use (required)')
+  .option('-p, --password <PASSWORD>', 'Supply your own password (optional, default: random partial mnemonic)')
+  .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Supply your own recovery phrase (optional, default: creates new mnemonic)')
+  .option('-m, --method <METHOD>', 'Use an alternative did method (optional, default: dht)')
+  .option('-u, --url <URL>', 'Provide did web URL (required, if using did:web)')
   .addHelpText('after', `
       Examples:
-        drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint
-        drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints
+        drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint; DWN Endpoints required
+        drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints; DWN Endpoints required
+        drpm profile create -m web -u example.com                               # Create new profile with did:web method; URL required
     `)
   .action(async (args) => await ProfileCommand.create(args));
 
@@ -58,7 +60,7 @@ profile
   .option('-d, --did <DID>', 'Set the DID')
   .option('-p, --password <PASSWORD>', 'Set the password (protects local DWN data)')
   .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Set the recovery phrase (for agent key recovery)')
-  .option('-e, --dwnEndpoints <ENDPOINTS>', 'Set the DWN endpoints')
+  .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Set the DWN endpoints')
   .option('-w, --web5DataPath <WEB5DATAPATH>', `Set the web5 DATA folder path (default: ${process.cwd()}/DATA)`)
   .addHelpText('after', `
     Examples:
@@ -98,12 +100,11 @@ profile
   .option('-b, --btc', 'Switch to did:btc method')
   .addHelpText('after', `
     Examples:
-        drpm profile switch --dht    # Switch to your did:dht profile
-        drpm profile switch --web    # Switch to your did:web profile
-        drpm profile switch --btc    # Switch to your did:btc profile
+        drpm profile switch {-d|--dht}    # Switch to your did:dht profile
+        drpm profile switch {-w|--web}    # Switch to your did:web profile
+        drpm profile switch {-b|--btc}    # Switch to your did:btc profile
   `)
   .action(async (args) => await ProfileCommand.switch(args));
-/* ---- PROFILE ---- */
 
 /**
  * -------- PROTOCOL -------- *
