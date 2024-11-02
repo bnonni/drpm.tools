@@ -4,7 +4,7 @@ import { ProfileData } from './types.js';
 
 export const stringify = (data: any): string => JSON.stringify(data, null, 2);
 
-export const hideSensitive = (data: any): {} => ({...data, password: '***************', recovertyPhrase: '***************'});
+export const hideSensitive = (data: any): {} => ({...data, password: '***************', recoveryPhrase: '***************'});
 
 export const cleanProfile = (profile: Partial<ProfileData>): {} => stringify(hideSensitive(profile));
 
