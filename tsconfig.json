@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "declarationDir": "dist/types",
-    "outDir": "dist/esm",
+    "outDir": "dist",
   },
   "include": [
     "src"

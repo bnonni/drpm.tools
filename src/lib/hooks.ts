@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { Logger } from '../utils/logger.js';
+import { Logger } from '../index.js';
 
 type Function = (...args: any[]) => any;
 type ResolveContext = {

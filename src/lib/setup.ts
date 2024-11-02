@@ -53,3 +53,4 @@ if (!await exists(DRPM_PROFILE)) {
     }`);
   console.log(`DRPM profile.json created: ${DRPM_PROFILE}`);
 }
+console.log(`DRPM Setup Complete!`);

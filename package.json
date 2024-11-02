@@ -4,15 +4,15 @@
   "type": "module",
   "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "bin": {
-    "drpm": "dist/esm/cli/drpm.js"
+    "drpm": "dist/cli/drpm.js"
   },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
+      "import": "./dist/index.js",
       "require": "./dist/cjs/index.js",
       "package.json": "./package.json"
     }
@@ -78,23 +78,23 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node ./dist/esm/registry/server.js",
-    "prepack": "npm run build && npm run cli:version && chmod +x ./dist/esm/cli/drpm.js",
-    "postinstall": "node ./scripts/postinstall/setup.js",
+    "start": "node ./dist/registry/server.js",
+    "prepack": "npm run build && npm run cli:version && chmod +x ./dist/cli/drpm.js",
+    "postbuild": "node ./dist/lib/setup.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",
     "tab:1-setup-npmrc": "[[ -f ~/.npmrc ]] && cp ~/.npmrc ~/.npmrc.drpm.bak || cp .npmrc ~/.npmrc",
     "tab:2-start-dwn": "sh build/docker.sh",
-    "tab:3-create-did": "./dist/esm/cli/drpm.js profile create -e http://localhost:3000",
-    "tab:4-configure-protocol": "./dist/esm/cli/drpm.js protocol configure",
-    "tab:5-start-registry": "node ./dist/esm/registry/server.js",
-    "tab:6-get-did": "./dist/esm/cli/drpm.js profile get -d",
-    "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/esm/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:cjs && npm run build:esm",
+    "tab:3-create-did": "./dist/cli/drpm.js profile create -e http://localhost:3000",
+    "tab:4-configure-protocol": "./dist/cli/drpm.js protocol configure",
+    "tab:5-start-registry": "node ./dist/registry/server.js",
+    "tab:6-get-did": "./dist/cli/drpm.js profile get -d",
+    "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
+    "build": "npm run build:cjs && npm run build:esm && npm run postbuild",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
-    "build:esm": "rimraf dist/esm dist/types && tsc -p tsconfig.json && chmod +x ./dist/esm/cli/drpm.js",
+    "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
-    "cli:install-local": "[[ ! -f /usr/local/bin/drpm ]] && npm run build && ln -s $(pwd)/dist/esm/cli/drpm.js /usr/local/bin/drpm || echo 'DRPM CLI already installed!\n'",
+    "cli:install-local": "[[ ! -f /usr/local/bin/drpm ]] && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpm || echo 'DRPM CLI already installed!\n'",
     "cli:version": "npm run build && sh scripts/cli/version.sh",
     "registryd:start": "sh scripts/registryd/start-restart.sh",
     "registryd:stop": "sh scripts/registryd/stop.sh",
