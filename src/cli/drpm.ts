@@ -1,37 +1,21 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
+import { readFile } from 'fs/promises';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
-import { DRPM_HOME } from '../config.js';
+import { DEFAULT_WEB5DATAPATH } from '../config.js';
 
-export const CLI_VERSION = '3.0.1';
-export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
-export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
-export const DEFAULT_PASSWORD = 'insecure-static-password';
-export const DEFAULT_PROFILE = {
-  default : 'dht',
-  dht     : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : '',
-    password       : `dht-${DEFAULT_PASSWORD}`
-  },
-  web : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : '',
-    password       : `web-${DEFAULT_PASSWORD}`
-  },
-  btc : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : '',
-    password       : `btc-${DEFAULT_PASSWORD}`
-  }
-};
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJsonPath = join(__dirname, '..', '..', 'package.json');
 
-program.version(`dpm v${CLI_VERSION}\nDecentralized Registry Package Manager CLI`, '-v, --version', 'Output the current version');
+export const CLI_VERSION = await readFile(packageJsonPath, 'utf8')
+  .then(data => JSON.parse(data).version)
+  .catch(() => 'latest');
+
+program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Package Manager CLI`, '-v, --version', 'Output the current version');
 
 /**
  * -------- PROFILE -------- *
@@ -41,77 +25,120 @@ program.version(`dpm v${CLI_VERSION}\nDecentralized Registry Package Manager CLI
  * - delete: TODO
  * - list: TODO
  */
-const profileCommand = program
+const profile = program
   .command('profile')
   .description('Interact with your DPM profile')
-  .addHelpText('afterAll', '\nCreate new profile\ndrpm profile create -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet multiple fields at once\ndrpm profile set -d did:example:abc123 -p "correct horse battery staple" -e https://dwn.mydomain.org')
-  .addHelpText('afterAll', '\nSet your did\ndrpm profile set -d did:example:abc123 ')
-  .addHelpText('afterAll', '\nSet your password\ndrpm profile set -p "correct horse battery staple"')
-  .addHelpText('afterAll', '\nSet your endpoint\ndrpm profile set -e https://dwn.mydomain.org');
+  .addHelpText('after', `
+    Examples:
+      drpm profile create           # Create a new profile
+      drpm profile set              # Set your profile
+      drpm profile get              # Get your profile
+      drpm profile switch           # Switch your profile
+    `);
 
 /* ---- PROFILE CREATE ---- */
-profileCommand
+profile
   .command('create')
   .description('Create a new DPM profile')
-  .option('-p, --password <PASSWORD>', 'Secure password to protect your local DRPM DWN data')
-  .option('-m, --method <METHOD>', 'Did method to use for your profile; Accetps dht and web; (default: dht)')
-  .option('-u, --url <URL>', 'URL of for your did web; (e.g. did:web:example.com)')
-  .option('-e, --dwnEndpoint <ENDPOINT>',
-    'Your Decentralized Web Node (DWN) endpoint; Only pass 1 endopoint, e.g. https://dwn.example.com or http://localhost:3000')
+  .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints to use (required)')
+  .option('-p, --password <PASSWORD>', 'Supply your own password (optional, default: random partial mnemonic)')
+  .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Supply your own recovery phrase (optional, default: creates new mnemonic)')
+  .option('-m, --method <METHOD>', 'Use an alternative did method (optional, default: dht)')
+  .option('-u, --url <URL>', 'Provide did web URL (required, if using did:web)')
+  .addHelpText('after', `
+      Examples:
+        drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint; DWN Endpoints required
+        drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints; DWN Endpoints required
+        drpm profile create -m web -u example.com                               # Create new profile with did:web method; URL required
+    `)
   .action(async (args) => await ProfileCommand.create(args));
 
 /* ---- PROFILE SET ---- */
-profileCommand
+profile
   .command('set')
   .description('Set your DPM profile')
-  .option('-d, --did <DID>', 'Your Decentralized Identifier (DID)')
-  .option('-p, --password <PASSWORD>', 'Secure password to protect your local DRPM DWN data')
-  .option('-e, --dwnEndpoint <ENDPOINT>',
-    'Your Decentralized Web Node (DWN) endpoint; ' +
-    'e.g. https://dwn.example.com, dwn.example.com or http://localhost:3000')
-  .option('-w, --web5DataPath <WEB5DATAPATH>',
-    'Desired path location to store your web5 data (keys, dwn data, etc.); ' +
-    'Must be an absolute path. default: $CWD/.drpm/DATA')
-  .action(async (args) => await ProfileCommand.set(args));
+  .option('-d, --did <DID>', 'Set the DID')
+  .option('-p, --password <PASSWORD>', 'Set the password (protects local DWN data)')
+  .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Set the recovery phrase (for agent key recovery)')
+  .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Set the DWN endpoints')
+  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set the web5 DATA folder path (default: ${process.cwd()}/DATA)`)
+  .addHelpText('after', `
+    Examples:
+        drpm profile set -d did:example:abc123                # Set the DID
+        drpm profile set -p "correct horse battery staple"    # Set the password
+        drpm profile set -e https://dwn.mydomain.org          # Set the DWN endpoint
+  `)
+  .action(ProfileCommand.set);
 
 /* ---- PROFILE GET ---- */
-profileCommand
+profile
   .command('get')
   .description('Get your DPM profile data. If no options passed, full profile will be printed.')
-  .option('-d, --did', 'Get your Decentralized Identifier (DID)')
-  .option('-p, --password', 'Get your password in plain text')
-  .option('-e, --dwnEndpoint', 'Get your Decentralized Web Node (DWN) endpoint')
-  .option('-w, --web5DataPath', `Get your web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
-  .action(async (args) => await ProfileCommand.get(args));
+  .option('-d, --did', 'Get the DID')
+  .option('-p, --password', 'Get the password in plain text')
+  .option('-r, --recoveryPhrase', 'Get the recovery phrase (for agent key recovery)')
+  .option('-e, --dwnEndpoints', 'Get the DWN endpoints')
+  .option('-w, --web5DataPath', `Get the web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
+  .addHelpText('after', `
+    Examples:
+      drpm profile get       # Print the full profile
+      drpm profile get -d    # Print the profile DID
+      drpm profile get -p    # Print the profile password
+      drpm profile get -e    # Print the profile DWN endpoints
+      drpm profile get -w    # Print the profile web5 data path
+      drpm profile get -r    # Print the profile recovery phrase
+    `)
+  .action(ProfileCommand.get);
+
 
 /* ---- PROFILE SWITCH ---- */
-profileCommand
+profile
   .command('switch')
-  .description('Get your DPM profile data. If no options passed, full profile will be printed.')
-  .option('-m, --method', 'Profile to switch to (based on did method: dht, web, btc)')
+  .description('Switch between different DID profiles.')
+  .option('-d, --dht', 'Switch to did:dht method')
+  .option('-w, --web', 'Switch to did:web method')
+  .option('-b, --btc', 'Switch to did:btc method')
+  .addHelpText('after', `
+    Examples:
+        drpm profile switch {-d|--dht}    # Switch to your did:dht profile
+        drpm profile switch {-w|--web}    # Switch to your did:web profile
+        drpm profile switch {-b|--btc}    # Switch to your did:btc profile
+  `)
   .action(async (args) => await ProfileCommand.switch(args));
-/* ---- PROFILE ---- */
+
+/* ---- PROFILE SWITCH ---- */
+profile
+  .command('list')
+  .description('Switch between different DID profiles.')
+  .option('-d, --dht', 'Switch to did:dht method')
+  .option('-w, --web', 'Switch to did:web method')
+  .option('-b, --btc', 'Switch to did:btc method')
+  .addHelpText('after', `
+    Examples:
+        drpm profile switch {-d|--dht}    # Switch to your did:dht profile
+        drpm profile switch {-w|--web}    # Switch to your did:web profile
+        drpm profile switch {-b|--btc}    # Switch to your did:btc profile
+  `)
+  .action(async () => await ProfileCommand.list());
 
 /**
  * -------- PROTOCOL -------- *
  * - configure: configure your dwn with the DRPM protocol
  * - query: TODO
  */
-const protocolCommand = program
+const protocol = program
   .command('protocol')
   .description('Configure your DWN with the DRPM protocol.');
 
 /* ---- PROTOCOL CONFIGURE ---- */
-protocolCommand
+protocol
   .command('configure')
   .action(async () => await ProtocolCommand.configure());
 
 /* ---- PROTOCOL QUERY ---- */
-protocolCommand
+protocol
   .command('query')
   .action(async () => await ProtocolCommand.query());
-/* ---- PROTOCOL ---- */
 
 /**
  * -------- PUBLISH -------- *
@@ -119,19 +146,11 @@ protocolCommand
  * - query: TODO
  */
 const publishCommand = program
-  .command('publish')
+  .command('dpk')
   .description('Publish metadata and/or packages to your DWN');
 
 publishCommand
-  .command('package')
-  .command('metadata')
-  .action(async () => {
-    throw new Error('Not implemented yet');
-  });
-
-publishCommand
-  .command('release')
-  .command('tarball')
+  .command('publish')
   .action(async () => {
     throw new Error('Not implemented yet');
   });

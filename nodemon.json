@@ -8,5 +8,5 @@
         "src/**/*.test.ts",
         "node_modules"
     ],
-    "exec": "npm run build:esm && npm run start"
+    "exec": "npm run build:esm && NODE_ENV=development npm run start"
 }

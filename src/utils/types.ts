@@ -2,6 +2,7 @@ import { DwnInterface, DwnMessageDescriptor, DwnResponseStatus } from '@web5/age
 import { DrlBuilder } from './dwn/drl-builder.js';
 import { Request } from 'express';
 import { PortableDid } from '@web5/dids';
+import { Web5UserAgent } from '@web5/user-agent';
 
 // DWN & HTTP Request/Response Types
 export type ResponseInfo = {
@@ -43,7 +44,10 @@ export type DpkDwnDescriptor = {
     datePublished: string;
     messageTimestamp: string;
 };
-export type Signature = { protected: string; signature: string };
+export type Signature = {
+    protected: string;
+    signature: string
+};
 export type Authorization = {
     signature: {
         payload: string;
@@ -124,7 +128,7 @@ export type Dpk = {
     name: string;
     version?: string;
     path: string;
-}
+};
 export type DpkRequest = {
     did: string;
     dpk: Dpk;
@@ -156,19 +160,43 @@ export type Profile = {
     web: ProfileData;
     btc: ProfileData;
     [key: string]: any;
-}
+};
 export type ProfileOptions = {
       did?: string;
       password?: string;
-      dwnEndpoint?: string;
+      dwnEndpoints?: string;
       web5DataPath?: string
       recoveryPhrase?: string;
       context?: string;
 };
 export type ProfileCreateParams = {
-    url?: string;
     method: string;
-    dwnEndpoint: string;
+    dwnEndpoints: string;
+    url?: string;
     password?: string;
 };
+export type ProfileSwitchOptions = {
+    dht: string;
+    web: string;
+    btc: string;
+};
 export type RequestParams = Request['params'];
+export type CreatePackageDidWebParams = {
+    did: string;
+    metadata: DpkMetadata;
+};
+export type DidWebConnectOptions = {
+    agent: Web5UserAgent;
+    data: ProfileData;
+    sync?: string;
+};
+export type DidDhtConnectOptions = {
+    data: ProfileData;
+    agent?: Web5UserAgent;
+    sync?: string;
+};
+export type DidDhtCreateParams = {
+    dwnEndpoints: string;
+    password?: string;
+};
+export type DidWebCreateParams = DidDhtCreateParams & { url: string };

@@ -1,4 +1,4 @@
-import { DRPM_DWN_URL, DRPM_PROTOCOL_B64URL } from '../../config.js';
+import { DEFAULT_DWN_URL, DRPM_PROTOCOL_B64URL } from '../../config.js';
 import dwn from './protocol.js';
 import { Logger } from '../logger.js';
 import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from '../types.js';
@@ -13,7 +13,7 @@ export class DrlBuilder {
   constructor({ endpoint, did }: BaseDrl) {
     if (!did) throw new Error('DID required to build DRL');
     if (!endpoint) Logger.warn('No DWN Endpoint Found! Using the default endpoint is not recommended.');
-    this.baseDrl = `${endpoint ?? DRPM_DWN_URL}/${did}`;
+    this.baseDrl = `${endpoint ?? DEFAULT_DWN_URL}/${did}`;
   }
 
   // Start building with base DRL

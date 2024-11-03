@@ -1,45 +1,54 @@
-import { DrlBuilder } from '../src/utils/drpm/drl-builder.js';
+import { DrlBuilder } from '../src/utils/dwn/drl-builder.js';
 
-const path = process.argv.slice(2)?.[0];
 const did = 'did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo';
 const name = 'tool5';
 const version = '6.1.0';
-const builder = DrlBuilder.create({ endpoint: 'http://localhost:3000', did });
-const drl = path === 'package'
-  ? builder.buildPackageDrl({ name, version })
-  : builder.buildPackageReleaseDrl({ name, version });
+const endpoint = 'http://localhost:3000';
 
-console.log(drl);
+const packageDRL = DrlBuilder
+  .create({ endpoint, did })
+  .buildDrlRead({
+    protocolPath : 'package',
+    filters      : {
+      tags : [{ subKey: 'name', value: name }]
+    }
+  });
+console.log('packageDRL', packageDRL);
 
-
-const createArgs = {
-  did      : 'did:dht:8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo',
-  endpoint : 'http://localhost:3000'
-};
+const releaseDRL = DrlBuilder
+  .create({ endpoint, did })
+  .buildDrlRead({
+    protocolPath : 'package/release',
+    filters      : {
+      tags    : [
+        { subKey: 'name', value: name },
+        { subKey: 'version', value: version }
+      ],
+    }
+  });
+console.log('releaseDRL', releaseDRL);
 
 const drlQuery1 = DrlBuilder
-  .create(createArgs)
+  .create({ did, endpoint })
   .buildDrlQuery({ filters: { protocolPath: 'package' }});
 
 console.log('drlQuery1', drlQuery1);
 
-
 const drlQuery2 = DrlBuilder
-  .create(createArgs)
+  .create({ did, endpoint })
   .buildDrlQuery({
-    filters : { tags: { subKey: 'name', value: 'tool5' }}
+    filters : { tags: { subKey: 'name', value: name }}
   });
 console.log('drlQuery2', drlQuery2);
 
-
 const drlRead1 = DrlBuilder
-  .create(createArgs)
+  .create({ did, endpoint })
   .buildDrlRead({
     protocolPath : 'package/release',
     filters      : {
       tags : [
-        { subKey: 'name', value: 'tool5' },
-        { subKey: 'version', value: '6.1.0' }
+        { subKey: 'name', value: name },
+        { subKey: 'version', value: version }
       ]
     }
   });
@@ -47,11 +56,11 @@ const drlRead1 = DrlBuilder
 console.log('drlRead1', drlRead1);
 
 const drlRead2 = DrlBuilder
-  .create(createArgs)
+  .create({ did, endpoint })
   .buildDrlRead({
     protocolPath : 'package/release',
     filters      : {
-      tags : { subKey: 'name', value: 'tool5' },
+      tags : { subKey: 'name', value: name },
     }
   });
 console.log('drlRead2', drlRead2);

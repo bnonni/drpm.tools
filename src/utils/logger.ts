@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import chalk from 'chalk';
+import chalk, { Chalk, ChalkInstance } from 'chalk';
 
 enum Env {
   Development = 'development',
@@ -45,6 +45,14 @@ export class Logger implements Partial<Console> {
 
   public static security(message?: unknown, ...args: unknown[]): void {
     console.warn(chalk.red('security') + ':', message, ...args);
+  }
+
+  public static plain(message?: unknown, ...args: unknown[]): void {
+    console.log(message, ...args);
+  }
+
+  public static newline(): void {
+    console.log();
   }
 
   public static log(message?: unknown, ...args: unknown[]): void {

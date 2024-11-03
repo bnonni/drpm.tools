@@ -7,13 +7,10 @@ import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import {
   DRPM_REGISTRY_DIR,
-  DRPM_VERSION_PREFIXES,
-  NPM_PACKAGE_JSON,
-  PACKAGE_VERSION
+  DRPM_VERSION_PREFIXES
 } from '../config.js';
 import { Logger } from '../utils/logger.js';
 import {
-  DependencyParam,
   PrefixResponse,
   RegistryGetDpkPath,
   RegistryResponse,
@@ -227,17 +224,5 @@ export class RegistryUtils {
 
   static routeSuccess({code, status, data}: RouteSuccessParams): RegistryResponse {
     return { ok: true, code: code ?? 200, status: status ?? 'OK', data };
-  }
-
-  static lookupCurrentVersion(): string {
-    return NPM_PACKAGE_JSON?.version ?? PACKAGE_VERSION;
-  }
-
-  static lookupDependencyVersion({dependency}: DependencyParam): PrefixResponse {
-    const semver = NPM_PACKAGE_JSON?.dependencies?.[dependency];
-    const { prefix, version } = RegistryUtils.isPrefixed(semver)
-      ? RegistryUtils.findPrefix(semver)
-      : { prefix: '', version: semver };
-    return {prefix, version};
   }
 }

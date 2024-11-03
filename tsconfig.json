@@ -1,27 +1,24 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowJs": false,
     "strict": true,
     "declaration": true,
     "declarationMap": true,
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "sourceMap": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "declarationDir": "dist/types",
+    "outDir": "dist",
   },
+  "include": [
+    "src"
+  ],
   "exclude": [
     "eslint.config.cjs",
-    "node_modules",
-    "tests",
-    "lib",
-    "docs",
-    ".well-known",
-    "dist",
-    "protocols",
-    "scripts"
+    "node_modules"
   ]
 }
