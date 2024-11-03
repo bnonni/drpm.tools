@@ -74,7 +74,7 @@ For usage, sett [USAGE.md](/docs/USAGE.md).
 
 ## Details
 
-The below sections outline various details differntiating DRPM, explaining how it works and why its an improvement on the current centralized soltutions.
+The below sections outline various details differentiating DRPM, explaining how it works and why its an improvement on the current centralized solutions.
 
 ### Dependencies
 

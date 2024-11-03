@@ -1,6 +1,6 @@
 {
   "name": "drpm",
-  "version": "4.2.10",
+  "version": "4.4.0",
   "type": "module",
   "description": "Decentralized Registry Package Manager (DRPM) helps developers publish, install, find and manage Decentralized Packages (DPKs) published to Decentralized Web Nodes (DWNs). DRPM does this by looking up a Decentralized Identifier (DID) to find its DID document and parse out the DWN service endpoints. DRPM uses the endpoints to query the DWN for any matching package and package/release records.",
   "main": "./dist/cjs/index.js",
@@ -94,7 +94,7 @@
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
-    "cli:install-local": "[[ ! -f /usr/local/bin/drpm ]] && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpm || echo 'DRPM CLI already installed!\n'",
+    "cli:install-local": "rm -f /usr/local/bin/drpml && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpml",
     "cli:version": "sh scripts/cli/version.sh",
     "registryd:start": "sh scripts/registryd/start-restart.sh",
     "registryd:stop": "sh scripts/registryd/stop.sh",
@@ -105,6 +105,7 @@
     "docker:run": "docker run -d --rm --network drpm-network -p 2092:2092 --name drpm-registry registry.digitalocean.com/nonni/drpm-registry"
   },
   "dependencies": {
+    "@inquirer/prompts": "^7.0.1",
     "@tbd54566975/dwn-sdk-js": "^0.5.1",
     "@web5/agent": "^0.8.1",
     "@web5/api": "^0.12.0",

@@ -1,4 +1,4 @@
-import { AgentDidApi, DwnDidStore, AgentDidResolverCache } from '@web5/agent';
+import { AgentDidApi, AgentDidResolverCache, DwnDidStore } from '@web5/agent';
 import { CryptoApi, LocalKeyManager } from '@web5/crypto';
 import {
   BearerDid,

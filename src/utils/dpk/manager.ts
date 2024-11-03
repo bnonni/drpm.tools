@@ -1,11 +1,11 @@
 import { Record } from '@web5/api';
-import { DrpmWeb5 } from '../../drpm/web5.js';
+import { DWeb5 } from '../../drpm/dweb5.js';
 import { RegistryUtils } from '../../registry/utils.js';
 import { DidResolver } from '../did/resolver.js';
 import { DrlBuilder } from '../dwn/drl-builder.js';
 import dwn from '../dwn/protocol.js';
 import { Logger } from '../logger.js';
-import { stringify } from '../misc.js';
+import { stringifier } from '../misc.js';
 import { ResponseUtils } from '../response.js';
 import {
   CreatePackageParams,
@@ -18,13 +18,13 @@ import {
   RegistryResponse
 } from '../types.js';
 
-const { web5, did } = await DrpmWeb5.connect();
+const { web5, did } = await DWeb5.connect();
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
   static async getDwnEndpoints(didToResolve: string = did): Promise<string[]> {
     const { didDocument } = await DidResolver.resolve(didToResolve) ?? {};
-    Logger.info(`DManager: Resolved didDocument=${stringify(didDocument)}`);
+    Logger.info(`DManager: Resolved didDocument=${stringifier(didDocument)}`);
     const services = didDocument?.service;
     const didServiceEndpoint = services?.find(
       service => service.type === 'DecentralizedWebNode'
