@@ -3,6 +3,7 @@ import { DrlBuilder } from './dwn/drl-builder.js';
 import { Request } from 'express';
 import { PortableDid } from '@web5/dids';
 import { Web5UserAgent } from '@web5/user-agent';
+import { Web5 } from '@web5/api';
 
 // DWN & HTTP Request/Response Types
 export type ResponseInfo = {
@@ -145,7 +146,7 @@ export type DpkData = {
     'package/release'?: DpkTarball;
     [key: string]: any;
 };
-export type ProfileData = {
+export type DrpmProfileData = {
     did: string;
     password: string;
     dwnEndpoints: string[];
@@ -154,14 +155,14 @@ export type ProfileData = {
     portableDid?: PortableDid;
 };
 export type SupportedMethods = 'web' | 'dht' | 'btc';
-export type Profile = {
+export type DrpmProfile = {
     current: string;
-    dht: ProfileData;
-    web: ProfileData;
-    btc: ProfileData;
+    dht: DrpmProfileData;
+    web: DrpmProfileData;
+    btc: DrpmProfileData;
     [key: string]: any;
 };
-export type ProfileOptions = {
+export type DrpmProfileOptions = {
       did?: string;
       password?: string;
       dwnEndpoints?: string;
@@ -169,7 +170,7 @@ export type ProfileOptions = {
       recoveryPhrase?: string;
       context?: string;
 };
-export type ProfileCreateParams = {
+export type DrpmProfileCreateParams = {
     method: string;
     dwnEndpoints: string;
     did?: string;
@@ -177,23 +178,28 @@ export type ProfileCreateParams = {
     recoveryPhrase?: string;
     web5DataPath?: string;
 };
-export type ProfileSwitchOptions = {
+export type DrpmProfileMethodOptions = {
     dht: string;
     web: string;
     btc: string;
 };
+export type DrpmProfileDeleteOptions = {
+    method?: string
+    current?: boolean;
+    all?: boolean;
+}
 export type RequestParams = Request['params'];
 export type CreatePackageDidWebParams = {
     did: string;
     metadata: DpkMetadata;
 };
 export type DidWebConnectOptions = {
-    data: ProfileData;
+    data: DrpmProfileData;
     agent: Web5UserAgent;
     sync?: string;
 };
 export type DidDhtConnectOptions = {
-    data: ProfileData;
+    data: DrpmProfileData;
     agent?: Web5UserAgent;
     sync?: string;
 };
@@ -205,3 +211,4 @@ export type DidDhtCreateParams = {
     did?: string;
 };
 export type DidWebCreateParams = DidDhtCreateParams;
+export type DWeb5Params = { web5: Web5; did: string };

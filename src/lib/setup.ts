@@ -1,4 +1,4 @@
-import { exists, ensureDir, ensureFile } from 'fs-extra';
+import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { writeFile } from 'fs/promises';
 import { homedir, platform } from 'os';
 import { join } from 'path';
@@ -34,7 +34,7 @@ if (!await exists(DRPM_VERSION_FILE)) {
 
 if (!await exists(DRPM_PROFILE)) {
   await writeFile(DRPM_PROFILE, `{
-        "current": null,
+        "current": "",
         "dht": {
             "did": null,
             "dwnEndpoints": null,

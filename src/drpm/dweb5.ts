@@ -1,13 +1,12 @@
 import { Web5 } from '@web5/api';
-import { Web5UserAgent } from '@web5/user-agent';
 import { DRPM_PROFILE } from '../config.js';
 import { DidWebAgent } from '../utils/did/did-web-facade.js';
 import { Logger } from '../utils/logger.js';
 import { cleanProfile } from '../utils/misc.js';
 import { DidDhtConnectOptions, DidWebConnectOptions } from '../utils/types.js';
-import { DrpmProfile } from './profile.js';
+import { Profile } from './profile/index.js';
 
-export class DrpmWeb5 {
+export class DWeb5 {
   static web5: Web5;
   static did: string;
 
@@ -16,7 +15,7 @@ export class DrpmWeb5 {
       return { web5: this.web5, did: this.did };
     }
 
-    const { current, dht, web } = await DrpmProfile.load() ?? {};
+    const { current, dht, web } = await Profile.load() ?? {};
     Logger.info(`Loaded ${current} profile from ${DRPM_PROFILE}`);
 
     if(current === 'web') {

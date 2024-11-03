@@ -1,42 +1,73 @@
-import { DrpmProfile } from '../../drpm/profile.js';
-import { Logger } from '../../utils/logger.js';
-import { ProfileCreateParams, ProfileOptions, ProfileSwitchOptions } from '../../utils/types.js';
+import { Profile } from '../../drpm/profile/index.js';
+import { ProfileError } from '../../utils/errors.js';
+import {
+  DrpmProfileCreateParams,
+  DrpmProfileDeleteOptions,
+  DrpmProfileMethodOptions,
+  DrpmProfileOptions
+} from '../../utils/types.js';
 
 export class ProfileCommand {
-  static async create(params: ProfileCreateParams): Promise<void> {
+  static async create(params: DrpmProfileCreateParams): Promise<void> {
     try {
-      await DrpmProfile.create(params);
+      await Profile.create(params);
+      process.exit(0);
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to create profile', error);
+      throw new ProfileError(`Failed to create profile: ${error.message}`, 'ProfileCreate');
     }
   }
-  static async get(options: ProfileOptions): Promise<void> {
+
+  static async read(options: DrpmProfileOptions): Promise<void> {
     try {
-      await DrpmProfile.get(options);
+      await Profile.read(options);
+      process.exit(0);
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to get profile', error);
+      throw new ProfileError(`Failed to read profile: ${error.message}`, 'ProfileRead');
     }
   }
-  static async set(options: ProfileOptions): Promise<void> {
+
+  static async update(options: DrpmProfileOptions): Promise<void> {
     try {
-      await DrpmProfile.set(options);
+      await Profile.update(options);
+      process.exit(0);
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to set profile', error);
+      throw new ProfileError(`Failed to update profile: ${error.message}`, 'ProfileUpdate');
     }
   }
-  static async switch(options: ProfileSwitchOptions): Promise<void> {
+
+  static async delete(options: DrpmProfileDeleteOptions): Promise<void> {
     try {
-      await DrpmProfile.switch(options);
+      await Profile.delete(options);
+      process.exit(0);
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to switch profile', error);
+      throw new ProfileError(`Failed to delete profile: ${error.message}`, 'ProfileDelete');
+    }
+  }
+
+  static async switch(options: DrpmProfileMethodOptions): Promise<void> {
+    try {
+      await Profile.switch(options);
+      process.exit(0);
+    } catch (error: any) {
+      throw new ProfileError(`Failed to switch profile: ${error.message}`, 'ProfileSwitch');
     }
   }
 
   static async list(): Promise<void> {
     try {
-      await DrpmProfile.list();
+      await Profile.list();
+      process.exit(0);
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to list profiles', error);
+      throw new ProfileError(`Failed to list profiles: ${error.message}`, 'ProfileList');
+    }
+  }
+
+  static async recover(): Promise<void> {
+    try {
+      await Profile.recover();
+      process.exit(0);
+    } catch (error: any) {
+      throw new ProfileError(`Failed to recover profile: ${error.message}`, 'ProfileRecover');
     }
   }
 }

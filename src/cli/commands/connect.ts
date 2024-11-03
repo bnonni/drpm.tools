@@ -1,5 +1,5 @@
 import { Web5 } from '@web5/api';
-import { DrpmWeb5 } from '../../drpm/web5.js';
+import { DWeb5 } from '../../drpm/dweb5.js';
 import { Logger } from '../../utils/logger.js';
 
 export class ConnectCommand {
@@ -11,10 +11,10 @@ export class ConnectCommand {
       if(this.web5 && this.did) {
         return { web5: this.web5, did: this.did };
       }
-      await DrpmWeb5.connect();
+      await DWeb5.connect();
 
-      this.web5 = DrpmWeb5.web5;
-      this.did = DrpmWeb5.did;
+      this.web5 = DWeb5.web5;
+      this.did = DWeb5.did;
 
       Logger.info(`Web5 connection success!`);
       return this;

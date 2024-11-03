@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import chalk, { Chalk, ChalkInstance } from 'chalk';
+import chalk from 'chalk';
 
 enum Env {
   Development = 'development',

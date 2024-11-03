@@ -1,9 +1,10 @@
 import { Registry } from './registry.js';
 
-const server = new Registry();
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  server.start();
+export default class Server {
+  static start() {
+    if (import.meta.url === `file://${process.argv[1]}`) {
+      const registry = new Registry();
+      registry.start();
+    }
+  }
 }
-
-export default server;

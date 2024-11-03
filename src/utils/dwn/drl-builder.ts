@@ -1,8 +1,8 @@
 import { DEFAULT_DWN_URL, DRPM_PROTOCOL_B64URL } from '../../config.js';
-import dwn from './protocol.js';
 import { Logger } from '../logger.js';
 import { BaseDrl, DrlAddQueryFilterParams, DrlFiltersParams, DrlReadParams } from '../types.js';
 import { DrlUtils } from './drl-utils.js';
+import dwn from './protocol.js';
 
 
 export class DrlBuilder {

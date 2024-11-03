@@ -1,8 +1,12 @@
-import { Registry } from '../../registry/registry.js';
+import Server from '../../registry/server.js';
+import { RegistryError } from '../../utils/errors.js';
 
-export class DrpmRegistry {
+export class RegistryCommand {
   static async start() {
-    const registry = new Registry();
-    registry.start();
+    try {
+      Server.start();
+    } catch (error: any) {
+      throw new RegistryError(`Failed to start registry server: ${error.message}`);
+    }
   }
 }
