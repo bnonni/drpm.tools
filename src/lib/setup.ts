@@ -36,25 +36,25 @@ if (!await exists(DRPM_PROFILE)) {
   await writeFile(DRPM_PROFILE, `{
         "current": null,
         "dht": {
-            "did": "",
-            "dwnEndpoints": [],
-            "web5DataPath": "",
-            "password": "",
-            "recoveryPhrase": ""
+            "did": null,
+            "dwnEndpoints": null,
+            "web5DataPath": null,
+            "password": null,
+            "recoveryPhrase": null
         },
         "web": {
-            "did": "",
-            "dwnEndpoints": [],
-            "web5DataPath": "",
-            "password": "",
-            "recoveryPhrase": ""
+            "did": null,
+            "dwnEndpoints": null,
+            "web5DataPath": null,
+            "password": null,
+            "recoveryPhrase": null
         },
         "btc": {
-            "did": "",
-            "dwnEndpoints": [],
-            "web5DataPath": "",
-            "password": "",
-            "recoveryPhrase": ""
+            "did": null,
+            "dwnEndpoints": null,
+            "web5DataPath": null,
+            "password": null,
+            "recoveryPhrase": null
         }
     }`);
   console.log(`DRPM profile.json created: ${DRPM_PROFILE}`);

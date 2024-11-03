@@ -35,4 +35,13 @@ export class ProfileCommand {
       throw error;
     }
   }
+
+  static async list(): Promise<void> {
+    try {
+      await DrpmProfile.list();
+    } catch (error: any) {
+      Logger.error('ProfileCommand: Failed to switch profile', error);
+      throw error;
+    }
+  }
 }

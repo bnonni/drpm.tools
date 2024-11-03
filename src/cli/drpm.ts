@@ -106,6 +106,21 @@ profile
   `)
   .action(async (args) => await ProfileCommand.switch(args));
 
+/* ---- PROFILE SWITCH ---- */
+profile
+  .command('list')
+  .description('Switch between different DID profiles.')
+  .option('-d, --dht', 'Switch to did:dht method')
+  .option('-w, --web', 'Switch to did:web method')
+  .option('-b, --btc', 'Switch to did:btc method')
+  .addHelpText('after', `
+    Examples:
+        drpm profile switch {-d|--dht}    # Switch to your did:dht profile
+        drpm profile switch {-w|--web}    # Switch to your did:web profile
+        drpm profile switch {-b|--btc}    # Switch to your did:btc profile
+  `)
+  .action(async () => await ProfileCommand.list());
+
 /**
  * -------- PROTOCOL -------- *
  * - configure: configure your dwn with the DRPM protocol

@@ -4,12 +4,13 @@ import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DEFAULT_RECOVERY_PHRASE, DEFAULT_WEB5DATAPATH, DRPM_HOME, DRPM_PROFILE } from '../config.js';
 import { DidWebAgent } from '../utils/did/did-web-facade.js';
 import { Logger } from '../utils/logger.js';
+import fmtr from '../utils/formatter.js';
 import { cleanProfile, createPassword, stringify } from '../utils/misc.js';
 import { DidDhtCreateParams, DidWebCreateParams, Profile, ProfileCreateParams, ProfileData, ProfileOptions, ProfileSwitchOptions } from '../utils/types.js';
 import { DrpmWeb5 } from './web5.js';
 import { Web5UserAgent } from '@web5/user-agent';
 
-export class DrpmProfile {
+export class DrpmProfileUtils {
   // Helper function to check if setup is needed
   static async needSetup(): Promise<boolean> {
     return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
@@ -133,6 +134,9 @@ export class DrpmProfile {
   static async save(profile: Profile): Promise<void> {
     await writeFile(DRPM_PROFILE, stringify(profile));
   }
+}
+
+export class DrpmProfile extends DrpmProfileUtils {
 
   // Subcommand function to create a new profile
   static async create({ method, dwnEndpoints, url, password }: ProfileCreateParams): Promise<void> {
@@ -203,10 +207,23 @@ export class DrpmProfile {
   // Subcommand function to switch between profiles
   static async switch({ dht, web, btc }: ProfileSwitchOptions): Promise<void> {
     const profile = await this.load();
-    console.log('dht, web, btc', dht, web, btc);
+    Logger.log('dht, web, btc', dht, web, btc);
     profile.current = dht ? 'dht' : web ? 'web' : btc ? 'btc' : profile.current;
     await this.save(profile);
     const data = profile[profile.current];
     Logger.log(`Switched to ${profile.current} profile: ${cleanProfile(data)}`);
   }
+
+  // Subcommand function to switch between profiles
+  static async list(): Promise<void> {
+    const profile = await this.load();
+    const [dht, web, btc] = Object.keys(profile).filter((key) => key !== 'current').map((key) => key.trim());
+
+    Logger.plain('Available profiles:');;
+    Logger.plain(` - ${dht}`);
+    Logger.plain(` - ${web}`);
+    Logger.plain(` - ${btc}`);
+  }
 }
+
+DrpmProfile.list();
