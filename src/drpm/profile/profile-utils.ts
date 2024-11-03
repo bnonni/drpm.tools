@@ -43,9 +43,9 @@ export class ProfileUtils {
   }
 
   // Helper function to check if a profile exists
-  static async exists(method?: string): Promise<boolean | DrpmProfile> {
+  static async exists(profile?: DrpmProfile, method?: string): Promise<boolean | DrpmProfile> {
     try {
-      const profile = await this.load();
+      profile ??= await this.load();
       if(!profile) return false;
 
       const data = profile[profile.current ?? method];

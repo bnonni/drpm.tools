@@ -4,9 +4,9 @@ import { program } from 'commander';
 import { readFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { DEFAULT_WEB5DATAPATH } from '../config.js';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
-import { DEFAULT_WEB5DATAPATH } from '../config.js';
 import { RegistryCommand } from './commands/registry.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -16,7 +16,7 @@ export const CLI_VERSION = await readFile(packageJsonPath, 'utf8')
   .then(data => JSON.parse(data).version)
   .catch(() => 'latest');
 
-const drpm = program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Package Manager CLI`, '-v, --version', 'Output the current version');
+program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Package Manager CLI`, '-v, --version', 'Output the current version');
 
 /**
  * -------- PROFILE -------- *
@@ -27,7 +27,7 @@ const drpm = program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Packag
  * - list: TODO
  * - switch: TODO
  */
-const profile = drpm
+const profile = program
   .command('profile')
   .description('Interacts with a DRPM profile context: CRUD, List, Switch, Recover. A profile contains multiple contexts based on did method. Each context allows you to interact with DRPM for publishing and installing DPKs to your DWNs.')
   .addHelpText('after', `
@@ -75,7 +75,7 @@ profile
       drpm profile read -e    # Returns the profile.dwnEndpoints
       drpm profile read -w    # Returns the profile.web5DataPath
   `)
-  .action(ProfileCommand.read);
+  .action(async (options) => await ProfileCommand.read(options));
 
 /* ---- PROFILE UPDATE ---- */
 profile
@@ -92,7 +92,7 @@ profile
       drpm profile update -p "correct horse battery staple"    # Update the password
       drpm profile update -e https://dwn.mydomain.org          # Update the DWN endpoint
   `)
-  .action(ProfileCommand.update);
+  .action(async (options) => await ProfileCommand.update(options));
 
 
 /* ---- PROFILE UPDATE ---- */
@@ -108,7 +108,7 @@ profile
       drpm profile update -p "correct horse battery staple"    # Update the password
       drpm profile update -e https://dwn.mydomain.org          # Update the DWN endpoint
   `)
-  .action(ProfileCommand.update);
+  .action(async (options) => await ProfileCommand.delete(options));
 
 
 /* ---- PROFILE SWITCH ---- */
@@ -125,7 +125,7 @@ profile
         drpm profile switch -w    # Switch to your did:web profile
         drpm profile switch -b    # Switch to your did:btc profile
   `)
-  .action(ProfileCommand.switch);
+  .action(async (options) => await ProfileCommand.switch(options));
 
 /* ---- PROFILE LIST ---- */
 profile
@@ -138,7 +138,7 @@ profile
     Examples:
         drpm profile list    # Lists out available profile contexts
   `)
-  .action(ProfileCommand.list);
+  .action(async () => await ProfileCommand.list());
 
 /* ---- PROFILE RECOVER ---- */
 // TODO: Implement profile recover
@@ -148,7 +148,7 @@ profile
   .option('-d, --did <DID>', 'Supply the DID to recover (required)')
   .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Supply the mnemonic recovery phrase (required)')
   .addHelpText('after', 'Only available for did:dht')
-  .action(ProfileCommand.recover);
+  .action(async () => await ProfileCommand.recover());
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -157,19 +157,19 @@ profile
  * - configure: configure your dwn with the DRPM protocol
  * - query: TODO
  */
-const protocol = drpm
+const protocol = program
   .command('protocol')
   .description('Configure your DWN with the DRPM protocol.');
 
 /* ---- PROTOCOL CONFIGURE ---- */
 protocol
   .command('configure')
-  .action(ProtocolCommand.configure);
+  .action(async () => await ProtocolCommand.configure());
 
 /* ---- PROTOCOL QUERY ---- */
 protocol
   .command('query')
-  .action(ProtocolCommand.query);
+  .action(async () => await ProtocolCommand.query());
 
 /* ------------------------------------------------------------------------------------------------ */
 
@@ -178,7 +178,7 @@ protocol
  * - install: install a DPK (package/release record) from your DWN
  * - publish: publish full DPK (package and package/release record) to your DWN
  */
-const dpk = drpm
+const dpk = program
   .command('dpk')
   .description('Install and publish full DPKs (package and package/release records) from and to your DWN');
 
@@ -201,13 +201,13 @@ dpk
  * - configure: configure your dwn with the DRPM protocol
  * - query: TODO
  */
-const registry = drpm
+const registry = program
   .command('registry')
   .description('Interact with DRG (DRPM registry).');
 
 registry
   .description('Start the DRPM registry.')
   .command('start')
-  .action(RegistryCommand.start);
+  .action(async () => await RegistryCommand.start());
 
 program.parse();

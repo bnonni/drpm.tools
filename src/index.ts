@@ -12,7 +12,6 @@ export * from './drpm/profile/index.js';
 export * from './drpm/profile/profile-utils.js';
 export * from './drpm/profile/web-profile.js';
 export * from './drpm/protocol/index.js';
-export * from './drpm/core.js';
 export * from './drpm/dweb5.js';
 
 export * from './lib/hooks.js';
