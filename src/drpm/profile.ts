@@ -225,5 +225,3 @@ export class DrpmProfile extends DrpmProfileUtils {
     Logger.plain(` - ${btc}`);
   }
 }
-
-DrpmProfile.list();
