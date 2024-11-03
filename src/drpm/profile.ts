@@ -1,14 +1,13 @@
 import { DidJwk } from '@web5/dids';
+import { Web5UserAgent } from '@web5/user-agent';
 import { exists } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DEFAULT_RECOVERY_PHRASE, DEFAULT_WEB5DATAPATH, DRPM_HOME, DRPM_PROFILE } from '../config.js';
 import { DidWebAgent } from '../utils/did/did-web-facade.js';
 import { Logger } from '../utils/logger.js';
-import fmtr from '../utils/formatter.js';
 import { cleanProfile, createPassword, stringify } from '../utils/misc.js';
 import { DidDhtCreateParams, DidWebCreateParams, Profile, ProfileCreateParams, ProfileData, ProfileOptions, ProfileSwitchOptions } from '../utils/types.js';
 import { DrpmWeb5 } from './web5.js';
-import { Web5UserAgent } from '@web5/user-agent';
 
 export class DrpmProfileUtils {
   // Helper function to check if setup is needed
@@ -34,12 +33,9 @@ export class DrpmProfileUtils {
     }
     await agent.start({ password: data.password });
 
-    const dhtConnection = await DrpmWeb5.connectDht({ data, agent });
-
-    return {
-      current : 'dht',
-      dht     : { ...data, ...dhtConnection }
-    };
+    const {did} = await DrpmWeb5.connectDht({ data, agent });
+    data.did = did;
+    return { current: 'dht', dht: data };
   }
 
   // Helper function to create a new Web profile
@@ -69,12 +65,9 @@ export class DrpmProfileUtils {
     }
     await agent.start({ password: data.password });
 
-    const webConnection = await DrpmWeb5.connectWeb({ data, agent });
+    await DrpmWeb5.connectWeb({ data, agent });
 
-    return {
-      current : 'web',
-      web     : { ...data, ...webConnection }
-    };
+    return { current: 'web', web: data};
   }
 
   // Helper function to validate profile data
