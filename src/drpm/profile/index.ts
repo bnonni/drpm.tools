@@ -1,9 +1,8 @@
 import * as Inquirer from '@inquirer/prompts';
-import { DEFAULT_WEB5DATAPATH, DRPM_HOME } from '../../config.js';
+import { DRPM_HOME } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
-import { cleanProfile, createPassword, stringifier } from '../../utils/misc.js';
+import { cleanProfile, stringifier } from '../../utils/misc.js';
 import { DrpmProfileCreateParams, DrpmProfileData, DrpmProfileDeleteOptions, DrpmProfileMethodOptions, DrpmProfileOptions } from '../../utils/types.js';
-import { DWeb5 } from '../dweb5.js';
 import { DhtProfile } from './dht-profile.js';
 import { ProfileUtils } from './profile-utils.js';
 import { WebProfile } from './web-profile.js';
@@ -24,8 +23,12 @@ export class Profile extends ProfileUtils {
     }
 
     const profile = await this.load();
-    let partialProfile;
-    if(did && recoveryPhrase) {
+    const partialProfile = method == 'web'
+      ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
+      : await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did });
+
+    // TODO: Implement this block
+    /*if(did && recoveryPhrase) {
       const [_, method, id] = did.split(':');
       const data = {
         did            : did,
@@ -45,7 +48,7 @@ export class Profile extends ProfileUtils {
       partialProfile = method == 'web'
         ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
         : await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did });
-    }
+    }*/
 
     if(!partialProfile) {
       throw new Error('Profile creation failed.');

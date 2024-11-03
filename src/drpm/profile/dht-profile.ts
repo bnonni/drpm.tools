@@ -50,14 +50,17 @@ export class DhtProfile {
   }
 
   // Helper function to create a new DHT profile
-  static async create(
-    {dwnEndpoints, password, recoveryPhrase, web5DataPath }: DidDhtCreateParams
-  ): Promise<Partial<DrpmProfile>> {
-    password ??= createPassword();
-    recoveryPhrase ??= DEFAULT_RECOVERY_PHRASE;
-    web5DataPath ??= `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`;
+  static async create({ dwnEndpoints, password, recoveryPhrase, web5DataPath }: DidDhtCreateParams): Promise<Partial<DrpmProfile>> {
+    const data = {
+      did            : '',
+      dwnEndpoints   : [dwnEndpoints],
+      password       : password ?? createPassword(),
+      recoveryPhrase : recoveryPhrase ?? DEFAULT_RECOVERY_PHRASE,
+      web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`
+    };
 
-    const { agent, data } = await this.createAgent({
+    // TODO: Implement this block
+    /*const { agent, data } = await this.createAgent({
       data : {
         password,
         web5DataPath,
@@ -65,11 +68,10 @@ export class DhtProfile {
         did            : '',
         dwnEndpoints   : [dwnEndpoints],
       }
-    });
-    console.log('data', data);
+    });*/
 
-    await DWeb5.connectDht({ data, agent });
-
+    const { did } = await DWeb5.connectDht({ data });
+    data.did = did;
     return { current: 'dht', dht: data };
   }
 }
