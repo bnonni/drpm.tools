@@ -8,7 +8,6 @@ import { Logger } from '../utils/logger.js';
 import { ResponseUtils } from '../utils/response.js';
 import { RegistryUtils } from './utils.js';
 
-
 class RegistryHandlers {
   private router: Router;
 
@@ -170,13 +169,9 @@ class RegistryHandlers {
 
       const chunks: Buffer[] = [];
       await pipeline(tarPack, gzip, async (source) => {
-        for await (const chunk of source) {
-          chunks.push(chunk); // Collect chunks into an array
-        }
+        for await (const chunk of source) { chunks.push(chunk); }
       });
       const release = Buffer.concat(chunks);
-
-      Logger.info('release', release);
       const relRes = await DManager.createPackageRelease({
         name,
         version,
@@ -190,8 +185,9 @@ class RegistryHandlers {
         Logger.error(`RegistryHandlers: Failed to upload tarball`, error);
         return res.status(code).json({ error });
       }
-
-      Logger.log(`Tarball uploaded successfully!`, relRes.data);
+      // const record = relRes.data as Record;
+      // , record.tags
+      Logger.log(`Tarball uploaded successfully!`);
 
       return res.status(200).json({ message: 'Tarball uploaded successfully' });
     } catch (error: any) {

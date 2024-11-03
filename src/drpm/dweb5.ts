@@ -47,7 +47,8 @@ export class DWeb5 {
       return { web5, did };
     }
 
-    throw new Error('No profile found');
+    Logger.error('DWeb5: No profile found');
+    process.exit(1);
   }
 
   static async connectWeb({ agent, data, sync = 'off' }: DidWebConnectOptions) {
@@ -61,14 +62,13 @@ export class DWeb5 {
         didCreateOptions : { dwnEndpoints },
       });
     } catch (error: any) {
-      Logger.error('DrpmWeb5: Failed to connect to Web5 using DidWeb', error);
-      throw new Error('Failed to connect to Web5 using DidWeb: ' + error.message);
+      Logger.error(error);
+      process.exit(1);
     }
   }
   static async connectDht({ data, agent, sync = 'off' }: DidDhtConnectOptions) {
     try {
       const { password, dwnEndpoints, did } = data ?? {};
-      Logger.info('DWeb5: Connecting to Web5 using DidDHT');
       return await Web5.connect({
         sync,
         agent,
@@ -77,8 +77,8 @@ export class DWeb5 {
         didCreateOptions : { dwnEndpoints },
       });
     } catch (error: any) {
-      Logger.error('DrpmWeb5: Failed to connect to Web5 using DidDHT', error);
-      throw new Error('Failed to connect to Web5 using DidDHT: ' + error.message);
+      Logger.error(error);
+      process.exit(1);
     }
   }
 }
