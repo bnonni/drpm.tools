@@ -29,11 +29,7 @@ export class DWeb5 {
         agent.initialize({ password: recoveryPhrase });
       }
       Logger.info(`Connecting with web profile: ${cleanProfile(web)}`);
-      const { web5, did } = await this.connectWeb({
-        data  : web,
-        sync  : '30s',
-        agent
-      });
+      const { web5, did } = await this.connectWeb({ data: web, sync: '30s', agent });
 
       this.web5 = web5;
       this.did = did;
@@ -43,10 +39,7 @@ export class DWeb5 {
 
     if(current === 'dht') {
       Logger.info(`Connecting with dht profile: ${cleanProfile(dht)}`);
-      const { web5, did } = await this.connectDht({
-        data  : dht,
-        sync  : '30s',
-      });
+      const { web5, did } = await this.connectDht({ data: dht, sync: '30s' });
 
       this.web5 = web5;
       this.did = did;
@@ -75,6 +68,7 @@ export class DWeb5 {
   static async connectDht({ data, agent, sync = 'off' }: DidDhtConnectOptions) {
     try {
       const { password, dwnEndpoints, did } = data ?? {};
+      Logger.info('DWeb5: Connecting to Web5 using DidDHT');
       return await Web5.connect({
         sync,
         agent,

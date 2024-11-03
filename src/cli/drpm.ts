@@ -55,7 +55,7 @@ profile
       drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints; DWN Endpoints required
       drpm profile create -m web -u example.com                               # Create new profile with did:web method; URL required
   `)
-  .action(ProfileCommand.create);
+  .action(async (options) => await ProfileCommand.create(options));
 
 /* ---- PROFILE read ---- */
 profile
