@@ -94,7 +94,7 @@
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
-    "cli:install-local": "[[ ! -f /usr/local/bin/drpm ]] && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpm || echo 'DRPM CLI already installed!\n'",
+    "cli:install-local": "rm -f /usr/local/bin/drpml && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpml || echo 'DRPM Local CLI already installed!\n'",
     "cli:version": "sh scripts/cli/version.sh",
     "registryd:start": "sh scripts/registryd/start-restart.sh",
     "registryd:stop": "sh scripts/registryd/stop.sh",

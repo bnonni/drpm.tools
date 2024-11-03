@@ -25,6 +25,7 @@ export class ProtocolCommand {
 
     const { status: send } = await protocol.send(did);
 
+    Logger.error('send', send);
     if(ResponseUtils.dwnFail({ status: send })) {
       const badSend = '';
       Logger.error(badSend, send);

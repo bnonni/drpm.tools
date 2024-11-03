@@ -1,60 +1,93 @@
 import { DidJwk } from '@web5/dids';
+import { Web5UserAgent } from '@web5/user-agent';
 import { exists } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DEFAULT_RECOVERY_PHRASE, DEFAULT_WEB5DATAPATH, DRPM_HOME, DRPM_PROFILE } from '../config.js';
 import { DidWebAgent } from '../utils/did/did-web-facade.js';
 import { Logger } from '../utils/logger.js';
-import fmtr from '../utils/formatter.js';
 import { cleanProfile, createPassword, stringify } from '../utils/misc.js';
 import { DidDhtCreateParams, DidWebCreateParams, Profile, ProfileCreateParams, ProfileData, ProfileOptions, ProfileSwitchOptions } from '../utils/types.js';
 import { DrpmWeb5 } from './web5.js';
-import { Web5UserAgent } from '@web5/user-agent';
 
-export class DrpmProfileUtils {
-  // Helper function to check if setup is needed
-  static async needSetup(): Promise<boolean> {
-    return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
-  }
-
-  // Helper function to create a new DHT profile
-  static async dht({ dwnEndpoints, password }: DidDhtCreateParams): Promise<Partial<Profile>> {
-    const data = {
-      did            : '',
-      dwnEndpoints   : [dwnEndpoints],
-      password       : password ?? createPassword(),
-      recoveryPhrase : DEFAULT_RECOVERY_PHRASE,
-      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/DHT/${crypto.randomUUID()}AGENT`,
-    };
-
+export class DhtProfile {
+  static async createAgent({ data }: { data: ProfileData }): Promise<{agent: Web5UserAgent; data: ProfileData}> {
     const agent = await Web5UserAgent.create({ dataPath: data.web5DataPath });
+
     if(await agent.firstLaunch()) {
       data.recoveryPhrase = await agent.initialize({ password: data.password });
     } else {
       throw new Error('Profile already exists. Use "drpm profile switch --dht" to load this profile.');
     }
+
     await agent.start({ password: data.password });
 
-    const dhtConnection = await DrpmWeb5.connectDht({ data, agent });
+    const identity = await agent.identity.create({
+      didMethod  : 'dht',
+      metadata   : { name: 'DRPM' },
+      didOptions : {
+        services : [
+          {
+            id              : 'dwn',
+            type            : 'DecentralizedWebNode',
+            serviceEndpoint : data.dwnEndpoints,
+            enc             : '#enc',
+            sig             : '#sig',
+          }
+        ],
+        verificationMethods : [
+          {
+            algorithm : 'Ed25519',
+            id        : 'sig',
+            purposes  : ['assertionMethod', 'authentication']
+          },
+          {
+            algorithm : 'secp256k1',
+            id        : 'enc',
+            purposes  : ['keyAgreement']
+          }
+        ]
+      }
+    });
 
-    return {
-      current : 'dht',
-      dht     : { ...data, ...dhtConnection }
-    };
+    data.did = identity.metadata.connectedDid ?? identity.did.uri;
+
+    return { agent, data };
   }
 
+  // Helper function to create a new DHT profile
+  static async create({ dwnEndpoints, password, recoveryPhrase, web5DataPath }: DidDhtCreateParams): Promise<Partial<Profile>> {
+    password ??= createPassword();
+    recoveryPhrase ??= DEFAULT_RECOVERY_PHRASE;
+    web5DataPath ??= `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`;
+
+    const { agent, data } = await this.createAgent({
+      data : {
+        password,
+        web5DataPath,
+        recoveryPhrase,
+        did            : '',
+        dwnEndpoints   : [dwnEndpoints],
+      }
+    });
+    console.log('data', data);
+
+    await DrpmWeb5.connectDht({ data, agent });
+
+    return { current: 'dht', dht: data };
+  }
+}
+
+export class WebProfile {
   // Helper function to create a new Web profile
-  static async web({ dwnEndpoints, password, url }: DidWebCreateParams): Promise<Partial<Profile>> {
-    if(!url) {
-      throw new Error('URL required to create a new web profile.');
-    }
+  static async create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did }: DidWebCreateParams): Promise<Partial<Profile>> {
 
     const data = {
-      did            : `did:web:${url}`,
+      did            : did ?? '',
       dwnEndpoints   : [dwnEndpoints],
       password       : password ?? createPassword(),
       portableDid    : await DidJwk.create(),
-      recoveryPhrase : DEFAULT_RECOVERY_PHRASE,
-      web5DataPath   : `${DEFAULT_WEB5DATAPATH}/WEB/${url}/AGENT`,
+      recoveryPhrase : recoveryPhrase ?? DEFAULT_RECOVERY_PHRASE,
+      web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/WEB/${did}/AGENT`,
     };
 
     const agent = await DidWebAgent.create({
@@ -69,12 +102,15 @@ export class DrpmProfileUtils {
     }
     await agent.start({ password: data.password });
 
-    const webConnection = await DrpmWeb5.connectWeb({ data, agent });
+    await DrpmWeb5.connectWeb({ data, agent });
+    return { current: 'web', web: data };
+  }
+}
 
-    return {
-      current : 'web',
-      web     : { ...data, ...webConnection }
-    };
+export class DrpmProfileUtils {
+  // Helper function to check if setup is needed
+  static async needSetup(): Promise<boolean> {
+    return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
   }
 
   // Helper function to validate profile data
@@ -137,36 +173,49 @@ export class DrpmProfileUtils {
 }
 
 export class DrpmProfile extends DrpmProfileUtils {
-
   // Subcommand function to create a new profile
-  static async create({ method, dwnEndpoints, url, password }: ProfileCreateParams): Promise<void> {
-    try {
-      if(await this.needSetup()) {
-        throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
+  static async create(params: ProfileCreateParams): Promise<void> {
+    const { dwnEndpoints, password, recoveryPhrase, web5DataPath, method = 'dht', did } = params;
 
-      }
-      method ??= 'dht';
-
-      if(!dwnEndpoints) {
-        throw new Error('DWN endpoints required to create a new profile.');
-      }
-
-      const profile = await this.load();
-      const partialProfile = method == 'web' && url
-        ? await this.web({ dwnEndpoints, password, url })
-        : await this.dht({ dwnEndpoints, password });
-
-      if(!partialProfile) {
-        throw new Error('Profile creation failed.');
-      }
-
-      await this.save({ ...profile, ...partialProfile });
-
-      Logger.log(`Created ${method} profile: ${stringify(partialProfile)}`);
-    } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to create profile', error);
-      throw error;
+    if(await this.needSetup()) {
+      throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
     }
+
+    if(!dwnEndpoints) {
+      throw new Error('DWN endpoints required to create a new profile.');
+    }
+
+    const profile = await this.load();
+    let partialProfile;
+    if(did && recoveryPhrase) {
+      const [_, method, id] = did.split(':');
+      const data = {
+        did            : did,
+        recoveryPhrase : recoveryPhrase,
+        dwnEndpoints   : dwnEndpoints.split(','),
+        password       : password ?? createPassword(),
+        web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/${method}/${id}/AGENT`,
+      };
+      if(method === 'dht') {
+        await DrpmWeb5.connectDht({ data });
+        partialProfile = { current: 'dht', dht: data };
+      } else {
+        // await DrpmWeb5.connectWeb({ data });
+        partialProfile = { current: 'web', dht: data };
+      }
+    } else {
+      partialProfile = method == 'web'
+        ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
+        : await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did });
+    }
+
+    if(!partialProfile) {
+      throw new Error('Profile creation failed.');
+    }
+
+    await this.save({ ...profile, ...partialProfile });
+
+    Logger.log(`Created ${method} profile: ${stringify(partialProfile)}`);
   }
 
   // Subcommand function to get profile data

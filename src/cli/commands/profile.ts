@@ -8,7 +8,6 @@ export class ProfileCommand {
       await DrpmProfile.create(params);
     } catch (error: any) {
       Logger.error('ProfileCommand: Failed to create profile', error);
-      throw error;
     }
   }
   static async get(options: ProfileOptions): Promise<void> {
@@ -16,7 +15,6 @@ export class ProfileCommand {
       await DrpmProfile.get(options);
     } catch (error: any) {
       Logger.error('ProfileCommand: Failed to get profile', error);
-      throw error;
     }
   }
   static async set(options: ProfileOptions): Promise<void> {
@@ -24,7 +22,6 @@ export class ProfileCommand {
       await DrpmProfile.set(options);
     } catch (error: any) {
       Logger.error('ProfileCommand: Failed to set profile', error);
-      throw error;
     }
   }
   static async switch(options: ProfileSwitchOptions): Promise<void> {
@@ -32,7 +29,6 @@ export class ProfileCommand {
       await DrpmProfile.switch(options);
     } catch (error: any) {
       Logger.error('ProfileCommand: Failed to switch profile', error);
-      throw error;
     }
   }
 
@@ -40,8 +36,7 @@ export class ProfileCommand {
     try {
       await DrpmProfile.list();
     } catch (error: any) {
-      Logger.error('ProfileCommand: Failed to switch profile', error);
-      throw error;
+      Logger.error('ProfileCommand: Failed to list profiles', error);
     }
   }
 }

@@ -1,11 +1,11 @@
 import { Web5 } from '@web5/api';
+import { Web5UserAgent } from '@web5/user-agent';
+import { DRPM_PROFILE } from '../config.js';
 import { DidWebAgent } from '../utils/did/did-web-facade.js';
 import { Logger } from '../utils/logger.js';
 import { cleanProfile } from '../utils/misc.js';
+import { DidDhtConnectOptions, DidWebConnectOptions } from '../utils/types.js';
 import { DrpmProfile } from './profile.js';
-import { DidWebConnectOptions, DidDhtConnectOptions } from '../utils/types.js';
-import { DRPM_PROFILE } from '../config.js';
-import { Web5UserAgent } from '@web5/user-agent';
 
 export class DrpmWeb5 {
   static web5: Web5;
@@ -47,7 +47,6 @@ export class DrpmWeb5 {
       const { web5, did } = await this.connectDht({
         data  : dht,
         sync  : '30s',
-        agent : await Web5UserAgent.create({ dataPath: dht.web5DataPath })
       });
 
       this.web5 = web5;
@@ -68,7 +67,6 @@ export class DrpmWeb5 {
         password,
         connectedDid     : did,
         didCreateOptions : { dwnEndpoints },
-        techPreview      : { dwnEndpoints }
       });
     } catch (error: any) {
       Logger.error('DrpmWeb5: Failed to connect to Web5 using DidWeb', error);
@@ -84,7 +82,6 @@ export class DrpmWeb5 {
         password,
         connectedDid     : did,
         didCreateOptions : { dwnEndpoints },
-        techPreview      : { dwnEndpoints },
       });
     } catch (error: any) {
       Logger.error('DrpmWeb5: Failed to connect to Web5 using DidDHT', error);

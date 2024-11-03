@@ -172,8 +172,10 @@ export type ProfileOptions = {
 export type ProfileCreateParams = {
     method: string;
     dwnEndpoints: string;
-    url?: string;
+    did?: string;
     password?: string;
+    recoveryPhrase?: string;
+    web5DataPath?: string;
 };
 export type ProfileSwitchOptions = {
     dht: string;
@@ -186,8 +188,8 @@ export type CreatePackageDidWebParams = {
     metadata: DpkMetadata;
 };
 export type DidWebConnectOptions = {
-    agent: Web5UserAgent;
     data: ProfileData;
+    agent: Web5UserAgent;
     sync?: string;
 };
 export type DidDhtConnectOptions = {
@@ -198,5 +200,8 @@ export type DidDhtConnectOptions = {
 export type DidDhtCreateParams = {
     dwnEndpoints: string;
     password?: string;
+    recoveryPhrase?: string;
+    web5DataPath?: string;
+    did?: string;
 };
-export type DidWebCreateParams = DidDhtCreateParams & { url: string };
+export type DidWebCreateParams = DidDhtCreateParams;

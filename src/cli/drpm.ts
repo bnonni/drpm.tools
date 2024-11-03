@@ -27,7 +27,7 @@ program.version(`drpm ${CLI_VERSION}\nDecentralized Registry Package Manager CLI
  */
 const profile = program
   .command('profile')
-  .description('Interact with your DPM profile')
+  .description('Interact with your DRPM profile')
   .addHelpText('after', `
     Examples:
       drpm profile create           # Create a new profile
@@ -39,12 +39,11 @@ const profile = program
 /* ---- PROFILE CREATE ---- */
 profile
   .command('create')
-  .description('Create a new DPM profile')
+  .description('Create a new DRPM profile')
   .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints to use (required)')
   .option('-p, --password <PASSWORD>', 'Supply your own password (optional, default: random partial mnemonic)')
-  .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Supply your own recovery phrase (optional, default: creates new mnemonic)')
+  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set the path to the web5 DATA dir (default: ${DEFAULT_WEB5DATAPATH})`)
   .option('-m, --method <METHOD>', 'Use an alternative did method (optional, default: dht)')
-  .option('-u, --url <URL>', 'Provide did web URL (required, if using did:web)')
   .addHelpText('after', `
       Examples:
         drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint; DWN Endpoints required
@@ -56,12 +55,12 @@ profile
 /* ---- PROFILE SET ---- */
 profile
   .command('set')
-  .description('Set your DPM profile')
+  .description('Set values in your DRPM profile')
   .option('-d, --did <DID>', 'Set the DID')
   .option('-p, --password <PASSWORD>', 'Set the password (protects local DWN data)')
   .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Set the recovery phrase (for agent key recovery)')
   .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Set the DWN endpoints')
-  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set the web5 DATA folder path (default: ${process.cwd()}/DATA)`)
+  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set the path to the web5 DATA dir (default: ${DEFAULT_WEB5DATAPATH})`)
   .addHelpText('after', `
     Examples:
         drpm profile set -d did:example:abc123                # Set the DID
@@ -73,12 +72,12 @@ profile
 /* ---- PROFILE GET ---- */
 profile
   .command('get')
-  .description('Get your DPM profile data. If no options passed, full profile will be printed.')
+  .description('Get values from your DRPM profile')
   .option('-d, --did', 'Get the DID')
   .option('-p, --password', 'Get the password in plain text')
   .option('-r, --recoveryPhrase', 'Get the recovery phrase (for agent key recovery)')
   .option('-e, --dwnEndpoints', 'Get the DWN endpoints')
-  .option('-w, --web5DataPath', `Get the web5 data storage path (default: ${DEFAULT_WEB5DATAPATH})`)
+  .option('-w, --web5DataPath', `Get the path to the web5 DATA dir (default: ${DEFAULT_WEB5DATAPATH})`)
   .addHelpText('after', `
     Examples:
       drpm profile get       # Print the full profile
@@ -104,7 +103,7 @@ profile
         drpm profile switch {-w|--web}    # Switch to your did:web profile
         drpm profile switch {-b|--btc}    # Switch to your did:btc profile
   `)
-  .action(async (args) => await ProfileCommand.switch(args));
+  .action(ProfileCommand.switch);
 
 /* ---- PROFILE SWITCH ---- */
 profile
@@ -119,7 +118,7 @@ profile
         drpm profile switch {-w|--web}    # Switch to your did:web profile
         drpm profile switch {-b|--btc}    # Switch to your did:btc profile
   `)
-  .action(async () => await ProfileCommand.list());
+  .action(ProfileCommand.list);
 
 /**
  * -------- PROTOCOL -------- *
@@ -133,12 +132,12 @@ const protocol = program
 /* ---- PROTOCOL CONFIGURE ---- */
 protocol
   .command('configure')
-  .action(async () => await ProtocolCommand.configure());
+  .action(ProtocolCommand.configure);
 
 /* ---- PROTOCOL QUERY ---- */
 protocol
   .command('query')
-  .action(async () => await ProtocolCommand.query());
+  .action(ProtocolCommand.query);
 
 /**
  * -------- PUBLISH -------- *
