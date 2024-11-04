@@ -67,10 +67,13 @@ Developers can discover packages here just like npmjs.com, except explorer.drpm.
 
 Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
-## Setup & Usage
+## Setup
 
 For setup, see [SETUP.md](/docs/SETUP.md).
-For usage, sett [USAGE.md](/docs/USAGE.md).
+
+## Usage
+
+For usage, see [USAGE.md](/docs/USAGE.md).
 
 ## Details
 

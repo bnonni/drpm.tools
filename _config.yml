@@ -1,5 +1,5 @@
-title: 
+theme: jekyll-theme-minimal
 logo: /assets/img/animal/wolf.webp
-description: Decentralized Registry Package Manager - npm for the DWeb
+description: Decentralized Registry Package Manager | npm for the DWeb
 include:
   - .well-known
