@@ -3,6 +3,7 @@ import { DEFAULT_RECOVERY_PHRASE, DEFAULT_WEB5DATAPATH } from '../../config.js';
 import { createPassword } from '../../utils/misc.js';
 import { DidDhtCreateParams, DrpmProfile, DrpmProfileData } from '../../utils/types.js';
 import { DWeb5 } from '../dweb5.js';
+import cuid from '@bugsnag/cuid';
 
 export class DhtProfile {
   static async createAgent({ data }: { data: DrpmProfileData }): Promise<{agent: Web5UserAgent; data: DrpmProfileData}> {
@@ -56,7 +57,7 @@ export class DhtProfile {
       dwnEndpoints   : [dwnEndpoints],
       password       : password ?? createPassword(),
       recoveryPhrase : recoveryPhrase ?? DEFAULT_RECOVERY_PHRASE,
-      web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/DHT/AGENT`
+      web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/DHT/${cuid()}/AGENT`
     };
 
     // TODO: Implement this block
