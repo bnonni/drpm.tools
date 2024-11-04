@@ -71,8 +71,9 @@ export class DhtProfile {
       }
     });*/
 
-    const { did } = await DWeb5.connectDht({ data });
+    const { did, recoveryPhrase: _recoveryPhrase } = await DWeb5.connectDht({ data });
     data.did = did;
+    data.recoveryPhrase = _recoveryPhrase ?? DEFAULT_RECOVERY_PHRASE;
     return { current: 'dht', dht: data };
   }
 }
