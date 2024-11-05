@@ -1,6 +1,6 @@
 import './exts.js';
 
-export * from './cli/drpm.js';
+export * from './cli/refactor/old-drpm.js';
 export * from './cli/commands/connect.js';
 export * from './cli/commands/profile.js';
 export * from './cli/commands/protocol.js';
