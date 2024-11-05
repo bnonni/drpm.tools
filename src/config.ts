@@ -11,7 +11,6 @@ export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL ?? 'aHR
 export const DRPM_VERSION_PREFIXES = ['~', '^', '<', '>', '<=', '>=', '=', '-', '@'];
 export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
-export const DEFAULT_WEB5DATAPATH = `${DRPM_HOME}/DATA`;
 // ggignore-start
 export const DEFAULT_PASSWORD = 'insecure correct horse battery staple';
 export const DEFAULT_RECOVERY_PHRASE = 'correct horse battle stable correct horse battle stable correct horse battle stable';

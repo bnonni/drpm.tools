@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DRPM_HOME, DRPM_PROFILE } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { stringifier } from '../../utils/misc.js';
-import { DrpmProfile } from '../../utils/types.js';
+import { DrpmProfile, DrpmProfileData } from '../../utils/types.js';
 
 export class ProfileUtils {
   // Helper function to check if setup is needed
@@ -62,6 +62,12 @@ export class ProfileUtils {
   static async load(): Promise<DrpmProfile> {
     const profile = await readFile(DRPM_PROFILE, 'utf8');
     return JSON.parse(profile);
+  }
+
+  static async data(profile?: DrpmProfile): Promise<DrpmProfileData> {
+    profile ??= await this.load();
+    const current = profile.current ?? 'dht';
+    return profile[current];
   }
 
   // Helper function to save profile data to the file

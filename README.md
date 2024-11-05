@@ -1,18 +1,15 @@
 # Decentralized Registry Package Manager (DRPM)
 
-<img src="/assets/img/animal/wolf.webp" height=250 width=250 />
+<img src="/assets/img/animal/octopus.webp" height=250 width=250 />
 
 DRPM is npm for the DWeb. Install and publish Decentralized Packages to your Decentralized Web Node using DRPM!
 
 ## Table of Contents
 
-* [Vocabulary](#vocabulary)
-  * [Web5 Vocab](#web5-vocab)
-  * [DRPM Vocab](#drpm-vocab)
-  * [Other Vocab](#other-vocab)
+* [Setup](#setup)
+* [Usage](#usage)
 * [Summary](#summary)
 * [Goals](#goals)
-* [Setup & Usage](#setup--usage)
 * [Details](#details)
   * [Dependencies](#dependencies)
   * [Namespace](#namespace)
@@ -23,49 +20,11 @@ DRPM is npm for the DWeb. Install and publish Decentralized Packages to your Dec
   * [Decentralized Registry (DRG)](#decentralized-registry-drg)
   * [Decentralized Package Manager (DPM)](#decentralized-package-manager-dpm)
   * [Decentralized Package Import](#decentralized-package-import-dpi)
+* [Vocabulary](#vocabulary)
+  * [Web5 Vocab](#web5-vocab)
+  * [DRPM Vocab](#drpm-vocab)
+  * [Other Vocab](#other-vocab)
 * [Project Resources](#project-resources)
-
-## Vocabulary
-
-Acronyms galore! But what does it all mean!?
-
-### Web5 Vocab
-
-* DID = Decentralized Identifier
-* DWN = Decentralized Web Node
-* DWA = Decentralized Web App
-
-### DRPM Vocab
-
-* DRG = Decentralized Registry
-* DPK = Decentralized Package
-* DPM = Decentralized Package Manager
-* DRPM = Decentralized Registry Package Manager
-* DMI = Decentralized Module Import
-* DPI = Decentralized Package Import (alt name for DMI)
-
-### Other Vocab
-
-* NPK = Node Package
-* NPM = Node Package Manager
-
-## Summary
-
-DRPM is a set of tools using DIDs to publish, install, and interact with DPKs published to a DWN. Every DID created has a DID Document containing relevant information for how to interact with that DID.
-
-In the case of DRPM, we are leveraging the `serverhe DID listed against the DPK to lookup the DID document using the DID method (which defines where the DID doc was stored, i.e.  which decentralized storage network).
-
-DRPM support two DID methods: DHT and WEB. The DID doc contains a "server" key containing as its value a list of objects. Each object defines a service available to that DID. In the case of DRPM, the service used is the DecentralizedWebNode service.
-
-This service object will contain a DWN endpoint. This endpoint is used to query the DWN for the DPK in question, which is stored using the DRPM DWN protocol. To view the protocol rules, checkout out [drpm.tools/protocols/drpm](https://drpm.tools/protocols/drpm).
-
-## Goals
-
-The goal of DRPM is to decentralize package management putting control of the software in the hands of the users - not the manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs.
-
-Developers can discover packages here just like npmjs.com, except explorer.drpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.
-
-Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
 ## Setup
 
@@ -74,6 +33,42 @@ For setup, see [SETUP.md](/docs/SETUP.md).
 ## Usage
 
 For usage, see [USAGE.md](/docs/USAGE.md).
+
+## Summary
+
+DRPM is a set of tools using DIDs to publish, install, and interact with DPKs published to a DWN. Every DID created has a DID Document containing relevant information for how to interact with that DID.
+
+In the case of DRPM, we add the DID Method and ID to the package name, so the registry server can lookup the DID document using the DID method (which defines where the DID doc was stored, i.e. which decentralized storage network).
+
+DRPM support one DID method - DHT - with upcoming support for DID WEB and DID BTC. The creation of a DID DHT requires the inclusion of a DWN endpoint. This endpoint is included in the DID document under the "service" section.
+
+```json
+{
+ "service": [
+    {
+      "id": "did:dht:tqa1ep34zbg3kwrt89irbj6sib333ps1ued5frwbug39meq3a4oy",
+      "type": "DecentralizedWebNode",
+      "serviceEndpoint": [
+        "https://dwn.example.org/"
+      ],
+      "enc": "#enc",
+      "sig": "#sig"
+    }
+  ]
+  }
+```
+
+The service key is a list of objects where each object defines a service available to that DID. In this case, the service used is called `DecentralizedWebNode`.
+
+Resolving the did yields the doc yields the endpoint yields the location for record reads and creates. To participate, you merely need to install the DRPM protocol into your DWN. To view the protocol rules, checkout out [drpm.tools/protocols/drpm](https://drpm.tools/protocols/drpm).
+
+## Goals
+
+The goal of DRPM is to decentralize package management putting control of the packages in the hands of the users - not the package registry or package manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs.
+
+Developers can discover packages here just like npmjs.com, except explorer.drpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.
+
+Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
 ## Details
 
@@ -284,6 +279,30 @@ Example require
 ```js
 const express = require('@drpm/express~8w7ckznnw671az7nmkrd19ddctpj4spgt8sjqxkmnamdartxh1bo');
 ```
+
+## Vocabulary
+
+Acronyms galore! But what does it all mean!?
+
+### Web5 Vocab
+
+* DID = Decentralized Identifier
+* DWN = Decentralized Web Node
+* DWA = Decentralized Web App
+
+### DRPM Vocab
+
+* DRG = Decentralized Registry
+* DPK = Decentralized Package
+* DPM = Decentralized Package Manager
+* DRPM = Decentralized Registry Package Manager
+* DMI = Decentralized Module Import
+* DPI = Decentralized Package Import (alt name for DMI)
+
+### Other Vocab
+
+* NPK = Node Package
+* NPM = Node Package Manager
 
 ## Project Resources
 

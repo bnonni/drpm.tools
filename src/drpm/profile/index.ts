@@ -2,7 +2,14 @@ import * as Inquirer from '@inquirer/prompts';
 import { DRPM_HOME } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanProfile, stringifier } from '../../utils/misc.js';
-import { DrpmProfileCreateParams, DrpmProfileData, DrpmProfileDeleteOptions, DrpmProfileMethodOptions, DrpmProfileOptions } from '../../utils/types.js';
+import {
+  DhtProfileCreate,
+  DrpmProfileData,
+  DrpmProfileDeleteOptions,
+  DrpmProfileMethodOptions,
+  DrpmProfileOptions,
+  WebProfileCreate
+} from '../../utils/types.js';
 import { DhtProfile } from './dht-profile.js';
 import { ProfileUtils } from './profile-utils.js';
 import { WebProfile } from './web-profile.js';
@@ -11,52 +18,41 @@ export class Profile extends ProfileUtils {
   constructor() { super(); }
 
   // Subcommand function to create a new profile
-  static async create(params: DrpmProfileCreateParams): Promise<void> {
-    const { dwnEndpoints, password, recoveryPhrase, web5DataPath, method = 'dht', did } = params;
-
-    if(await this.needSetup()) {
-      throw new Error(`DRPM config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
-    }
-
-    if(!dwnEndpoints) {
-      throw new Error('DWN endpoints required to create a new profile.');
-    }
-
-    const profile = await this.load();
-    const partialProfile = method == 'web'
-      ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
-      : await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did });
-
-    // TODO: Implement this block
-    /*if(did && recoveryPhrase) {
-      const [_, method, id] = did.split(':');
-      const data = {
-        did            : did,
-        recoveryPhrase : recoveryPhrase,
-        dwnEndpoints   : dwnEndpoints.split(','),
-        password       : password ?? createPassword(),
-        web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/${method}/${id}/AGENT`,
-      };
-      if(method === 'dht') {
-        await DWeb5.connectDht({ data });
-        partialProfile = { current: 'dht', dht: data };
-      } else {
-        // await DWeb5.connectWeb({ data });
-        partialProfile = { current: 'web', dht: data };
+  static async create(params: DhtProfileCreate | WebProfileCreate): Promise<void> {
+    try {
+      const { dwnEndpoints, password, recoveryPhrase, web5DataPath, method = 'dht', did } = params;
+      if(await this.needSetup()) {
+        Logger.error(`DRPM .config not setup. Re-install drpm to setup ${DRPM_HOME}.`);
+        process.exit(1);
       }
-    } else {
-      partialProfile = method == 'web'
-        ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
+
+      if(!dwnEndpoints) {
+        Logger.error('DWN endpoints required to create a new profile.');
+        process.exit(1);
+      }
+
+      if(method == 'web' && !did) {
+        Logger.error('DID required to create a new web profile.');
+        process.exit(1);
+      }
+
+      const profile = await this.load();
+      const { success, error, [method]: partialProfile } = method == 'web'
+        ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did: did! })
         : await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did });
-    }*/
 
-    if(!partialProfile) {
-      throw new Error('Profile creation failed.');
+      if(!success) {
+        Logger.error(`Failed to create ${method} profile`, error);
+        process.exit(1);
+      }
+
+      await this.save({ ...profile, [method]: partialProfile });
+
+      Logger.log(`Created ${method} profile: ${stringifier(partialProfile)}`);
+    } catch (error: any) {
+      Logger.error(`Failed to create profile: ${error.message}`);
+      process.exit(1);
     }
-
-    await this.save({ ...profile, ...partialProfile });
-
-    Logger.log(`Created ${method} profile: ${stringifier(partialProfile)}`);
   }
 
   // Subcommand function to read profile data

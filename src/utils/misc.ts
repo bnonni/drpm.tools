@@ -1,6 +1,7 @@
 import { generateMnemonic } from '@scure/bip39';
 import { wordlist as english } from '@scure/bip39/wordlists/english';
 import { DrpmProfileData } from './types.js';
+import { Logger } from './logger.js';
 
 export const stringifier = (data: any): string => JSON.stringify(data, null, 2);
 
@@ -17,4 +18,14 @@ export const createPassword = (n: number = 6): string => {
     mnemonic.splice(randomIndex, 1);
   }
   return password.join(' ');
+};
+
+export const cleanEndpoint = (endpoint: string): string => {
+  try {
+    const parsedEndpoint = new URL(endpoint);
+    return parsedEndpoint.host;
+  } catch (error) {
+    Logger.error('Invalid Endpoint:', error);
+    return endpoint;
+  }
 };

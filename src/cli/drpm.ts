@@ -4,7 +4,7 @@ import { program } from 'commander';
 import { readFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { DEFAULT_WEB5DATAPATH } from '../config.js';
+import { DRPM_HOME } from '../config.js';
 import { ProfileCommand } from './commands/profile.js';
 import { ProtocolCommand } from './commands/protocol.js';
 import { RegistryCommand } from './commands/registry.js';
@@ -47,7 +47,7 @@ profile
   .description('Create a new DRPM profile context')
   .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints to use (required)')
   .option('-p, --password <PASSWORD>', 'Supply your own password (optional, default: random partial mnemonic)')
-  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set your own web5 DATA dir path  (optional, default: ${DEFAULT_WEB5DATAPATH})`)
+  .option('-w, --web5DataPath <WEB5DATAPATH>', `Set your own web5 DATA dir path  (optional, default: ${DRPM_HOME}/DATA/DHT/AGENT)`)
   .option('-m, --method <METHOD>', 'Use an specific did method (default: dht)')
   .addHelpText('after', `
     Examples:

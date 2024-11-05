@@ -1,5 +1,7 @@
 theme: jekyll-theme-minimal
-logo: /assets/img/animal/wolf.webp
-description: Decentralized Registry Package Manager | npm for the DWeb
+show_sidebar: false
+title: Decentralized Registry Package Manager (DRPM)
+description: DRPM - npm for the DWeb
+logo: /assets/img/animal/octopus.webp
 include:
   - .well-known

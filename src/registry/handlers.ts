@@ -77,7 +77,7 @@ class RegistryHandlers {
       const dependency = method === 'dht' ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;;
       Logger.log(`Installing ${dependency} ...`);
 
-      const missing = RegistryUtils.checkReqParams(req.params) ?? [];
+      const missing = RegistryUtils.checkReqParams({scope, name, id}) ?? [];
       if(missing.length > 0) {
         const missingList = missing.join(', ');
         Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);
@@ -110,7 +110,7 @@ class RegistryHandlers {
           protocolPath : 'package/release',
           filters      : {
             tags    : [
-              { subKey: 'name', value: name },
+              { subKey: 'name', value: dependency },
               { subKey: 'version', value: version }
             ],
           }
@@ -130,7 +130,7 @@ class RegistryHandlers {
       const { scope, name, method = 'dht', id } = req.params ?? {};
       const dependency = method === 'dht' ? `${scope}/${name}~${id}` : `${scope}/${name}~${method}~${id}`;
 
-      const missing = RegistryUtils.checkReqParams(req.params) ?? [];
+      const missing = RegistryUtils.checkReqParams({scope, name, id}) ?? [];
       if(missing.length > 0) {
         const missingList = missing.join(', ');
         Logger.error(`RegistryHandlers: Missing required params - ${missingList}`);

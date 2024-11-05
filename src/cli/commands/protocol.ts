@@ -1,25 +1,24 @@
-import { DWeb5 } from '../../drpm/dweb5.js';
 import { Protocol } from '../../drpm/protocol/index.js';
-import { ProtocolError } from '../../utils/errors.js';
+import { Logger } from '../../utils/logger.js';
 
 export class ProtocolCommand {
   static async configure(): Promise<void> {
     try {
-      const { web5, did } = await DWeb5.connect();
-      await Protocol.configure({ web5, did });
+      await Protocol.configure();
       process.exit(0);
     } catch (error: any) {
-      throw new ProtocolError(`Failed to create profile: ${error.message}`, 'ProtocolConfigure');
+      Logger.error(error);
+      process.exit(1);
     }
   }
 
   static async query(): Promise<void> {
     try {
-      const { web5, did } = await DWeb5.connect();
-      await Protocol.query({ web5, did });
+      await Protocol.query();
       process.exit(0);
     } catch (error: any) {
-      throw new ProtocolError(`Failed to create profile: ${error.message}`, 'ProtocolConfigure');
+      Logger.error(error);
+      process.exit(1);
     }
   }
 }
