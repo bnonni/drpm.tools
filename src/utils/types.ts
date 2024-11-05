@@ -162,6 +162,7 @@ export type DrpmProfile = {
     btc: DrpmProfileData;
     [key: string]: any;
 };
+export type PartialDrpmProfile = Partial<DrpmProfile>;
 export type DrpmProfileOptions = {
       did?: string;
       password?: string;
@@ -170,14 +171,16 @@ export type DrpmProfileOptions = {
       recoveryPhrase?: string;
       context?: string;
 };
-export type DrpmProfileCreateParams = {
-    method: string;
+export type DrpmProfileCreateBase = {
     dwnEndpoints: string;
-    did?: string;
     password?: string;
     recoveryPhrase?: string;
     web5DataPath?: string;
 };
+export type DhtProfileCreate = DrpmProfileCreateBase & { method: 'dht'; did?: string; };
+export type WebProfileCreate = DrpmProfileCreateBase & { method: 'web'; did: string; };
+export type BtcProfileCreate = DrpmProfileCreateBase & { method: 'btc'; did?: string; };
+export type DrpmProfileCreateParams = DhtProfileCreate | WebProfileCreate;
 export type DrpmProfileMethodOptions = {
     dht: string;
     web: string;
@@ -199,7 +202,7 @@ export type DidWebConnectOptions = {
     sync?: string;
 };
 export type DidDhtConnectOptions = {
-    data: DrpmProfileData;
+    data: Partial<DrpmProfileData>;
     agent?: Web5UserAgent;
     sync?: string;
 };
@@ -210,5 +213,22 @@ export type DidDhtCreateParams = {
     web5DataPath?: string;
     did?: string;
 };
-export type DidWebCreateParams = DidDhtCreateParams;
+export type DhtProfileConnectParams = {
+    did: string;
+    password: string;
+    dwnEndpoints: string[];
+    recoveryPhrase: string;
+    web5DataPath: string;
+};
+export type DidWebCreateParams = {
+    did: string;
+    dwnEndpoints: string;
+    password?: string;
+    recoveryPhrase?: string;
+    web5DataPath?: string;
+};
 export type DWeb5Params = { web5: Web5; did: string };
+export type DhtAgentConst = { agent: Web5UserAgent };
+export type DhtAgentPassword = { password: string };
+export type DhtAgentDataPath = { dataPath: string };
+export type DhtAgentIdentity = { dwnEndpoints: string[]; recoveryPhrase: string };

@@ -1,5 +1,7 @@
+import cuid from '@bugsnag/cuid';
 import { DidJwk } from '@web5/dids';
-import { DEFAULT_RECOVERY_PHRASE, DEFAULT_WEB5DATAPATH } from '../../config.js';
+import { exists } from 'fs-extra';
+import { DEFAULT_RECOVERY_PHRASE, DRPM_HOME } from '../../config.js';
 import { DidWebAgent } from '../../utils/did/did-web-facade.js';
 import { createPassword } from '../../utils/misc.js';
 import { DidWebCreateParams, DrpmProfile } from '../../utils/types.js';
@@ -8,14 +10,20 @@ import { DWeb5 } from '../dweb5.js';
 export class WebProfile {
   // Helper function to create a new Web profile
   static async create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did }: DidWebCreateParams): Promise<Partial<DrpmProfile>> {
+    const endpoints = dwnEndpoints.split(',');
+    const [_d, _m, domain] = did?.split(':') ?? [];
+    const basePath = `${DRPM_HOME}/DATA/WEB/AGENT/${domain}`;
+    const dataPath = await exists(basePath)
+      ? `${basePath}/${cuid()}`
+      : basePath;
 
     const data = {
       did            : did ?? '',
-      dwnEndpoints   : [dwnEndpoints],
+      dwnEndpoints   : endpoints,
       password       : password ?? createPassword(),
       portableDid    : await DidJwk.create(),
       recoveryPhrase : recoveryPhrase ?? DEFAULT_RECOVERY_PHRASE,
-      web5DataPath   : web5DataPath ?? `${DEFAULT_WEB5DATAPATH}/WEB/${did}/AGENT`,
+      web5DataPath   : web5DataPath ?? dataPath,
     };
 
     const agent = await DidWebAgent.create({

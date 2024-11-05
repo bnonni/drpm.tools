@@ -31,7 +31,7 @@ export class DManager {
     )?.serviceEndpoint ?? (
       process.env.NODE_ENV === 'development'
         ? ['http://localhost:3000/']
-        : ['https://dwn.drpm.tools']
+        : ['https://dwn.drpm.tools/']
     );
     const serviceEndpoints = Array.isArray(didServiceEndpoint) ? didServiceEndpoint : [didServiceEndpoint];
     return serviceEndpoints.map(endpoint => endpoint.replace(/\/$/, ''));
@@ -262,7 +262,7 @@ export class DManager {
 
   static async createPackageRelease({ parentId, name, version, integrity, release }: CreateReleaseParams): Promise<RegistryResponse> {
     try {
-      const { record = null, status } = await web5.dwn.records.create({
+      const { record = null, status }: {record: Record | null; status: any} = await web5.dwn.records.create({
         data    : release,
         store   : true,
         message : {
@@ -288,6 +288,8 @@ export class DManager {
       }
 
       Logger.log('DManager: Release record created in local!', status);
+      const data = record.toJSON(); ;
+      Logger.debug('DManager: Release record data parsed!', data);
 
       const { status: send } = await record.send(did);
       if (ResponseUtils.dwnFail({ status: send })) {
