@@ -11,15 +11,15 @@
             "sig": "#sig"
         },
         {
-            "id": "DRG",
+            "id": "DPR",
             "type": "DecentralizedPackageRegistry",
             "serviceEndpoint": [
                 "https://registry.drpm.tools/"
             ]
         },
         {
-            "id": "DPKx",
-            "type": "DpkExplorer",
+            "id": "DPX",
+            "type": "DecentralizedPackageExplorer",
             "serviceEndpoint": [
                 "https://explorer.drpm.tools/"
             ]
