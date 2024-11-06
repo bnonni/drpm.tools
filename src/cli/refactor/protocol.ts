@@ -1,31 +1,22 @@
+import { ICommand } from '../drpm.js';
+import dwn from '../../utils/dwn/protocol.js';
 
-import { Command } from 'commander';
-
-export class ProtocolCommand {
-  constructor(program: Command) {
-    const protocol = program
-      .command('protocol')
-      .description('Configure your DWN with the DRPM protocol');
-
-    this.addConfigureCommand(protocol);
-    this.addQueryCommand(protocol);
+export class ProtocolCommand implements ICommand {
+  async execute(options: any, subcommand: string): Promise<void> {
+    if (subcommand === 'configure') {
+      await this.configure();
+    } else if (subcommand === 'query') {
+      await this.query();
+    }
   }
 
-  private addConfigureCommand(protocol: Command) {
-    protocol
-      .command('configure')
-      .description('Configure your DWN with the DRPM protocol')
-      .action(async () => {
-        console.error('Not implemented yet');
-      });
+  private async configure() {
+    console.log('Configuring DWN protocol...');
+    // Configuration logic here
   }
 
-  private addQueryCommand(protocol: Command) {
-    protocol
-      .command('query')
-      .description('Query the DWN with DRPM protocol')
-      .action(async () => {
-        console.error('Not implemented yet');
-      });
+  private async query() {
+    console.log('Querying DWN protocol...');
+    // Query logic here
   }
 }

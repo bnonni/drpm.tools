@@ -1,21 +1,22 @@
+import { Logger } from '../../utils/logger.js';
+import { ICommand } from '../drpm.js';
 
-import { Command } from 'commander';
-
-export class RegistryCommand {
-  constructor(program: Command) {
-    const registry = program
-      .command('registry')
-      .description('Interact with the DRPM registry');
-
-    this.addStartCommand(registry);
+export class RegistryCommand implements ICommand {
+  async execute({ subcommand }: { subcommand: string }): Promise<void> {
+    if (subcommand === 'start') {
+      await this.start();
+    }
   }
 
-  private addStartCommand(registry: Command) {
-    registry
-      .command('start')
-      .description('Start the DRPM registry')
-      .action(async () => {
-        console.error('Not implemented yet');
-      });
+  private async start() {
+    try {
+      Logger.info('Starting registry server ...');
+      const { Registry } = await import('../../registry/registry.js');
+      const server = new Registry();
+      server.start();
+    } catch (error: any) {
+      Logger.error(`Failed to start registry server: ${error.message}`);
+      throw error;
+    }
   }
 }

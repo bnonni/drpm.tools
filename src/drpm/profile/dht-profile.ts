@@ -6,31 +6,28 @@ import { DRPM_HOME } from '../../config.js';
 import { Profile } from '../../drpm/profile/index.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanEndpoint, createPassword } from '../../utils/misc.js';
-import {
-  DhtProfileConnectParams,
-  DidDhtCreateParams,
-  PartialDrpmProfile
-} from '../../utils/types.js';
+import { DhtProfileConnectParams, DidDhtCreateParams, PartialDrpmProfile } from '../../utils/types.js';
 
 export class DhtAgent {
-  agent: Web5UserAgent;
+  userAgent: Web5UserAgent;
   recoveryPhrase?: string;
   connectedDid?: string;
 
-  constructor({ agent }: { agent: Web5UserAgent }) {
-    this.agent = agent;
+  constructor({ userAgent }: { userAgent: Web5UserAgent }) {
+    this.userAgent = userAgent;
   }
 
-  static async create({ dataPath }: { dataPath: string }): Promise<Web5UserAgent> {
-    return await Web5UserAgent.create({ dataPath });
+  static async create({ dataPath }: { dataPath: string }): Promise<DhtAgent> {
+    const userAgent = await Web5UserAgent.create({ dataPath });
+    return new DhtAgent({ userAgent });
   }
 
   async launch({ password }: { password: string }): Promise<void> {
     try {
-      if(await this.agent.firstLaunch()) {
-        this.recoveryPhrase = await this.agent.initialize({ password });
+      if(await this.userAgent.firstLaunch()) {
+        this.recoveryPhrase = await this.userAgent.initialize({ password });
       }
-      await this.agent.start({ password });
+      await this.userAgent.start({ password });
     } catch (error: any) {
       Logger.error(`Failed to setup agent: ${error.message}`);
       process.exit(1);
@@ -38,9 +35,9 @@ export class DhtAgent {
     }
   }
 
-  json(): { agent: Web5UserAgent; recoveryPhrase: string; connectedDid: string } {
+  json(): { userAgent: Web5UserAgent; recoveryPhrase: string; connectedDid: string } {
     return {
-      agent          : this.agent,
+      userAgent          : this.userAgent,
       recoveryPhrase : this.recoveryPhrase!,
       connectedDid   : this.connectedDid!
     };
@@ -48,7 +45,7 @@ export class DhtAgent {
 
   async identity({ dwnEndpoints }: { dwnEndpoints: string[]; recoveryPhrase: string }): Promise<string> {
     try {
-      const identity = await this.agent.identity.create({
+      const identity = await this.userAgent.identity.create({
         didMethod  : 'dht',
         metadata   : { name: 'DRPM' },
         didOptions : {
@@ -105,16 +102,16 @@ export class DhtProfile {
         ? `${endpointPaths[0]}/AGENT/MAIN`
         : `${dwnEndpoints[0]}/AGENT/${cuid()}`;
       const dataPath = `${DRPM_HOME}/DATA/DHT/${endpointPath}`;
-      const password = params.password ?? createPassword();
       const web5DataPath = params.web5DataPath ?? dataPath;
 
-      const agent = await DhtAgent.create({ dataPath: web5DataPath });
-      const dhtAgent = new DhtAgent({ agent });
+      const password = params.password ?? createPassword();
 
-      await dhtAgent.launch({ password: password });
+      const dhtAgent = await DhtAgent.create({ dataPath: web5DataPath });
+      await dhtAgent.launch({ password });
       const { recoveryPhrase } = dhtAgent.json() ?? await Profile.data();
-
       const connectedDid = await dhtAgent.identity({ dwnEndpoints, recoveryPhrase });
+      const agent = dhtAgent.userAgent;
+
       const { did } = await Web5.connect({
         agent,
         password,
@@ -128,19 +125,18 @@ export class DhtProfile {
       Logger.info('Syncing complete!');
 
       return {
-        success : true,
         current : 'dht',
         dht     : {
           did,
           password,
           web5DataPath,
-          dwnEndpoints   : dwnEndpoints,
-          recoveryPhrase : recoveryPhrase,
+          dwnEndpoints,
+          recoveryPhrase,
         }
       };
     } catch (error: any) {
       Logger.error(`Failed to create DHT profile: ${error.message}`);
-      return { success: false, error: error.message };
+      throw error;
     }
   }
 
@@ -149,22 +145,18 @@ export class DhtProfile {
     did, password, dwnEndpoints, web5DataPath
   }: DhtProfileConnectParams): Promise<any> {
     try {
-      const agent = await DhtAgent.create({ dataPath: web5DataPath });
-      const dhtAgent = new DhtAgent({ agent });
+      const dhtAgent = await DhtAgent.create({ dataPath: web5DataPath });
       await dhtAgent.launch({ password });
-
-      const { web5, did: connectedDid } = await Web5.connect({
-        agent,
+      return await Web5.connect({
         password,
         connectedDid     : did,
         sync             : '30s',
         didCreateOptions : { dwnEndpoints },
+        agent            : dhtAgent.userAgent,
       });
-
-      return { success: true, web5, did: connectedDid };
     } catch (error: any) {
       Logger.error(`Failed to connect to DHT profile: ${error.message}`);
-      return { success: false, error: error.message };
+      throw error;
     }
   }
 }

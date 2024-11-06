@@ -1,13 +1,11 @@
 import * as Inquirer from '@inquirer/prompts';
 import { DRPM_HOME } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
-import { cleanProfile, stringifier } from '../../utils/misc.js';
+import { safeProfile, stringifier } from '../../utils/misc.js';
 import {
   DhtProfileCreate,
-  DrpmProfileData,
-  DrpmProfileDeleteOptions,
-  DrpmProfileMethodOptions,
-  DrpmProfileOptions,
+  ProfileData,
+  ProfileOptions,
   WebProfileCreate
 } from '../../utils/types.js';
 import { DhtProfile } from './dht-profile.js';
@@ -56,16 +54,16 @@ export class Profile extends ProfileUtils {
   }
 
   // Subcommand function to read profile data
-  static async read(options: DrpmProfileOptions): Promise<void> {
+  static async read(options: ProfileOptions): Promise<void> {
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];
     const optionKeys = Object.keys(options);
     !optionKeys.length
-      ? Logger.plain(`${current.toUpperCase()} Profile:\n${cleanProfile(data)}`)
+      ? Logger.plain(`${current.toUpperCase()} Profile:\n${safeProfile(data)}`)
       : optionKeys.forEach((key) => {
-        if (data[key as keyof DrpmProfileOptions]) {
-          Logger.plain(`${key}: ${data[key as keyof DrpmProfileData]}`);
+        if (data[key as keyof ProfileOptions]) {
+          Logger.plain(`${key}: ${data[key as keyof ProfileData]}`);
         } else {
           Logger.error(`ProfileError: ${key} not found in profile.`);
         }
@@ -73,7 +71,8 @@ export class Profile extends ProfileUtils {
   }
 
   // Subcommand function to update profile data
-  static async update({ did, password, dwnEndpoints, web5DataPath, recoveryPhrase }: DrpmProfileOptions): Promise<void> {
+  static async update(options: ProfileOptions): Promise<void> {
+    const { did, password, dwnEndpoints, web5DataPath, recoveryPhrase } = options;
     const profile = await this.load();
     const current = profile.current ?? 'dht';
     const data = profile[current];
@@ -87,12 +86,12 @@ export class Profile extends ProfileUtils {
       recoveryPhrase : recoveryPhrase ?? data.recoveryPhrase,
     };
     await this.save({ ...profile, [current]: { ...data, ...updatedData, } });
-    Logger.log(`Updated ${profile.current} profile: ${cleanProfile(updatedData)}`);
+    Logger.log(`Updated ${profile.current} profile: ${safeProfile(updatedData)}`);
   }
 
-  static async delete({ method, current, all }: DrpmProfileDeleteOptions): Promise<void> {
-    const profile = await this.load();
-    if (all) {
+  static async delete(options: { method?: string; current?: boolean; all?: boolean }): Promise<void> {
+    const { method, current } = options ?? {};
+    if (options.all) {
       const answer = await Inquirer.select({
         choices : ['Yes', 'No'],
         message : 'Are you sure you want to delete all profiles?'
@@ -102,15 +101,21 @@ export class Profile extends ProfileUtils {
         return Logger.log('Wise choice! Exiting ...');
       }
 
-      Logger.log('I hope you know what you are doing ... Deleted all profiles');
+      Logger.log('I hope you know what you are doing ... deleting profile.json');
       await this.wipe();
 
       return Logger.log('Deleted all profiles!');
     }
+    const profile = await this.load();
     profile.current = '';
-    profile[method ? method : profile.current] = {};
+    if(options.current) {
+      profile[profile.current] = {};
+    } else if (method) {
+      profile[method] = {};
+    }
+
     await this.save(profile);
-    Logger.log(`Deleted ${current} profile`);
+    Logger.log(`Deleted ${options.current} profile`);
   }
 
   // Subcommand function to switch between profiles
@@ -125,7 +130,7 @@ export class Profile extends ProfileUtils {
       profile.current = dht ? 'dht' : web ? 'web' : btc ? 'btc' : profile.current;
     }
     await this.save(profile);
-    Logger.log(`Switched to ${profile.current} profile: ${cleanProfile(profile[profile.current])}`);
+    Logger.log(`Switched to ${profile.current} profile: ${safeProfile(profile[profile.current])}`);
   }
 
   // Subcommand function to switch between profiles
@@ -133,19 +138,20 @@ export class Profile extends ProfileUtils {
     const profile = await this.load();
     const [dht, web, btc] = Object.keys(profile)
       .filter((key) => key !== 'current')
-      .map((key) => `${key.trim()} (${key === profile.current ? 'current' : 'inactive'})`);
-    Logger.plain('Available profiles:');;
-    Logger.plain(` - ${dht}`);
-    Logger.plain(` - ${web}`);
-    Logger.plain(` - ${btc}`);
-    const answer: string = await Inquirer.select({
-      message : 'Which profile would you like to display?',
-      choices : ['dht', 'web', 'btc']
-    }) ?? profile.current;
-    Logger.plain(`${answer.toUpperCase()} Profile:\n${cleanProfile(profile[answer])}`);
+      .map((key) => `${key.trim()} (${key === profile.current ? 'active' : 'inactive'})`);
+    Logger.plain(
+      `Available profiles:
+        1. ${dht}
+        2. ${web}
+        3. ${btc}`
+    );
   }
 
-  static async recover(): Promise<void> {
-    throw new Error('ProfileCommand: recover not implemented');
+  static async recover(options: any): Promise<void> {
+    throw new Error('ProfileCommand: recover not implemented: ' + options);
+  }
+
+  static async add(options: any): Promise<void> {
+    throw new Error('ProfileCommand: add not implemented: ' + options);
   }
 }

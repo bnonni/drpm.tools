@@ -1,55 +1,42 @@
-
-import { Command } from 'commander';
 import { Profile } from '../../drpm/profile/index.js';
-import { ProfileError } from '../../utils/errors.js';
-import {
-  DrpmProfileCreateParams,
-  DrpmProfileOptions
-} from '../../utils/types.js';
+import { Logger } from '../../utils/logger.js';
+import { ICommand } from '../drpm.js';
+import { DRegistryPackageManagerError } from './error.js';
 
-export class ProfileCommand {
-  constructor(program: Command) {
-    const profile = program
-      .command('profile')
-      .description('Interacts with a DRPM profile');
-
-    this.addCreateCommand(profile);
-    this.addReadCommand(profile);
-    this.addUpdateCommand(profile);
-    this.addDeleteCommand(profile);
-    this.addSwitchCommand(profile);
-    this.addListCommand(profile);
-  }
-
-  private addCreateCommand(profile: Command) {
-    profile
-      .command('create')
-      .description('Create a new DRPM profile')
-      .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints to use (required)')
-      .option('-p, --password <PASSWORD>', 'Supply your own password (optional)')
-      .action(async (options: DrpmProfileCreateParams) => {
-        try {
+export class ProfileCommand implements ICommand {
+  async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
+    try {
+      switch (subcommand) {
+        case 'create':
           await Profile.create(options);
-        } catch (error) {
-          console.error(`Failed to create profile: ${error.message}`);
-        }
-      });
-  }
-
-  private addReadCommand(profile: Command) {
-    profile
-      .command('read')
-      .description('Read values from the current DRPM profile')
-      .option('-d, --did', 'Read the DID')
-      .option('-p, --password', 'Read the password in plain text')
-      .action(async (options: DrpmProfileOptions) => {
-        try {
+          break;
+        case 'read':
           await Profile.read(options);
-        } catch (error) {
-          console.error(`Failed to read profile: ${error.message}`);
-        }
-      });
+          break;
+        case 'update':
+          await Profile.update(options);
+          break;
+        case 'delete':
+          await Profile.delete(options);
+          break;
+        case 'switch':
+          await Profile.switch(options);
+          break;
+        case 'list':
+          await Profile.list();
+          break;
+        case 'recover':
+          await Profile.recover(options);
+          break;
+        case 'add':
+          await Profile.add(options);
+          break;
+        default:
+          throw new DRegistryPackageManagerError(`ProfileCommand: Unknown action ${subcommand}`);
+      }
+    } catch (error: any) {
+      Logger.error(error.message);
+      throw error;
+    }
   }
-
-  // Additional methods for update, delete, switch, list, etc.
 }

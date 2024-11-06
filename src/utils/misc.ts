@@ -7,7 +7,7 @@ export const stringifier = (data: any): string => JSON.stringify(data, null, 2);
 
 export const hideSensitive = (data: any): {} => ({...data, password: '***************', recoveryPhrase: '***************'});
 
-export const cleanProfile = (profile: Partial<DrpmProfileData>): {} => stringifier(hideSensitive(profile));
+export const safeProfile = (profile: Partial<DrpmProfileData>): {} => stringifier(hideSensitive(profile));
 
 export const createPassword = (n: number = 6): string => {
   const mnemonic = generateMnemonic(english, 128).split(' ');
