@@ -155,14 +155,14 @@ export type ProfileData = {
     portableDid?: PortableDid;
 };
 export type SupportedMethods = 'web' | 'dht' | 'btc';
-export type DrpmProfile = {
+export type ProfileJson = {
     current: string;
     dht: ProfileData;
     web: ProfileData;
     btc: ProfileData;
     [key: string]: any;
 };
-export type PartialDrpmProfile = Partial<DrpmProfile>;
+export type PartialProfileJson = Partial<ProfileJson>;
 export type ProfileOptions = {
       did?: string;
       password?: string;
@@ -171,15 +171,15 @@ export type ProfileOptions = {
       recoveryPhrase?: string;
       context?: string;
 };
-export type DrpmProfileCreateBase = {
+export type ProfileJsonCreateBase = {
     dwnEndpoints: string;
     password?: string;
     recoveryPhrase?: string;
     web5DataPath?: string;
 };
-export type DhtProfileCreate = DrpmProfileCreateBase & { method: 'dht'; did?: string; };
-export type WebProfileCreate = DrpmProfileCreateBase & { method: 'web'; did: string; };
-export type BtcProfileCreate = DrpmProfileCreateBase & { method: 'btc'; did?: string; };
+export type DhtProfileCreate = ProfileJsonCreateBase & { method: 'dht'; did?: string; };
+export type WebProfileCreate = ProfileJsonCreateBase & { method: 'web'; did: string; };
+export type BtcProfileCreate = ProfileJsonCreateBase & { method: 'btc'; did?: string; };
 
 export type RequestParams = Request['params'];
 export type CreatePackageDidWebParams = {

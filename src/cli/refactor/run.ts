@@ -1,5 +1,5 @@
 export class RunCommand {
-  constructor() {
+  async execute(): Promise<void> {
     throw new Error('Not implemented yet');
   }
 }

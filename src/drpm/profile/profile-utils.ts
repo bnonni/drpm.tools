@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DRPM_HOME, DRPM_PROFILE } from '../../config.js';
 import { Logger } from '../../utils/logger.js';
 import { stringifier } from '../../utils/misc.js';
-import { DrpmProfile, DrpmProfileData } from '../../utils/types.js';
+import { ProfileJson, ProfileData } from '../../utils/types.js';
 
 export class ProfileUtils {
   // Helper function to check if setup is needed
@@ -12,7 +12,7 @@ export class ProfileUtils {
   }
 
   // Helper function to validate profile data
-  static valid(data?: DrpmProfile): boolean | DrpmProfile {
+  static valid(data?: ProfileJson): boolean | ProfileJson {
     if(!data) {
       Logger.error('ProfileError: No profile data found.');
       return false;
@@ -43,7 +43,7 @@ export class ProfileUtils {
   }
 
   // Helper function to check if a profile exists
-  static async exists(profile?: DrpmProfile, method?: string): Promise<boolean | DrpmProfile> {
+  static async exists(profile?: ProfileJson, method?: string): Promise<boolean | ProfileJson> {
     try {
       profile ??= await this.load();
       if(!profile) return false;
@@ -59,19 +59,24 @@ export class ProfileUtils {
   }
 
   // Helper function to load existing profile or create a new one
-  static async load(): Promise<DrpmProfile> {
+  static async load(): Promise<ProfileJson> {
     const profile = await readFile(DRPM_PROFILE, 'utf8');
     return JSON.parse(profile);
   }
 
-  static async data(profile?: DrpmProfile): Promise<DrpmProfileData> {
+  static async current(profile?: ProfileJson): Promise<string> {
+    profile ??= await this.load();
+    return profile.current ?? 'dht';
+  }
+
+  static async data(profile?: ProfileJson): Promise<{current: string; data: ProfileData}> {
     profile ??= await this.load();
     const current = profile.current ?? 'dht';
-    return profile[current];
+    return {current, data: profile[current]};
   }
 
   // Helper function to save profile data to the file
-  static async save(profile: DrpmProfile): Promise<void> {
+  static async save(profile: ProfileJson): Promise<void> {
     await writeFile(DRPM_PROFILE, stringifier(profile));
   }
 

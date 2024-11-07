@@ -1,5 +1,5 @@
 import { Web5 } from '@web5/api';
-import { DRegistryPackageManagerError } from '../cli/refactor/error.js';
+import { DRegistryPackageManagerError } from '../cli/commands/error.js';
 import { Logger } from '../utils/logger.js';
 import { safeProfile } from '../utils/misc.js';
 import { DhtProfile } from './profile/dht-profile.js';

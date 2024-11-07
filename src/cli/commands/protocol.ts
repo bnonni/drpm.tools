@@ -1,24 +1,22 @@
-import { Protocol } from '../../drpm/protocol/index.js';
-import { Logger } from '../../utils/logger.js';
+import { ICommand } from '../drpm.js';
+import dwn from '../../utils/dwn/protocol.js';
 
-export class ProtocolCommand {
-  static async configure(): Promise<void> {
-    try {
-      await Protocol.configure();
-      process.exit(0);
-    } catch (error: any) {
-      Logger.error(error);
-      process.exit(1);
+export class ProtocolCommand implements ICommand {
+  async execute({ subcommand }: { subcommand: string }): Promise<void> {
+    if (subcommand === 'configure') {
+      await this.configure();
+    } else if (subcommand === 'query') {
+      await this.query();
     }
   }
 
-  static async query(): Promise<void> {
-    try {
-      await Protocol.query();
-      process.exit(0);
-    } catch (error: any) {
-      Logger.error(error);
-      process.exit(1);
-    }
+  private async configure() {
+    console.log('Configuring DWN protocol...');
+    // Configuration logic here
+  }
+
+  private async query() {
+    console.log('Querying DWN protocol...');
+    // Query logic here
   }
 }

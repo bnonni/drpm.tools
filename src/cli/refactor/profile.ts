@@ -28,9 +28,6 @@ export class ProfileCommand implements ICommand {
         case 'recover':
           await Profile.recover(options);
           break;
-        case 'add':
-          await Profile.add(options);
-          break;
         default:
           throw new DRegistryPackageManagerError(`ProfileCommand: Unknown action ${subcommand}`);
       }

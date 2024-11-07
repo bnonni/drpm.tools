@@ -3,8 +3,8 @@ export class DRegistryPackageManagerError {
   type: string;
   message: string;
 
-  constructor(message: string, type: string = 'ProfileCommand') {
-    this.name = 'ProfileError';
+  constructor(message: string, type: string = 'DRegistryPackageManagerError') {
+    this.name = 'DRegistryPackageManagerError';
     this.type = type;
     this.message = message;
   }
