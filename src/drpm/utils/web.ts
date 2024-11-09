@@ -8,8 +8,7 @@ import { DRPM_HOME } from '../../config.js';
 import { DidWebFacade } from '../../utils/did/did-web-facade.js';
 import { Logger } from '../../utils/logger.js';
 import { createPassword } from '../../utils/misc.js';
-import { DidWebConnectOptions, DidWebCreateParams, DrpmProfile } from '../../utils/types.js';
-import { Profile } from './index.js';
+import { DidWebConnectOptions, DidWebCreateParams, ProfileJson } from '../../utils/types.js';
 
 export class WebAgent {
   userAgent: Web5UserAgent;
@@ -55,7 +54,7 @@ export class WebAgent {
 
 export class WebProfile {
   // Helper function to create a new Web profile
-  static async create(params: DidWebCreateParams): Promise<Partial<DrpmProfile>> {
+  static async create(params: DidWebCreateParams): Promise<Partial<ProfileJson>> {
     try {
       const password = params.password ?? createPassword();
       const connectedDid = params.did;

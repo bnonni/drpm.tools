@@ -3,10 +3,10 @@ import { Web5 } from '@web5/api';
 import { Web5UserAgent } from '@web5/user-agent';
 import { exists } from 'fs-extra';
 import { DRPM_HOME } from '../../config.js';
-import { Profile } from '../../drpm/profile/index.js';
+import { Profile } from '../profile.js';
 import { Logger } from '../../utils/logger.js';
 import { cleanEndpoint, createPassword } from '../../utils/misc.js';
-import { DhtProfileConnectParams, DidDhtCreateParams, PartialDrpmProfile } from '../../utils/types.js';
+import { DhtProfileConnectParams, DidDhtCreateParams, PartialProfileJson } from '../../utils/types.js';
 
 export class DhtAgent {
   userAgent: Web5UserAgent;
@@ -85,7 +85,7 @@ export class DhtAgent {
 
 export class DhtProfile {
   // Used by cli drpm profile create to create new DHT profile
-  static async create(params: DidDhtCreateParams): Promise<PartialDrpmProfile> {
+  static async create(params: DidDhtCreateParams): Promise<PartialProfileJson> {
     try {
       const dwnEndpoints = params.dwnEndpoints.split(',');
       const endpoints = params.dwnEndpoints
@@ -108,7 +108,7 @@ export class DhtProfile {
 
       const dhtAgent = await DhtAgent.create({ dataPath: web5DataPath });
       await dhtAgent.launch({ password });
-      const { recoveryPhrase } = dhtAgent.json() ?? await Profile.data();
+      const { recoveryPhrase } = dhtAgent.json() ?? Profile.json.dht.recoveryPhrase;
       const connectedDid = await dhtAgent.identity({ dwnEndpoints, recoveryPhrase });
       const agent = dhtAgent.userAgent;
 
@@ -125,14 +125,11 @@ export class DhtProfile {
       Logger.info('Syncing complete!');
 
       return {
-        current : 'dht',
-        dht     : {
-          did,
-          password,
-          web5DataPath,
-          dwnEndpoints,
-          recoveryPhrase,
-        }
+        did,
+        password,
+        web5DataPath,
+        dwnEndpoints,
+        recoveryPhrase,
       };
     } catch (error: any) {
       Logger.error(`Failed to create DHT profile: ${error.message}`);

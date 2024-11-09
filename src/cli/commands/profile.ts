@@ -1,4 +1,4 @@
-import { Profile } from '../../drpm/profile/index.js';
+import { Profile } from '../../drpm/profile.js';
 import { Logger } from '../../utils/logger.js';
 import { ICommand } from '../drpm.js';
 import { DRegistryPackageManagerError } from './error.js';
@@ -6,33 +6,32 @@ import { DRegistryPackageManagerError } from './error.js';
 export class ProfileCommand implements ICommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
+      const name = options?.name ?? Profile.loadStatic().name;
+      const profile = new Profile(name);
       switch (subcommand) {
-        case 'create':
-          await Profile.create(options);
-          break;
         case 'read':
-          await Profile.read(options);
-          break;
-        case 'update':
-          await Profile.update(options);
-          break;
-        case 'delete':
-          await Profile.delete(options);
-          break;
-        case 'switch':
-          await Profile.switch(options);
-          break;
-        case 'list':
-          await Profile.list();
-          break;
-        case 'recover':
-          await Profile.recover(options);
+          await profile.read(options);
           break;
         case 'add':
-          await Profile.add(options);
+          await profile.add(options);
+          break;
+        case 'delete':
+          await profile.delete(options);
+          break;
+        case 'list':
+          await profile.list();
+          break;
+        case 'switch':
+          await profile.switch(options);
+          break;
+        case 'recover':
+          await profile.recover(options);
+          break;
+        case 'backup':
+          await profile.backup(options);
           break;
         default:
-          throw new DRegistryPackageManagerError(`ProfileCommand: Unknown action ${subcommand}`);
+          throw new DRegistryPackageManagerError(`ProfileCommand: Unknown subcommand ${subcommand}`);
       }
     } catch (error: any) {
       Logger.error(error.message);

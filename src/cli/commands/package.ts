@@ -1,22 +1,59 @@
 import { DWeb5, Web5Connection } from '../../drpm/dweb5.js';
+import { Profile } from '../../drpm/profile.js';
 import dwn from '../../utils/dwn/protocol.js';
 import { Logger } from '../../utils/logger.js';
 import { ResponseUtils } from '../../utils/response.js';
 import { DpkMetadata } from '../../utils/types.js';
 import { ICommand } from '../drpm.js';
+import { DRegistryPackageManagerError } from './error.js';
 
 export class PackageCommand implements ICommand {
   async execute(options: any, subcommand?: string): Promise<void> {
-    options.connection = await DWeb5.connect();
-    if (subcommand === 'package') {
-      await this.publish(options);
+    try {
+      const name = options.name ?? Profile.loadStatic().name;
+      options.connection = await DWeb5.connect({ name });
+      switch (subcommand) {
+        case 'init':
+        case 'create':
+          await this.init(options);
+          break;
+        case 'publish':
+          await this.publish(options);
+          break;
+        case 'run':
+          await this.run(options);
+          break;
+        default:
+          throw new DRegistryPackageManagerError(`PackageCommand: Unknown subcommand ${subcommand}`);
+      }
+    } catch (error: any) {
+      Logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async init(options: any): Promise<void> {
+    throw new Error('PackageCommand: init not implemented: ' + options);
+  }
+
+  async run(options: any): Promise<void> {
+    throw new Error('PackageCommand: run not implemented: ' + options);
+  }
+
+  async publish(options: any): Promise<void> {
+    if(options.type === 'package') {
+      await this.package(options);
+    } else if(['release', 'package/release'].includes(options.type)) {
+      await this.release(options);
     } else {
+      await this.package(options);
       await this.release(options);
     }
   }
 
-  private async publish({ metadata, connection: { web5, did } }: { metadata: DpkMetadata; connection: Web5Connection }) {
+  async package(params: { metadata: DpkMetadata; connection: Web5Connection }) {
     try {
+      const { metadata, connection: { web5, did } } = params ?? {};
       const { 'dist-tags': distTags, name } = metadata ?? {};
       const { record: _package = null, status } = await web5.dwn.records.create({
         store   : true,
@@ -45,7 +82,7 @@ export class PackageCommand implements ICommand {
     }
   }
 
-  private async release(options: {
+  async release(options: {
     parentId: string;
     name: string;
     version: string;

@@ -1,26 +1,10 @@
-import { Web5 } from '@web5/api';
 import { DWeb5 } from '../../drpm/dweb5.js';
-import { Logger } from '../../utils/logger.js';
+import { Profile } from '../../drpm/profile.js';
+import { ICommand } from '../drpm.js';
 
-export class ConnectCommand {
-  static web5: Web5;
-  static did: string;
-
-  static async connect() {
-    try {
-      if(this.web5 && this.did) {
-        return { web5: this.web5, did: this.did };
-      }
-      await DWeb5.connect();
-
-      this.web5 = DWeb5.web5;
-      this.did = DWeb5.did;
-
-      Logger.info(`Web5 connection success!`);
-      return this;
-    } catch (error: any) {
-      Logger.error('DrpmConnect: Failed to connect', error);
-      process.exit(1);
-    }
+export class ConnectCommand implements ICommand {
+  async execute({ options }: { options: any; }): Promise<void> {
+    const name = options.name ?? Profile.loadStatic().name;
+    await DWeb5.connect({name, verbose: true});
   }
 }

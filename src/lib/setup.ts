@@ -2,6 +2,7 @@ import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { writeFile } from 'fs/promises';
 import { homedir, platform } from 'os';
 import { join } from 'path';
+import { Logger } from '../utils/logger.js';
 
 const DRPM_DIR = 'drpm';
 const CONFIG_DRPM_DIR = platform() === 'win32'
@@ -12,51 +13,55 @@ const DRPM_REGISTRY_OUT_FILE = join(CONFIG_DRPM_DIR, 'registry.out');
 const DRPM_VERSION_FILE = join(CONFIG_DRPM_DIR, '.version');
 const DRPM_PROFILE = join(CONFIG_DRPM_DIR, 'profile.json');
 
-if (!await exists(CONFIG_DRPM_DIR)) {
-  await ensureDir(CONFIG_DRPM_DIR);
-  console.log(`DRPM config created (${CONFIG_DRPM_DIR})`);
-}
+export class Setup {
+  public static async run(): Promise<void> {
+    if (!await exists(CONFIG_DRPM_DIR)) {
+      await ensureDir(CONFIG_DRPM_DIR);
+      Logger.log(`DRPM config created (${CONFIG_DRPM_DIR})`);
+    }
 
-if (!await exists(DRPM_REGISTRYPID_FILE)) {
-  await ensureFile(DRPM_REGISTRYPID_FILE);
-  console.log(`DRPM registry.pid created: ${DRPM_REGISTRYPID_FILE}`);
-}
+    if (!await exists(DRPM_REGISTRYPID_FILE)) {
+      await ensureFile(DRPM_REGISTRYPID_FILE);
+      Logger.log(`DRPM registry.pid created: ${DRPM_REGISTRYPID_FILE}`);
+    }
 
-if (!await exists(DRPM_REGISTRY_OUT_FILE)) {
-  await ensureFile(DRPM_REGISTRY_OUT_FILE);
-  console.log(`DRPM registry.out created: ${DRPM_REGISTRY_OUT_FILE}`);
-}
+    if (!await exists(DRPM_REGISTRY_OUT_FILE)) {
+      await ensureFile(DRPM_REGISTRY_OUT_FILE);
+      Logger.log(`DRPM registry.out created: ${DRPM_REGISTRY_OUT_FILE}`);
+    }
 
-if (!await exists(DRPM_VERSION_FILE)) {
-  await ensureFile(DRPM_VERSION_FILE);
-  console.log(`DRPM .version created: ${DRPM_VERSION_FILE}`);
-}
+    if (!await exists(DRPM_VERSION_FILE)) {
+      await ensureFile(DRPM_VERSION_FILE);
+      Logger.log(`DRPM .version created: ${DRPM_VERSION_FILE}`);
+    }
 
-if (!await exists(DRPM_PROFILE)) {
-  await writeFile(DRPM_PROFILE, `{
+    if (!await exists(DRPM_PROFILE)) {
+      await writeFile(DRPM_PROFILE, `{
         "current": "",
         "dht": {
-            "did": null,
-            "dwnEndpoints": null,
-            "web5DataPath": null,
-            "password": null,
-            "recoveryPhrase": null
+            "did": undefined,
+            "dwnEndpoints": undefined,
+            "web5DataPath": undefined,
+            "password": undefined,
+            "recoveryPhrase": undefined
         },
         "web": {
-            "did": null,
-            "dwnEndpoints": null,
-            "web5DataPath": null,
-            "password": null,
-            "recoveryPhrase": null
+            "did": undefined,
+            "dwnEndpoints": undefined,
+            "web5DataPath": undefined,
+            "password": undefined,
+            "recoveryPhrase": undefined
         },
         "btc": {
-            "did": null,
-            "dwnEndpoints": null,
-            "web5DataPath": null,
-            "password": null,
-            "recoveryPhrase": null
+            "did": undefined,
+            "dwnEndpoints": undefined,
+            "web5DataPath": undefined,
+            "password": undefined,
+            "recoveryPhrase": undefined
         }
     }`);
-  console.log(`DRPM profile.json created: ${DRPM_PROFILE}`);
+      Logger.log(`DRPM profile.json created: ${DRPM_PROFILE}`);
+    }
+    Logger.log(`DRPM Setup Complete!`);
+  }
 }
-console.log(`DRPM Setup Complete!`);

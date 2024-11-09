@@ -94,7 +94,7 @@ export type ReadPackageParams = {
     name: string
 };
 export type ReadReleaseParams = ReadPackageParams & { version: string };
-export type CreatePackageParams = { metadata: DpkMetadata; web5: Web5; did: string };
+export type CreatePackageParams = { metadata: DpkMetadata; };
 export type CreateReleaseParams = {
     parentId: string;
     name: string;
@@ -146,30 +146,29 @@ export type DpkData = {
     'package/release'?: DpkTarball;
     [key: string]: any;
 };
-export type ProfileData = {
+export type ProfileContext = {
     did: string;
     password: string;
     dwnEndpoints: string[];
     web5DataPath: string;
     recoveryPhrase: string;
-    portableDid?: PortableDid;
 };
+export type ProfileContextWeb = ProfileContext & { portableDid?: PortableDid; };
 export type SupportedMethods = 'web' | 'dht' | 'btc';
 export type ProfileJson = {
-    current: string;
-    dht: ProfileData;
-    web: ProfileData;
-    btc: ProfileData;
+    name: string;
+    dht: ProfileContext;
+    web: ProfileContext;
+    btc: ProfileContext;
     [key: string]: any;
 };
 export type PartialProfileJson = Partial<ProfileJson>;
-export type ProfileOptions = {
+export type ContextOptions = {
       did?: string;
       password?: string;
+      recoveryPhrase?: string;
       dwnEndpoints?: string;
       web5DataPath?: string
-      recoveryPhrase?: string;
-      context?: string;
 };
 export type ProfileJsonCreateBase = {
     dwnEndpoints: string;
@@ -193,7 +192,7 @@ export type DidWebConnectOptions = {
     web5DataPath: string;
 };
 export type DidDhtConnectOptions = {
-    data: Partial<ProfileData>;
+    data: Partial<ProfileContext>;
     agent?: Web5UserAgent;
     sync?: string;
 };

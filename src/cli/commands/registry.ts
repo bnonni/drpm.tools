@@ -1,15 +1,22 @@
-import { RegistryError } from '../../utils/errors.js';
 import { Logger } from '../../utils/logger.js';
+import { ICommand } from '../drpm.js';
 
-export class RegistryCommand {
-  static async start() {
+export class RegistryCommand implements ICommand {
+  async execute({ subcommand }: { subcommand: string }): Promise<void> {
+    if (subcommand === 'start') {
+      await this.start();
+    }
+  }
+
+  private async start() {
     try {
       Logger.info('Starting registry server ...');
       const { Registry } = await import('../../registry/registry.js');
       const server = new Registry();
       server.start();
     } catch (error: any) {
-      throw new RegistryError(`Failed to start registry server: ${error.message}`);
+      Logger.error(`Failed to start registry server: ${error.message}`);
+      throw error;
     }
   }
 }

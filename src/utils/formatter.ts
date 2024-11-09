@@ -88,5 +88,4 @@ export class Formatter {
   }
 }
 
-const fmtr = new Formatter();
-export default fmtr;
+export default new Formatter();
