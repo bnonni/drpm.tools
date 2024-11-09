@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 import { Command, program } from 'commander';
-import { readFile } from 'fs/promises';
+import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { DRPM_HOME, DRPM_PROFILE } from '../config.js';
-import { Logger } from '../utils/logger.js';
 import { ConnectCommand } from './commands/connect.js';
 import { ContextCommand } from './commands/context.js';
 import { PackageCommand } from './commands/package.js';
@@ -13,6 +12,7 @@ import { ProfileCommand } from './commands/profile.js';
 import { RegistryCommand } from './commands/registry.js';
 import { SetupCommand } from './commands/setup.js';
 import { DwnCommand } from './commands/dwn.js';
+import { Logger } from '../utils/logger.js';
 
 export const DEFAULT_DATAPATH = `${DRPM_HOME}/DATA/<method>/AGENT/<dwnEndpoint>)`;
 
@@ -238,18 +238,14 @@ class DRegistryPackageManager {
   private addDetails() {
     const __dirname = dirname(fileURLToPath(import.meta.url));
     const packageJsonPath = join(__dirname, '..', '..', 'package.json');
-
-    readFile(packageJsonPath, 'utf8')
-      .then((data) => (this.VERSION = JSON.parse(data).version))
-      .catch(Logger.error);
-
+    try {
+      const data = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+      this.VERSION = data.version;
+    } catch (error) {
+      Logger.error('Error reading package.json:', error);
+    }
     this.DRPM.name('drpm');
-    this.DRPM.version(
-      `drpm ${this.VERSION}
-        Decentralized Registry Package Manager`,
-      '-v, --version',
-      'Output the current version'
-    );
+    this.DRPM.version(`Decentralized Registry Package Manager (drpm) v${this.VERSION} `,'-v, --version', 'Output the current version');
   }
 
 
