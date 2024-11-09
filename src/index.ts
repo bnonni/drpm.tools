@@ -1,17 +1,18 @@
 import './exts.js';
 
-export * from './cli/drpm.js';
 export * from './cli/commands/connect.js';
+export * from './cli/commands/context.js';
+export * from './cli/commands/dwn.js';
+export * from './cli/commands/package.js';
 export * from './cli/commands/profile.js';
-export * from './cli/commands/protocol.js';
-export * from './cli/commands/publish.js';
 export * from './cli/commands/registry.js';
+export * from './cli/commands/setup.js';
 
-export * from './drpm/profile/dht-profile.js';
-export * from './drpm/profile/index.js';
-export * from './drpm/profile/profile-utils.js';
-export * from './drpm/profile/web-profile.js';
-export * from './drpm/protocol/index.js';
+export * from './drpm/utils/dht.js';
+export * from './drpm/profile.js';
+export * from './drpm/utils/utils.js';
+export * from './drpm/utils/web.js';
+export * from './drpm/dwn.js';
 export * from './drpm/dweb5.js';
 
 export * from './lib/hooks.js';

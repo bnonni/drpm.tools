@@ -1,13 +1,28 @@
 import { generateMnemonic } from '@scure/bip39';
 import { wordlist as english } from '@scure/bip39/wordlists/english';
-import { DrpmProfileData } from './types.js';
+import { ProfileContext, ProfileJson } from './types.js';
 import { Logger } from './logger.js';
 
 export const stringifier = (data: any): string => JSON.stringify(data, null, 2);
 
 export const hideSensitive = (data: any): {} => ({...data, password: '***************', recoveryPhrase: '***************'});
 
-export const cleanProfile = (profile: Partial<DrpmProfileData>): {} => stringifier(hideSensitive(profile));
+export const secureProfileContext = (profile: Partial<ProfileContext>): {} => stringifier(hideSensitive(profile));
+
+export const profileLessName = (profile: ProfileJson): {} => {
+  const temp = Object.fromEntries(Object.entries(profile).filter(([name, _]) => name !== 'name'));
+  delete temp.name;
+  return temp;
+};
+
+export const secureProfile = (profile: ProfileJson): {} => Object.fromEntries(
+  Object.entries(profile)
+    .filter(([name, _]) => name !== 'name')
+    .map(([method, data]) => [
+      method,
+      hideSensitive(data)
+    ])
+);
 
 export const createPassword = (n: number = 6): string => {
   const mnemonic = generateMnemonic(english, 128).split(' ');

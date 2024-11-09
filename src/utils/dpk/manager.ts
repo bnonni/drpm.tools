@@ -18,7 +18,7 @@ import {
   RegistryResponse
 } from '../types.js';
 
-const { web5, did } = await DWeb5.connect();
+const { web5, did } = DWeb5.connectSync();
 
 export class DManager {
   // Get DWeb Node endpoints from Did Doc on respective network based on DID Method
@@ -262,7 +262,7 @@ export class DManager {
 
   static async createPackageRelease({ parentId, name, version, integrity, release }: CreateReleaseParams): Promise<RegistryResponse> {
     try {
-      const { record = null, status }: {record: Record | null; status: any} = await web5.dwn.records.create({
+      const { record = undefined, status }: {record?: Record; status: any} = await web5.dwn.records.create({
         data    : release,
         store   : true,
         message : {
@@ -275,6 +275,7 @@ export class DManager {
           tags            : { name, version, integrity }
         },
       });
+
       if (ResponseUtils.dwnFail({ status })) {
         const error = 'Failed to create local release record - Failing DWN Status';
         Logger.error(`DManager: ${error}`, status);

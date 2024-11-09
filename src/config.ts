@@ -11,29 +11,32 @@ export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL ?? 'aHR
 export const DRPM_VERSION_PREFIXES = ['~', '^', '<', '>', '<=', '>=', '=', '-', '@'];
 export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
+export const DRPM_ENCRYPTED_PROFILE = `${DRPM_HOME}/profile.enc`;
 // ggignore-start
 export const DEFAULT_PASSWORD = 'insecure correct horse battery staple';
-export const DEFAULT_RECOVERY_PHRASE = 'correct horse battle stable correct horse battle stable correct horse battle stable';
 export const DEFAULT_DWN_URL = 'https://dwn.drpm.tools';
 export const DEFAULT_PROFILE = {
-  default : 'dht',
+  current : '',
   dht     : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : DEFAULT_RECOVERY_PHRASE,
-    password       : DEFAULT_PASSWORD
+    did            : null,
+    dwnEndpoints   : null,
+    web5DataPath   : null,
+    password       : null,
+    recoveryPhrase : null
   },
   web : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : DEFAULT_RECOVERY_PHRASE,
-    password       : DEFAULT_PASSWORD
+    did            : null,
+    dwnEndpoints   : null,
+    web5DataPath   : null,
+    password       : null,
+    recoveryPhrase : null
   },
   btc : {
-    did            : '',
-    dwnEndpoints   : [],
-    recoveryPhrase : DEFAULT_RECOVERY_PHRASE,
-    password       : DEFAULT_PASSWORD
+    did            : null,
+    dwnEndpoints   : null,
+    web5DataPath   : null,
+    password       : null,
+    recoveryPhrase : null
   }
 };
 // ggignore-end

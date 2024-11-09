@@ -94,7 +94,7 @@ export type ReadPackageParams = {
     name: string
 };
 export type ReadReleaseParams = ReadPackageParams & { version: string };
-export type CreatePackageParams = { metadata: DpkMetadata };
+export type CreatePackageParams = { metadata: DpkMetadata; };
 export type CreateReleaseParams = {
     parentId: string;
     name: string;
@@ -146,63 +146,53 @@ export type DpkData = {
     'package/release'?: DpkTarball;
     [key: string]: any;
 };
-export type DrpmProfileData = {
+export type ProfileContext = {
     did: string;
     password: string;
     dwnEndpoints: string[];
     web5DataPath: string;
     recoveryPhrase: string;
-    portableDid?: PortableDid;
 };
+export type ProfileContextWeb = ProfileContext & { portableDid?: PortableDid; };
 export type SupportedMethods = 'web' | 'dht' | 'btc';
-export type DrpmProfile = {
-    current: string;
-    dht: DrpmProfileData;
-    web: DrpmProfileData;
-    btc: DrpmProfileData;
+export type ProfileJson = {
+    name: string;
+    dht: ProfileContext;
+    web: ProfileContext;
+    btc: ProfileContext;
     [key: string]: any;
 };
-export type PartialDrpmProfile = Partial<DrpmProfile>;
-export type DrpmProfileOptions = {
+export type PartialProfileJson = Partial<ProfileJson>;
+export type ContextOptions = {
       did?: string;
       password?: string;
+      recoveryPhrase?: string;
       dwnEndpoints?: string;
       web5DataPath?: string
-      recoveryPhrase?: string;
-      context?: string;
 };
-export type DrpmProfileCreateBase = {
+export type ProfileJsonCreateBase = {
     dwnEndpoints: string;
     password?: string;
     recoveryPhrase?: string;
     web5DataPath?: string;
 };
-export type DhtProfileCreate = DrpmProfileCreateBase & { method: 'dht'; did?: string; };
-export type WebProfileCreate = DrpmProfileCreateBase & { method: 'web'; did: string; };
-export type BtcProfileCreate = DrpmProfileCreateBase & { method: 'btc'; did?: string; };
-export type DrpmProfileCreateParams = DhtProfileCreate | WebProfileCreate;
-export type DrpmProfileMethodOptions = {
-    dht: string;
-    web: string;
-    btc: string;
-};
-export type DrpmProfileDeleteOptions = {
-    method?: string
-    current?: boolean;
-    all?: boolean;
-}
+export type DhtProfileCreate = ProfileJsonCreateBase & { method: 'dht'; did?: string; };
+export type WebProfileCreate = ProfileJsonCreateBase & { method: 'web'; did: string; };
+export type BtcProfileCreate = ProfileJsonCreateBase & { method: 'btc'; did?: string; };
+
 export type RequestParams = Request['params'];
 export type CreatePackageDidWebParams = {
     did: string;
     metadata: DpkMetadata;
 };
 export type DidWebConnectOptions = {
-    data: DrpmProfileData;
-    agent: Web5UserAgent;
-    sync?: string;
+    did: string;
+    password: string;
+    dwnEndpoints: string[];
+    web5DataPath: string;
 };
 export type DidDhtConnectOptions = {
-    data: Partial<DrpmProfileData>;
+    data: Partial<ProfileContext>;
     agent?: Web5UserAgent;
     sync?: string;
 };
