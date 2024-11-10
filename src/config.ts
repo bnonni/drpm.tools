@@ -9,14 +9,14 @@ export const DRPM_REGISTRY_DIR = join(process.env.HOME || homedir(), '.drpm', 'r
 export const DRPM_PROTOCOL_B64URL = DrlUtils.base64urlEncode(dwn.protocol);
 export const DRL_PROTOCOL_PARAM = `read/protocols/${DRPM_PROTOCOL_B64URL ?? 'aHR0cHM6Ly9kcnBtLnRvb2xzL3Byb3RvY29scy9kcnBt'}`;
 export const DRPM_VERSION_PREFIXES = ['~', '^', '<', '>', '<=', '>=', '=', '-', '@'];
-export const DRPM_HOME = `${process.env.HOME || homedir()}/.config/drpm`;
+export const DRPM_HOME = `${process.env.HOME}/.config/drpm`;
 export const DRPM_PROFILE = `${DRPM_HOME}/profile.json`;
 export const DRPM_ENCRYPTED_PROFILE = `${DRPM_HOME}/profile.enc`;
 // ggignore-start
 export const DEFAULT_PASSWORD = 'insecure correct horse battery staple';
 export const DEFAULT_DWN_URL = 'https://dwn.drpm.tools';
 export const DEFAULT_PROFILE = {
-  current : '',
+  name : '',
   dht     : {
     did            : null,
     dwnEndpoints   : null,

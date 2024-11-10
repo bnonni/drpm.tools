@@ -2,6 +2,7 @@ import { generateMnemonic } from '@scure/bip39';
 import { wordlist as english } from '@scure/bip39/wordlists/english';
 import { ProfileContext, ProfileJson } from './types.js';
 import { Logger } from './logger.js';
+import cuid from '@bugsnag/cuid';
 
 export const stringifier = (data: any): string => JSON.stringify(data, null, 2);
 
@@ -35,12 +36,14 @@ export const createPassword = (n: number = 6): string => {
   return password.join(' ');
 };
 
+export const scuid = ({len, n}: {len: number; n: number} = {len: 25, n: 8}): string => cuid().slice(len-n, len);
+
 export const cleanEndpoint = (endpoint: string): string => {
   try {
     const parsedEndpoint = new URL(endpoint);
     return parsedEndpoint.host;
   } catch (error) {
     Logger.error('Invalid Endpoint:', error);
-    return endpoint;
+    return endpoint.replace(/https?:\/\/(www\.)?([^/]+).*/, '$2');
   }
 };

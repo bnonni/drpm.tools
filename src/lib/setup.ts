@@ -8,6 +8,7 @@ const DRPM_DIR = 'drpm';
 const CONFIG_DRPM_DIR = platform() === 'win32'
   ? join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), DRPM_DIR)
   : join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), DRPM_DIR);
+const DRPM_BAK_DIR = join(CONFIG_DRPM_DIR, 'bak');
 const DRPM_REGISTRYPID_FILE = join(CONFIG_DRPM_DIR, 'registry.pid');
 const DRPM_REGISTRY_OUT_FILE = join(CONFIG_DRPM_DIR, 'registry.out');
 const DRPM_VERSION_FILE = join(CONFIG_DRPM_DIR, '.version');
@@ -17,7 +18,12 @@ export class Setup {
   public static async run(): Promise<void> {
     if (!await exists(CONFIG_DRPM_DIR)) {
       await ensureDir(CONFIG_DRPM_DIR);
-      Logger.log(`DRPM config created (${CONFIG_DRPM_DIR})`);
+      Logger.log(`DRPM .config dir created (${CONFIG_DRPM_DIR})`);
+    }
+
+    if (!await exists(DRPM_BAK_DIR)) {
+      await ensureDir(DRPM_BAK_DIR);
+      Logger.log(`DRPM .config/bak created (${DRPM_BAK_DIR})`);
     }
 
     if (!await exists(DRPM_REGISTRYPID_FILE)) {
@@ -37,7 +43,7 @@ export class Setup {
 
     if (!await exists(DRPM_PROFILE)) {
       await writeFile(DRPM_PROFILE, `{
-        "current": "",
+        "name": "",
         "dht": {
             "did": undefined,
             "dwnEndpoints": undefined,

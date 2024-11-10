@@ -6,23 +6,25 @@ import { DRegistryPackageManagerError } from './error.js';
 export class ContextCommand implements ICommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
-      const name = options?.name ?? Profile.loadStatic().name;
+      const name = options?.name ?? Profile.staticLoad().name;
+      console.log('ContextCommand -> options', options);
+      console.log('ContextCommand -> name', name);
       const profile = new Profile(name);
       switch (subcommand) {
         case 'create':
           await profile.context.create(options);
-          await profile.context.save({ name: profile.context.name, context: profile.context.data });
+          await profile.save();
           break;
         case 'read':
           profile.context.read(options);
           break;
         case 'update':
           profile.context.update(options);
-          await profile.context.save({ name: profile.context.name, context: profile.context.data });
+          profile.context.save({ name: profile.context.name, context: profile.context.data });
           break;
         case 'delete':
           profile.context.delete(options);
-          await profile.context.save({ name: profile.context.name, context: profile.context.data });
+          profile.context.save({ name: profile.context.name, context: profile.context.data });
           break;
         case 'backup':
           profile.context.backup(options);

@@ -6,29 +6,27 @@ import { DRegistryPackageManagerError } from './error.js';
 export class ProfileCommand implements ICommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
-      const name = options?.name ?? Profile.loadStatic().name;
-      const profile = new Profile(name);
       switch (subcommand) {
+        case 'recover':
+          await Profile.recover(options);
+          break;
         case 'read':
-          await profile.read(options);
+          await new Profile(options?.name).read(options);
           break;
         case 'add':
-          await profile.add(options);
+          await new Profile(options?.name).add(options);
           break;
         case 'delete':
-          await profile.delete(options);
+          await new Profile(options?.name).delete(options);
           break;
         case 'list':
-          await profile.list();
+          await new Profile(options?.name).list();
           break;
         case 'switch':
-          await profile.switch(options);
-          break;
-        case 'recover':
-          await profile.recover(options);
+          await new Profile(options?.name).switch(options);
           break;
         case 'backup':
-          await profile.backup(options);
+          await new Profile(options?.name).backup(options);
           break;
         default:
           throw new DRegistryPackageManagerError(`ProfileCommand: Unknown subcommand ${subcommand}`);
