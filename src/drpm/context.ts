@@ -1,9 +1,10 @@
 import * as Inquirer from '@inquirer/prompts';
 import { Logger } from '../utils/logger.js';
-import { stringifier, secureProfileContext } from '../utils/misc.js';
-import { ProfileContext, DhtProfileCreate, WebProfileCreate, ContextOptions } from '../utils/types.js';
+import { secureProfileContext, stringifier } from '../utils/misc.js';
+import { ContextOptions, DhtProfileCreate, ProfileContext, WebProfileCreate } from '../utils/types.js';
 import { DhtProfile } from './utils/dht.js';
 import { WebProfile } from './utils/web.js';
+import { Profile } from './profile.js';
 
 export class Context {
   name: string;
@@ -17,15 +18,16 @@ export class Context {
     return this.data;
   }
 
-  async save({name, context}: {name: string; context: ProfileContext}): Promise<void> {
-    this.name = name;
-    this.data = context;
-    Logger.log(`Saved profile ${name} context!`);
+  save(options: { name?: string; context?: ProfileContext } = {}): void {
+    this.name = options.name ?? this.name;
+    this.data = options.context ?? this.data;
+    Profile.json[this.name] = this.data;
+    Logger.log(`Saved ${this.name} profile context!`);
   }
 
   async create(params: DhtProfileCreate | WebProfileCreate): Promise<void> {
     try {
-      const { dwnEndpoints, password, recoveryPhrase, web5DataPath, method = 'dht', did } = params;
+      const { dwnEndpoints, method = 'dht', did } = params;
       if(!dwnEndpoints) {
         Logger.error('DWN endpoints required to create a new profile.');
         process.exit(1);
@@ -35,19 +37,20 @@ export class Context {
         Logger.error('DID required to create a new web profile.');
         process.exit(1);
       }
-      const { [method]: partialProfile } = method === 'dht'
-        ? await DhtProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
-        : did
-          ? await WebProfile.create({ dwnEndpoints, password, recoveryPhrase, web5DataPath, did })
+      const { [method]: context } = method === 'dht'
+        ? await DhtProfile.create(params)
+        : method === 'web' && did
+          ? await WebProfile.create(params as WebProfileCreate)
           : {};
 
-      if(!partialProfile) {
-        Logger.error(`Failed to create ${method} profile`);
+      if(!context) {
+        Logger.error(`Failed to create ${method} profile, exiting ...`, context);
         process.exit(1);
       }
-      this.name = method;
-      this.data = partialProfile;
-      Logger.log(`Created ${method} profile: ${stringifier(partialProfile)}`);
+
+      Profile.json.name = method;
+      Profile.json[method] = context;
+      Logger.log(`Created ${method} profile: ${stringifier(context)}`);
     } catch (error: any) {
       Logger.error(`Failed to create profile: ${error.message}`);
       process.exit(1);

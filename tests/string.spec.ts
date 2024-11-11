@@ -17,9 +17,9 @@ String.prototype.caps = function (): string {
 
 function displayProfiles(profiles: any) {
   for (const key of Object.keys(profiles)) {
-    if (key === 'current') continue;
+    if (key === 'name') continue;
     const profile = profiles[key];
-    console.log(`${key.caps()} Profile ${key === profiles.current ? '(current)' : ''}`);
+    console.log(`${key.caps()} Profile ${key === profiles.name ? '(active)' : '(inactive)'}`);
     console.log(`  ${chalk.blue('Method')}: ${key}`);
     console.log(`  ${chalk.red('DID')}: ${!profile.did ? chalk.underline('Unset') : profile.did}`);
     console.log(`  ${chalk.blue('Password')}: ${profile.password ?? chalk.underline('Unset')}`);
@@ -37,7 +37,7 @@ function displayProfiles(profiles: any) {
 }
 
 displayProfiles({
-  current : 'dht',
+  name : 'dht',
   dht     : {
     password       : 'tree spawn garlic vicious rigid glare',
     did            : 'did:dht:tzarizg6dprr5x8djfy35h7k86z7hy9bdzzsa4jd9qt7rtnjqg1o',

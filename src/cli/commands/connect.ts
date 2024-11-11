@@ -4,7 +4,7 @@ import { ICommand } from '../drpm.js';
 
 export class ConnectCommand implements ICommand {
   async execute({ options }: { options: any; }): Promise<void> {
-    const name = options.name ?? Profile.loadStatic().name;
+    const name = options.name ?? Profile.loadStaticSync().name;
     await DWeb5.connect({name, verbose: true});
   }
 }

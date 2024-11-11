@@ -7,7 +7,7 @@ import { DRegistryPackageManagerError } from './error.js';
 export class DwnCommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
-      const name = options.name ?? Profile.loadStatic().name;
+      const name = options.name ?? Profile.loadStaticSync().name;
       options.connection = await DWeb5.connect({ name });
       switch (subcommand) {
         case 'protocols': {

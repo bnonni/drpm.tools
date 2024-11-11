@@ -1,38 +1,53 @@
 import * as Inquirer from '@inquirer/prompts';
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from 'crypto';
-import { readFileSync } from 'fs';
-import { exists } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
+import { ensureDir } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DEFAULT_PROFILE, DRPM_HOME, DRPM_PROFILE } from '../config.js';
+import { Setup } from '../lib/setup.js';
 import formatter from '../utils/formatter.js';
 import { Logger } from '../utils/logger.js';
 import { createPassword, secureProfile, secureProfileContext, stringifier } from '../utils/misc.js';
 import { ProfileJson } from '../utils/types.js';
 import { Context } from './context.js';
-type EncryptedProfile = { encrypted: string; salt: string; iv: string; authTag: string };
+
+type ProfileBackup = {
+  data: string;
+  salt: string;
+  iv: string;
+  authTag: string;
+}
 
 export class Profile {
   static json: ProfileJson;
   context: Context;
 
-  constructor(current: string) {
-    Profile.loadSync();
-    this.context = new Context(current, Profile.json?.[current]);
+  constructor(name?: string) {
+    if(!this.exists()) {
+      Logger.error('ProfileError: No profile found.');
+      this.template();
+    }
+    if(!this.isSetup()) {
+      Logger.error('ProfileError: Setup not completed.');
+      // TODO: run setup? await Setup.run();
+      // process.exit(1);
+    }
+    name ??= Profile.loadStaticSync()?.name;
+    this.context = new Context(name, Profile.json?.[name]);
   }
 
-  static loadSync(): void {
+  isSetup(): boolean {
+    return Setup.isDone();
+  }
+
+  static loadStaticSync(): ProfileJson {
     const profile = readFileSync(DRPM_PROFILE, 'utf8');
     this.json = JSON.parse(profile);
-  }
-
-  static loadStatic(): ProfileJson {
-    this.loadSync();
     return this.json;
   }
 
-  // Helper function to check if setup is needed
-  async needSetup(): Promise<boolean> {
-    return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
+  template(): void {
+    writeFileSync(DRPM_PROFILE, stringifier(DEFAULT_PROFILE));
   }
 
   // Helper function to validate profile data
@@ -41,7 +56,7 @@ export class Profile {
       Logger.error('ProfileError: No profile data found.');
       return false;
     }
-    const { did, password, dwnEndpoints, web5DataPath } = data?.[data?.current] ?? {};
+    const { did, password, dwnEndpoints, web5DataPath } = data?.[data?.name] ?? {};
     // Check for empty or invalid DID
     if (!did || did.trim() === '') {
       Logger.error('ProfileError: DID cannot be blank.');
@@ -67,12 +82,12 @@ export class Profile {
   }
 
   // Helper function to check if a profile exists
-  async exists(profile?: ProfileJson, method?: string): Promise<boolean | ProfileJson> {
+  exists(profile?: ProfileJson, method?: string): boolean | ProfileJson {
     try {
-      profile ??= await this.load();
+      profile ??= Profile.loadStaticSync();
       if(!profile) return false;
 
-      const data = profile[profile.current ?? method];
+      const data = profile[profile.name ?? method];
       if(!data) return false;
 
       return profile;
@@ -89,9 +104,16 @@ export class Profile {
     return Profile.json;
   }
 
+  static async staticSave(): Promise<void> {
+    const profile = Profile.json ?? this.loadStaticSync();
+    await writeFile(DRPM_PROFILE, stringifier(profile), 'utf8');
+    Logger.log('Saved profile.json', secureProfile(Profile.json));
+  }
+
   async save(): Promise<void> {
-    const profile = Profile.json ?? await this.load();
-    await writeFile(DRPM_PROFILE, stringifier(profile));
+    const profile = Profile.json ?? this.load();
+    await writeFile(DRPM_PROFILE, stringifier(profile), 'utf8');
+    Logger.log('Saved profile.json', secureProfile(Profile.json));
   }
 
   async read(options: { text?: boolean }): Promise<void> {
@@ -103,7 +125,8 @@ export class Profile {
     throw new Error('ProfileCommand: add not implemented: ' + options);
   }
 
-  encrypt({ password }:{password: string}): EncryptedProfile {
+  encrypt({ password }:{ password: string }): ProfileBackup {
+    password ??= createPassword();
     const jsonString = JSON.stringify(Profile.json);
     const salt = randomBytes(16);
     const iv = randomBytes(12);
@@ -117,10 +140,10 @@ export class Profile {
     const authTag = cipher.getAuthTag().toString('hex');
 
     return {
-      encrypted,
-      salt          : salt.toString('hex'),
-      iv            : iv.toString('hex'),
-      authTag       : authTag
+      data    : encrypted,
+      salt    : salt.toString('hex'),
+      iv      : iv.toString('hex'),
+      authTag : authTag
     };
   }
 
@@ -160,7 +183,7 @@ export class Profile {
       `Available Profile Contexts:\n${
         Object.keys(Profile.json)
           .filter((key) => key !== 'name')
-          .map((key, i) => `  ${i+1}. ${key.trim()} (${key === this.context.name ? formatter.green('active') : formatter.red('inactive')})`).join('\n')
+          .map((key, i) => `  ${i+1}. ${key.trim()} (${key === Profile.json.name ? formatter.green('active') : formatter.red('inactive')})`).join('\n')
       }`);
   }
 
@@ -171,7 +194,7 @@ export class Profile {
     } else {
       const choices = Object.keys(Profile.json)
         .filter((key) => key !== 'name')
-        .map((key) => `${key.trim()} (${key === this.context.name ? 'active' : 'inactive'})`);
+        .map((key) => `${key.trim()} (${key === Profile.json.name ? 'active' : 'inactive'})`);
       const name: string = await Inquirer.select({ choices, message: 'Which profile context would you like to switch to?' });
       Profile.json.name = name.replace(/ \(.*\)/, '');
     }
@@ -182,30 +205,48 @@ export class Profile {
     Logger.log(`Switched profile context to ${activeName}: ${secureProfileContext(context)}`);
   }
 
-  async recover({ password, file }: { password: string; file: string }): Promise<void> {
-    const recoveryFile = JSON.parse(await readFile(file, 'utf8'));
-    const { encrypted, salt, iv, authTag } = recoveryFile ?? {};
-    const saltBuffer = Buffer.from(salt, 'hex');
-    const ivBuffer = Buffer.from(iv, 'hex');
-    const authTagBuffer = Buffer.from(authTag, 'hex');
+  static async recover({ password, file }: { password: string; file: string }): Promise<void> {
+    const profileBackup: ProfileBackup = JSON.parse(await readFile(file, 'utf8'));
+    const { data, salt, iv, authTag } = profileBackup ?? {};
+    if(!(data && salt && iv && authTag)) {
+      Logger.error(`ProfileError: Invalid backup file ${file}`);
+      process.exit(1);
+    }
 
-    const key = pbkdf2Sync(password, saltBuffer, 100000, 32, 'sha256');
-    const decipher = createDecipheriv('aes-256-gcm', key, ivBuffer);
-    decipher.setAuthTag(authTagBuffer);
+    const key = pbkdf2Sync(password, Buffer.from(salt, 'hex'), 100000, 32, 'sha256');
+    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'hex'));
+    decipher.setAuthTag(Buffer.from(authTag, 'hex'));
 
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    let decrypted = decipher.update(data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
 
     Profile.json = JSON.parse(decrypted);
-    await this.save();
-    Logger.log(`Recovered backup ${file}!`);
+
+    await this.staticSave();
+    Logger.log(`Recovered profile.json from backup ${file}`);
   }
 
 
   async backup({ password }: {password: string}): Promise<void> {
+    const writePassword = !password;
     password ??= createPassword();
-    const encrypted = this.encrypt({ password });
-    Logger.log('Backed up profile.json!', encrypted);
-    await writeFile(`${DRPM_HOME}/profile-${encrypted.authTag}.enc`, stringifier(encrypted));
+    const jsonString = JSON.stringify(Profile.json);
+    const salt = randomBytes(16);
+    const iv = randomBytes(12);
+    const key = pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    let encryptedData = cipher.update(jsonString, 'utf8', 'hex');
+    encryptedData += cipher.final('hex');
+    const encrypted = {
+      data    : encryptedData,
+      salt    : salt.toString('hex'),
+      iv      : iv.toString('hex'),
+      authTag : cipher.getAuthTag().toString('hex')
+    };
+    const encryptedDir = `${DRPM_HOME}/bak/${encrypted.authTag}`;
+    await ensureDir(encryptedDir);
+    if(writePassword) await writeFile(`${encryptedDir}/profile.key`, password, 'utf8');
+    await writeFile(`${encryptedDir}/profile.enc`, stringifier(encrypted), 'utf8');
+    Logger.log(`Backed up profile.json to ${encryptedDir}`, encrypted);
   }
 }

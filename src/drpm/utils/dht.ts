@@ -1,12 +1,12 @@
-import cuid from '@bugsnag/cuid';
 import { Web5 } from '@web5/api';
 import { Web5UserAgent } from '@web5/user-agent';
-import { exists } from 'fs-extra';
+import fsx from 'fs-extra';
 import { DRPM_HOME } from '../../config.js';
-import { Profile } from '../profile.js';
 import { Logger } from '../../utils/logger.js';
-import { cleanEndpoint, createPassword } from '../../utils/misc.js';
+import { cleanEndpoint, createPassword, scuid } from '../../utils/misc.js';
 import { DhtProfileConnectParams, DidDhtCreateParams, PartialProfileJson } from '../../utils/types.js';
+import { Profile } from '../profile.js';
+import cuid from '@bugsnag/cuid';
 
 export class DhtAgent {
   userAgent: Web5UserAgent;
@@ -88,22 +88,16 @@ export class DhtProfile {
   static async create(params: DidDhtCreateParams): Promise<PartialProfileJson> {
     try {
       const dwnEndpoints = params.dwnEndpoints.split(',');
-      const endpoints = params.dwnEndpoints
-        .split(',')
-        .map((endpoint: string) => cleanEndpoint(endpoint));
+      const endpoints = dwnEndpoints
+        .map((dwnEndpoint) => cleanEndpoint(dwnEndpoint))
+        .filter(endpoint => !fsx.existsSync(`${DRPM_HOME}/DHT/${endpoint}`));
 
-      const endpointPaths = [];
-      for(const dwnEndpoint of endpoints) {
-        if(!await exists(`${DRPM_HOME}/DATA/DHT/${dwnEndpoint}`)) {
-          endpointPaths.push(dwnEndpoint);
-        }
-      }
-      const endpointPath = endpointPaths.length
-        ? `${endpointPaths[0]}/AGENT/MAIN`
-        : `${dwnEndpoints[0]}/AGENT/${cuid()}`;
-      const dataPath = `${DRPM_HOME}/DATA/DHT/${endpointPath}`;
+      const endpointPath = endpoints.length
+        ? `${endpoints[0]}/0/DATA/AGENT`
+        : `${cleanEndpoint(dwnEndpoints[0])}/${scuid()}/DATA/AGENT`;
+
+      const dataPath = `${DRPM_HOME}/DHT/${endpointPath}`;
       const web5DataPath = params.web5DataPath ?? dataPath;
-
       const password = params.password ?? createPassword();
 
       const dhtAgent = await DhtAgent.create({ dataPath: web5DataPath });
@@ -125,11 +119,14 @@ export class DhtProfile {
       Logger.info('Syncing complete!');
 
       return {
-        did,
-        password,
-        web5DataPath,
-        dwnEndpoints,
-        recoveryPhrase,
+        name : 'dht',
+        dht  : {
+          did,
+          password,
+          web5DataPath,
+          dwnEndpoints,
+          recoveryPhrase,
+        }
       };
     } catch (error: any) {
       Logger.error(`Failed to create DHT profile: ${error.message}`);

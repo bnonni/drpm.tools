@@ -6,8 +6,7 @@ import { DRegistryPackageManagerError } from './error.js';
 export class ProfileCommand implements ICommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
-      const name = options?.name ?? Profile.loadStatic().name;
-      const profile = new Profile(name);
+      const profile = new Profile(options?.name);
       switch (subcommand) {
         case 'read':
           await profile.read(options);
@@ -25,7 +24,7 @@ export class ProfileCommand implements ICommand {
           await profile.switch(options);
           break;
         case 'recover':
-          await profile.recover(options);
+          await Profile.recover(options);
           break;
         case 'backup':
           await profile.backup(options);

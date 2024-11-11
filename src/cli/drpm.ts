@@ -14,7 +14,7 @@ import { SetupCommand } from './commands/setup.js';
 import { DwnCommand } from './commands/dwn.js';
 import { Logger } from '../utils/logger.js';
 
-export const DEFAULT_DATAPATH = `${DRPM_HOME}/DATA/<method>/AGENT/<dwnEndpoint>)`;
+export const DEFAULT_DATAPATH = `${DRPM_HOME}/DHT/<ENDPOINT>/<0|cuid>/DATA/AGENT)`;
 
 export interface ICommand {
   execute({ options, subcommand, }: { options?: any; subcommand?: string; }): Promise<void>;
@@ -54,11 +54,11 @@ class DRegistryPackageManager {
     profile.command('delete')
       .description('Delete the current profile.json')
       .option('-f, --force', 'Force delete the profile.json without backing up')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile-bak.key)`)
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
       .addHelpText('after',
         `Examples:
-          drpm profile profile                                   # Delete the profile.json encrypting backup with a random password
-          drpm profile profile -p "correct horse battery staple" # Delete the profile.json encrypting backup with a custom password`)
+          drpm profile delete                                   # Delete profile.json; use random password for encrypted backup
+          drpm profile delete -p "correct horse battery staple" # Delete profile.json; use custom password for encrypted backup`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'delete' }));
     // profile add
     profile
@@ -91,7 +91,7 @@ class DRegistryPackageManager {
     profile
       .command('backup')
       .description('Recover an existing DRPM profile.')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile-bak.key)`)
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'backup' }));
     // profile recover
     profile
@@ -159,7 +159,7 @@ class DRegistryPackageManager {
     context.command('delete')
       .description('Delete the current profile context')
       .option('-f, --force', 'Force delete the profile context')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile-bak.key)`)
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
       .addHelpText('after',
         `Examples:
         drpm profile delete                                   # Delete the context with a random password

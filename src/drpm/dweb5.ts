@@ -55,7 +55,7 @@ export class DWeb5 {
       if(this.isConnected()) {
         return this.connection;
       }
-      const { name, web, dht } = Profile.loadStatic();
+      const { name, web, dht } = Profile.loadStaticSync();
       const data = name === 'web' ? web : dht;
 
       if(verbose) {
