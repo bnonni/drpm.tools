@@ -18,25 +18,25 @@ export const DEFAULT_DWN_URL = 'https://dwn.drpm.tools';
 export const DEFAULT_PROFILE = {
   name : '',
   dht     : {
-    did            : null,
-    dwnEndpoints   : null,
-    web5DataPath   : null,
-    password       : null,
-    recoveryPhrase : null
+    did            : undefined,
+    dwnEndpoints   : undefined,
+    web5DataPath   : undefined,
+    password       : undefined,
+    recoveryPhrase : undefined
   },
   web : {
-    did            : null,
-    dwnEndpoints   : null,
-    web5DataPath   : null,
-    password       : null,
-    recoveryPhrase : null
+    did            : undefined,
+    dwnEndpoints   : undefined,
+    web5DataPath   : undefined,
+    password       : undefined,
+    recoveryPhrase : undefined
   },
   btc : {
-    did            : null,
-    dwnEndpoints   : null,
-    web5DataPath   : null,
-    password       : null,
-    recoveryPhrase : null
+    did            : undefined,
+    dwnEndpoints   : undefined,
+    web5DataPath   : undefined,
+    password       : undefined,
+    recoveryPhrase : undefined
   }
 };
 // ggignore-end

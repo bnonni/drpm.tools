@@ -6,9 +6,7 @@ import { DRegistryPackageManagerError } from './error.js';
 export class ContextCommand implements ICommand {
   async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
     try {
-      const name = options?.name ?? Profile.staticLoad().name;
-      console.log('ContextCommand -> options', options);
-      console.log('ContextCommand -> name', name);
+      const name = options?.name ?? Profile.loadStaticSync().name;
       const profile = new Profile(name);
       switch (subcommand) {
         case 'create':

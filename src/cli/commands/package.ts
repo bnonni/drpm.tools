@@ -10,7 +10,7 @@ import { DRegistryPackageManagerError } from './error.js';
 export class PackageCommand implements ICommand {
   async execute(options: any, subcommand?: string): Promise<void> {
     try {
-      const name = options.name ?? Profile.staticLoad().name;
+      const name = options.name ?? Profile.loadStaticSync().name;
       options.connection = await DWeb5.connect({ name });
       switch (subcommand) {
         case 'init':

@@ -57,8 +57,8 @@ class DRegistryPackageManager {
       .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
       .addHelpText('after',
         `Examples:
-          drpm profile profile                                   # Delete the profile.json encrypting backup with a random password
-          drpm profile profile -p "correct horse battery staple" # Delete the profile.json encrypting backup with a custom password`)
+          drpm profile delete                                   # Delete profile.json; use random password for encrypted backup
+          drpm profile delete -p "correct horse battery staple" # Delete profile.json; use custom password for encrypted backup`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'delete' }));
     // profile add
     profile

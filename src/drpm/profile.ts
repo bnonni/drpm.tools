@@ -1,39 +1,53 @@
 import * as Inquirer from '@inquirer/prompts';
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from 'crypto';
-import { readFileSync } from 'fs';
-import { ensureDir, exists } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
+import { ensureDir } from 'fs-extra';
 import { readFile, writeFile } from 'fs/promises';
 import { DEFAULT_PASSWORD, DEFAULT_PROFILE, DRPM_HOME, DRPM_PROFILE } from '../config.js';
+import { Setup } from '../lib/setup.js';
 import formatter from '../utils/formatter.js';
 import { Logger } from '../utils/logger.js';
 import { createPassword, secureProfile, secureProfileContext, stringifier } from '../utils/misc.js';
 import { ProfileJson } from '../utils/types.js';
 import { Context } from './context.js';
+
 type ProfileBackup = {
   data: string;
   salt: string;
   iv: string;
   authTag: string;
 }
+
 export class Profile {
   static json: ProfileJson;
   context: Context;
 
   constructor(name?: string) {
-    name ??= Profile.staticLoad()?.name;
+    if(!this.exists()) {
+      Logger.error('ProfileError: No profile found.');
+      this.template();
+    }
+    if(!this.isSetup()) {
+      Logger.error('ProfileError: Setup not completed.');
+      // TODO: run setup? await Setup.run();
+      // process.exit(1);
+    }
+    name ??= Profile.loadStaticSync()?.name;
     this.context = new Context(name, Profile.json?.[name]);
   }
 
-  static staticLoad(): ProfileJson {
+  isSetup(): boolean {
+    return Setup.isDone();
+  }
+
+  static loadStaticSync(): ProfileJson {
     const profile = readFileSync(DRPM_PROFILE, 'utf8');
     this.json = JSON.parse(profile);
     return this.json;
   }
 
-
-  // Helper function to check if setup is needed
-  async needSetup(): Promise<boolean> {
-    return !(await exists(DRPM_HOME) || await exists(DRPM_PROFILE));
+  template(): void {
+    writeFileSync(DRPM_PROFILE, stringifier(DEFAULT_PROFILE));
   }
 
   // Helper function to validate profile data
@@ -68,9 +82,9 @@ export class Profile {
   }
 
   // Helper function to check if a profile exists
-  static async exists(profile?: ProfileJson, method?: string): Promise<boolean | ProfileJson> {
+  exists(profile?: ProfileJson, method?: string): boolean | ProfileJson {
     try {
-      profile ??= this.staticLoad();
+      profile ??= Profile.loadStaticSync();
       if(!profile) return false;
 
       const data = profile[profile.name ?? method];
@@ -91,7 +105,7 @@ export class Profile {
   }
 
   static async staticSave(): Promise<void> {
-    const profile = Profile.json ?? this.staticLoad();
+    const profile = Profile.json ?? this.loadStaticSync();
     await writeFile(DRPM_PROFILE, stringifier(profile), 'utf8');
     Logger.log('Saved profile.json', secureProfile(Profile.json));
   }
