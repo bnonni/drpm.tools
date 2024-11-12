@@ -19,21 +19,21 @@ type ProfileBackup = {
 }
 
 export class Profile {
-  static json: ProfileJson;
-  context: Context;
+  static data: ProfileJson;
+  static context: Context;
 
-  constructor(name?: string) {
+  constructor() {
     if(!this.exists()) {
       Logger.error('ProfileError: No profile found.');
-      this.template();
+      this.create();
     }
     if(!this.isSetup()) {
       Logger.error('ProfileError: Setup not completed.');
       // TODO: run setup? await Setup.run();
       // process.exit(1);
     }
-    name ??= Profile.loadStaticSync()?.name;
-    this.context = new Context(name, Profile.json?.[name]);
+    Profile.loadStaticSync();
+    Profile.context = new Context(Profile.data.name);
   }
 
   isSetup(): boolean {
@@ -41,12 +41,11 @@ export class Profile {
   }
 
   static loadStaticSync(): ProfileJson {
-    const profile = readFileSync(DRPM_PROFILE, 'utf8');
-    this.json = JSON.parse(profile);
-    return this.json;
+    this.data = JSON.parse(readFileSync(DRPM_PROFILE, 'utf8'));
+    return this.data;
   }
 
-  template(): void {
+  create(): void {
     writeFileSync(DRPM_PROFILE, stringifier(DEFAULT_PROFILE));
   }
 
@@ -84,7 +83,7 @@ export class Profile {
   // Helper function to check if a profile exists
   exists(profile?: ProfileJson, method?: string): boolean | ProfileJson {
     try {
-      profile ??= Profile.loadStaticSync();
+      profile ??= Profile.data;
       if(!profile) return false;
 
       const data = profile[profile.name ?? method];
@@ -100,24 +99,24 @@ export class Profile {
   // Helper function to load existing profile or create a new one
   async load(): Promise<ProfileJson> {
     const profile = await readFile(DRPM_PROFILE, 'utf8');
-    Profile.json = JSON.parse(profile);
-    return Profile.json;
+    Profile.data = JSON.parse(profile);
+    return Profile.data;
   }
 
   static async staticSave(): Promise<void> {
-    const profile = Profile.json ?? this.loadStaticSync();
+    const profile = Profile.data ?? this.loadStaticSync();
     await writeFile(DRPM_PROFILE, stringifier(profile), 'utf8');
-    Logger.log('Saved profile.json', secureProfile(Profile.json));
+    Logger.log('Saved profile.json', secureProfile(Profile.data));
   }
 
   async save(): Promise<void> {
-    const profile = Profile.json ?? this.load();
+    const profile = Profile.data ?? this.load();
     await writeFile(DRPM_PROFILE, stringifier(profile), 'utf8');
-    Logger.log('Saved profile.json', secureProfile(Profile.json));
+    Logger.log('Saved profile.json', secureProfile(Profile.data));
   }
 
   async read(options: { text?: boolean }): Promise<void> {
-    Logger.plain('DRPM Profile:', options.text ?? false ? Profile.json : secureProfile(Profile.json));
+    Logger.plain('DRPM Profile:', options.text ?? false ? Profile.data : secureProfile(Profile.data));
   }
 
   async add(options: any): Promise<void> {
@@ -127,7 +126,7 @@ export class Profile {
 
   encrypt({ password }:{ password: string }): ProfileBackup {
     password ??= createPassword();
-    const jsonString = JSON.stringify(Profile.json);
+    const jsonString = JSON.stringify(Profile.data);
     const salt = randomBytes(16);
     const iv = randomBytes(12);
 
@@ -181,26 +180,26 @@ export class Profile {
   async list(): Promise<void> {
     Logger.plain(
       `Available Profile Contexts:\n${
-        Object.keys(Profile.json)
+        Object.keys(Profile.data)
           .filter((key) => key !== 'name')
-          .map((key, i) => `  ${i+1}. ${key.trim()} (${key === Profile.json.name ? formatter.green('active') : formatter.red('inactive')})`).join('\n')
+          .map((key, i) => `  ${i+1}. ${key.trim()} (${key === Profile.data.name ? formatter.green('active') : formatter.red('inactive')})`).join('\n')
       }`);
   }
 
   // Subcommand function to switch between profiles
   async switch({ name }: { name?: string }): Promise<void> {
     if(name) {
-      Profile.json.name = name;
+      Profile.data.name = name;
     } else {
-      const choices = Object.keys(Profile.json)
+      const choices = Object.keys(Profile.data)
         .filter((key) => key !== 'name')
-        .map((key) => `${key.trim()} (${key === Profile.json.name ? 'active' : 'inactive'})`);
+        .map((key) => `${key.trim()} (${key === Profile.data.name ? 'active' : 'inactive'})`);
       const name: string = await Inquirer.select({ choices, message: 'Which profile context would you like to switch to?' });
-      Profile.json.name = name.replace(/ \(.*\)/, '');
+      Profile.data.name = name.replace(/ \(.*\)/, '');
     }
     await this.save();
-    const profile = Profile.json;
-    const activeName = Profile.json.name;
+    const profile = Profile.data;
+    const activeName = Profile.data.name;
     const context = profile[activeName];
     Logger.log(`Switched profile context to ${activeName}: ${secureProfileContext(context)}`);
   }
@@ -220,7 +219,7 @@ export class Profile {
     let decrypted = decipher.update(data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
 
-    Profile.json = JSON.parse(decrypted);
+    Profile.data = JSON.parse(decrypted);
 
     await this.staticSave();
     Logger.log(`Recovered profile.json from backup ${file}`);
@@ -230,7 +229,7 @@ export class Profile {
   async backup({ password }: {password: string}): Promise<void> {
     const writePassword = !password;
     password ??= createPassword();
-    const jsonString = JSON.stringify(Profile.json);
+    const jsonString = JSON.stringify(Profile.data);
     const salt = randomBytes(16);
     const iv = randomBytes(12);
     const key = pbkdf2Sync(password, salt, 100000, 32, 'sha256');

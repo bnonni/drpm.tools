@@ -17,7 +17,7 @@ import { Logger } from '../utils/logger.js';
 export const DEFAULT_DATAPATH = `${DRPM_HOME}/DHT/<ENDPOINT>/<0|cuid>/DATA/AGENT)`;
 
 export interface ICommand {
-  execute({ options, subcommand, }: { options?: any; subcommand?: string; }): Promise<void>;
+  static async execute({ options, subcommand, }: { options?: any; subcommand?: string; }): Promise<void>;
 }
 
 export type CommandType =
@@ -40,18 +40,94 @@ class DRegistryPackageManager {
 
   private addProfileCommands() {
     /* ============ PROFILE COMMANDS ============ */
-    const profileCommand = new ProfileCommand();
+    const profile = new ProfileCommand({
+      parent   : this.DRPM.command('profile').description(`Manage your profile (location: ${DRPM_PROFILE}`),
+      commands : [
+        {
+          name        : 'read',
+          description : 'Prints the entire profile.json',
+          option      : {
+            flags       : '-t, --text',
+            description : 'Prints the profile in plain text'
+          },
+          helpText : {
+            location : 'after',
+            description: `Examples:\n  drpm profile read       # Returns the profile.json`
+          },
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'read' })
+        },
+        {
+          name        : 'delete',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+        {
+          name        : 'add',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+        {
+          name        : 'list',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+        {
+          name        : 'switch',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+        {
+          name        : 'backup',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+        {
+          name        : 'recover',
+          description : '',
+          option      : {
+            flags       : '',
+            description : ''
+          },
+          helpText :{location: '', description: ''},
+          action: async (options) => await this.invokeCommand({ options, command: ProfileCommand, subcommand: 'delete' })
+        },
+      ],
+    });
     // drpm profile
-    const profile = this.DRPM.command('profile').description(`Manage your profile (location: ${DRPM_PROFILE}`);
+    // const profile = this.DRPM.command('profile').description(`Manage your profile (location: ${DRPM_PROFILE}`);
     // profile read
-    profile
-      .command('read')
+    profile.parent.command('read')
       .description('Prints the entire profile.json')
       .option('-t, --text', 'Prints the profile in plain text')
       .addHelpText('after', `Examples:\n  drpm profile read       # Returns the profile.json`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'read' }));
     // profile delete
-    profile.command('delete')
+    profile.parent.command('delete')
       .description('Delete the current profile.json')
       .option('-f, --force', 'Force delete the profile.json without backing up')
       .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random saved to ${DRPM_HOME}/bak/<randhex>/profile.key)`)
@@ -61,23 +137,20 @@ class DRegistryPackageManager {
           drpm profile delete -p "correct horse battery staple"    # Delete profile.json, creates backup w/ custom password`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'delete' }));
     // profile add
-    profile
-      .command('add')
+    profile.parent.command('add')
       .description('Add a new context to profile.json')
       .option('-n, --name <NAME>', 'Name of the context to add; Names are based on DID Methods')
       .allowUnknownOption()
       .addHelpText('after', `Examples:\n  drpm profile add -n btc1 {...}    # Adds a new profile context called btc1`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'add' }));
     // profile list
-    profile
-      .command('list')
+    profile.parent.command('list')
       .description('Shows a list of available profile contexts')
       .addHelpText('after',
         `Examples:\n  drpm profile list    # Lists out available profile contexts`)
       .action(async () => await this.invokeCommand({ command: profileCommand, subcommand: 'list' }));
     // profile switch
-    profile
-      .command('switch')
+    profile.parent.command('switch')
       .description('Switch between different DID profiles.')
       .option('-n, --name <NAME>', 'Name of the context to switch to; Names are based on DID Methods')
       .addHelpText('after',
@@ -88,14 +161,12 @@ class DRegistryPackageManager {
            drpm profile switch -n btc    # Switch to your btc profile`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'switch' }));
     // profile backup
-    profile
-      .command('backup')
+    profile.parent.command('backup')
       .description('Backup the current profile.json file')
       .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random written to ${DRPM_HOME}/profile.key)`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'backup' }));
     // profile recover
-    profile
-      .command('recover')
+    profile.parent.command('recover')
       .description('Recover an existing profile.json from a backup file and password')
       .option('-f, --file <FILEPATH>', 'Path to a profile.enc backup file')
       .option('-p, --password <PASSWORD>', 'Provide the password to decrypt the profile backup (default: profile.key in same dir as profile.enc')

@@ -5,13 +5,16 @@ import { ContextOptions, DhtProfileCreate, ProfileContext, WebProfileCreate } fr
 import { DhtProfile } from './utils/dht.js';
 import { WebProfile } from './utils/web.js';
 import { Profile } from './profile.js';
+import { readFileSync } from 'node:fs';
+import { DRPM_PROFILE } from '../config.js';
 
 export class Context {
   name: string;
   data: ProfileContext;
-  constructor(name: string, context: ProfileContext) {
+
+  constructor(name: string, data?: ProfileContext) {
     this.name = name;
-    this.data = context;
+    this.data = data ?? this.loadStaticSync();
   }
 
   get(): ProfileContext {
@@ -21,8 +24,14 @@ export class Context {
   save(options: { name?: string; context?: ProfileContext } = {}): void {
     this.name = options.name ?? this.name;
     this.data = options.context ?? this.data;
-    Profile.json[this.name] = this.data;
+    Profile.data[this.name] = this.data;
     Logger.log(`Saved ${this.name} profile context!`);
+  }
+
+  loadStaticSync(): ProfileContext {
+    const profile = JSON.parse(readFileSync(DRPM_PROFILE, 'utf8'));
+    this.data = profile[this.name];
+    return this.data;
   }
 
   async create(params: DhtProfileCreate | WebProfileCreate): Promise<void> {
@@ -48,8 +57,8 @@ export class Context {
         process.exit(1);
       }
 
-      Profile.json.name = method;
-      Profile.json[method] = context;
+      Profile.data.name = method;
+      Profile.data[method] = context;
       Logger.log(`Created ${method} profile: ${stringifier(context)}`);
     } catch (error: any) {
       Logger.error(`Failed to create profile: ${error.message}`);

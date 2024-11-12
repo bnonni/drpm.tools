@@ -1,12 +1,30 @@
+import { Command } from 'commander';
 import { Profile } from '../../drpm/profile.js';
 import { Logger } from '../../utils/logger.js';
 import { ICommand } from '../drpm.js';
 import { DRegistryPackageManagerError } from './error.js';
 
+type ComandDetails = {
+  name: string;
+  description: string;
+  option: {flags: string, description: string, defaultValue?: string};
+  helpText: {location: string, description: string};
+  action: (options: any) => Promise<void> | void;
+}
+
 export class ProfileCommand implements ICommand {
-  async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
+  name: string = 'profile';
+  commands: ComandDetails[] = [];
+  parent: Command;
+
+  constructor({parent, commands}: {parent: Command, commands: ComandDetails[]}) {
+    this.parent = parent;
+    this.commands = commands;
+  }
+
+  static async execute({options, subcommand}: {options?: any, subcommand?: string}): Promise<void> {
     try {
-      const profile = new Profile(options?.name);
+      const profile = new Profile();
       switch (subcommand) {
         case 'read':
           await profile.read(options);
@@ -36,5 +54,9 @@ export class ProfileCommand implements ICommand {
       Logger.error(error.message);
       throw error;
     }
+  }
+
+  async execute({ options, subcommand, }: { options?: any; subcommand?: string; }): Promise<void> {
+    await ProfileCommand.execute({options, subcommand});
   }
 }
