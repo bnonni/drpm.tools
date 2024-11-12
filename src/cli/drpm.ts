@@ -54,11 +54,11 @@ class DRegistryPackageManager {
     profile.command('delete')
       .description('Delete the current profile.json')
       .option('-f, --force', 'Force delete the profile.json without backing up')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random saved to ${DRPM_HOME}/bak/<randhex>/profile.key)`)
       .addHelpText('after',
         `Examples:
-          drpm profile delete                                   # Delete profile.json; use random password for encrypted backup
-          drpm profile delete -p "correct horse battery staple" # Delete profile.json; use custom password for encrypted backup`)
+          drpm profile delete                                      # Delete profile.json, creates backup w/ random password
+          drpm profile delete -p "correct horse battery staple"    # Delete profile.json, creates backup w/ custom password`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'delete' }));
     // profile add
     profile
@@ -90,26 +90,25 @@ class DRegistryPackageManager {
     // profile backup
     profile
       .command('backup')
-      .description('Recover an existing DRPM profile.')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
+      .description('Backup the current profile.json file')
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random written to ${DRPM_HOME}/profile.key)`)
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'backup' }));
     // profile recover
     profile
       .command('recover')
-      .description('Recover an existing DRPM profile.')
-      .option('-f, --file <FILEPATH>', 'Path to a profile.json backup')
-      .option('-p, --password <PASSWORD>', 'Provide the password to decrypt the profile backup, if encrypted')
-      .addHelpText('after', 'Only available for did:dht')
+      .description('Recover an existing profile.json from a backup file and password')
+      .option('-f, --file <FILEPATH>', 'Path to a profile.enc backup file')
+      .option('-p, --password <PASSWORD>', 'Provide the password to decrypt the profile backup (default: profile.key in same dir as profile.enc')
       .action(async (options) => await this.invokeCommand({ options, command: profileCommand, subcommand: 'recover' }));
   }
 
   private addContextCommands() {
     /* ============ CONTEXT COMMANDS ============ */
     const contextCommand = new ContextCommand();
-    const context = this.DRPM.command('context').description('Interact with different DRPM profile contexts');
+    const context = this.DRPM.command('context').description('Interact with different profile contexts');
     // context create
     context.command('create')
-      .description('Create a new DRPM profile context')
+      .description('Create a new profile context')
       .option('-e, --dwnEndpoints <DWNENDPOINTS>', 'Provide one or more DWN endpoints')
       .option('-p, --password <PASSWORD>', 'Provide a password to encrypt Web5 data (default: random)')
       .option('-w, --web5DataPath <WEB5DATAPATH>', `Provide file path for storing Web5 data (default: ${DEFAULT_DATAPATH})`)
@@ -117,9 +116,9 @@ class DRegistryPackageManager {
       .option('-d, --did <METHOD>', 'The method specific id; Required for -m web (e.g. did:web:example.com => example.com)')
       .addHelpText('after',
         `Examples:
-          drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint; DWN Endpoints required
-          drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints; DWN Endpoints required
-          drpm profile create -m web -d example.com                               # Create new profile with did:web method; DID required`
+          drpm profile create -e https://dwn.mydomain.org                         # Create new profile with 1 DWN endpoint (REQUIRED: -e)
+          drpm profile create -e https://dwn.example.com,http://localhost:3000    # Create new profile with multiple DWN endpoints (REQUIRED: -e))
+          drpm profile create -m web -d example.com                               # Create new profile with did:web method (REQUIRED: -d)`
       )
       .action(async (options) => await this.invokeCommand({ options, command: contextCommand, subcommand: 'create' }));
     // context read
@@ -132,17 +131,17 @@ class DRegistryPackageManager {
       .option('-w, --web5DataPath', `Read the web5 DATA dir path`)
       .addHelpText('after',
         `Examples:
-        drpm profile read       # Returns the profile
-        drpm profile read -d    # Returns the profile.did
-        drpm profile read -p    # Returns the profile.password
-        drpm profile read -r    # Returns the profile.recoveryPhrase
-        drpm profile read -e    # Returns the profile.dwnEndpoints
-        drpm profile read -w    # Returns the profile.web5DataPath`
+          drpm profile read       # Returns the profile
+          drpm profile read -d    # Returns the profile.did
+          drpm profile read -p    # Returns the profile.password
+          drpm profile read -r    # Returns the profile.recoveryPhrase
+          drpm profile read -e    # Returns the profile.dwnEndpoints
+          drpm profile read -w    # Returns the profile.web5DataPath`
       )
       .action(async (options) => await this.invokeCommand({ options, command: contextCommand, subcommand: 'read' }));
     // context update
     context.command('update')
-      .description('Update values in the current DRPM profile context')
+      .description('Update values in the current profile context')
       .option('-d, --did <DID>', 'Update the DID')
       .option('-p, --password <PASSWORD>', 'Update the password')
       .option('-r, --recoveryPhrase <RECOVERYPHRASE>', 'Update the recovery phrase')
@@ -150,20 +149,20 @@ class DRegistryPackageManager {
       .option('-w, --web5DataPath <WEB5DATAPATH>', `Update the path to the web5 DATA dir`)
       .addHelpText('after',
         `Examples:
-          drpm profile update -d did:example:abc123                # Update the DID
-          drpm profile update -p "correct horse battery staple"    # Update the password
-          drpm profile update -e https://dwn.mydomain.org          # Update the DWN endpoint`
+          drpm profile update -d did:example:abc123                # Update the profile.did
+          drpm profile update -p "correct horse battery staple"    # Update the profile.password
+          drpm profile update -e https://dwn.mydomain.org          # Update the profile.dwnEndpoints`
       )
       .action(async (options) => await this.invokeCommand({ options, command: contextCommand, subcommand: 'update' }));
     // context delete
     context.command('delete')
       .description('Delete the current profile context')
       .option('-f, --force', 'Force delete the profile context')
-      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random; ${DRPM_HOME}/profile.key)`)
+      .option('-p, --password [PASSWORD]', `Provide a custom password to encypt backup (default: random saved to ${DRPM_HOME}/bak/<randhex>/profile.key)`)
       .addHelpText('after',
         `Examples:
-        drpm profile delete                                   # Delete the context with a random password
-        drpm profile delete -p "correct horse battery staple" # Delete the context with a custom password`
+          drpm profile delete                                      # Delete profile.json, creates backup w/ random password
+          drpm profile delete -p "correct horse battery staple"    # Delete profile.json, creates backup w/ custom password`
       )
       .action(async (options) => await this.invokeCommand({ options, command: contextCommand, subcommand: 'delete' }));
     // TODO: context backup

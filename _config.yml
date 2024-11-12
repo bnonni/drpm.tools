@@ -2,6 +2,5 @@ theme: jekyll-theme-minimal
 show_sidebar: false
 title: Decentralized Registry Package Manager (DRPM)
 description: DRPM - npm for the DWeb
-logo: /assets/img/logo/octopus.webp
 include:
   - .well-known
