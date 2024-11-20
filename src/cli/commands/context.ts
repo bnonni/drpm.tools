@@ -1,4 +1,4 @@
-import { Profile } from '../../drpm/profile.js';
+import { Profile } from '../../lib/profile.js';
 import { Logger } from '../../utils/logger.js';
 import { ICommand } from '../drpm.js';
 import { DRegistryPackageManagerError } from './error.js';

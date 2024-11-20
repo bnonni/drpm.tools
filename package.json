@@ -14,8 +14,7 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/cjs/index.js",
-      "package.json": "./package.json"
+      "require": "./dist/cjs/index.js"
     }
   },
   "homepage": "https://drpm.tools",
