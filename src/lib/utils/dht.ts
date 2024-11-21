@@ -6,7 +6,7 @@ import { Logger } from '../../utils/logger.js';
 import { cleanEndpoint, createPassword, scuid } from '../../utils/misc.js';
 import { DhtProfileConnectParams, DidDhtCreateParams, PartialProfileJson } from '../../utils/types.js';
 import { Profile } from '../profile.js';
-import cuid from '@bugsnag/cuid';
+// import cuid from '@bugsnag/cuid';
 
 export class DhtAgent {
   userAgent: Web5UserAgent;
@@ -37,7 +37,7 @@ export class DhtAgent {
 
   json(): { userAgent: Web5UserAgent; recoveryPhrase: string; connectedDid: string } {
     return {
-      userAgent          : this.userAgent,
+      userAgent      : this.userAgent,
       recoveryPhrase : this.recoveryPhrase!,
       connectedDid   : this.connectedDid!
     };

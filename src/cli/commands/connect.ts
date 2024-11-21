@@ -1,5 +1,5 @@
-import { DWeb5 } from '../../drpm/dweb5.js';
-import { Profile } from '../../drpm/profile.js';
+import { DWeb5 } from '../../lib/dweb5.js';
+import { Profile } from '../../lib/profile.js';
 import { ICommand } from '../drpm.js';
 
 export class ConnectCommand implements ICommand {

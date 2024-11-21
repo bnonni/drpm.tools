@@ -1,6 +1,6 @@
-import { DWeb5 } from '../../drpm/dweb5.js';
-import { DwnProtocols, DwnRecords, DwnSync } from '../../drpm/dwn.js';
-import { Profile } from '../../drpm/profile.js';
+import { DWeb5 } from '../../lib/dweb5.js';
+import { DwnProtocols, DwnRecords, DwnSync } from '../../lib/dwn.js';
+import { Profile } from '../../lib/profile.js';
 import { Logger } from '../../utils/logger.js';
 import { DRegistryPackageManagerError } from './error.js';
 

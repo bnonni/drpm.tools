@@ -8,16 +8,16 @@ export * from './cli/commands/profile.js';
 export * from './cli/commands/registry.js';
 export * from './cli/commands/setup.js';
 
-export * from './drpm/utils/dht.js';
-export * from './drpm/profile.js';
-export * from './drpm/utils/utils.js';
-export * from './drpm/utils/web.js';
-export * from './drpm/dwn.js';
-export * from './drpm/dweb5.js';
-
-export * from './lib/hooks.js';
-export * from './lib/register.js';
+export * from './lib/utils/dht.js';
+export * from './lib/profile.js';
+export * from './lib/utils/utils.js';
+export * from './lib/utils/web.js';
+export * from './lib/dwn.js';
+export * from './lib/dweb5.js';
 export * from './lib/setup.js';
+
+export * from './lib/runtime/hooks.js';
+export * from './lib/runtime/register.js';
 
 export * from './registry/handlers.js';
 export * from './registry/registry.js';

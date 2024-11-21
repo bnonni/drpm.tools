@@ -1,4 +1,5 @@
-import { ensureDir, ensureFile, exists, existsSync } from 'fs-extra';
+import { existsSync } from 'node:fs';
+import { ensureDir, ensureFile, exists } from 'fs-extra';
 import { writeFile } from 'fs/promises';
 import { homedir, platform } from 'os';
 import { join } from 'path';

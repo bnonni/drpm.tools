@@ -18,7 +18,7 @@ export class DWeb5 {
     return this.connection !== undefined;
   }
 
-  public static async connect({name, verbose = false}: {name: string; verbose?: boolean}): Promise<Web5Connection> {
+  public static async connect({ name, verbose = false }: { name?: string; verbose?: boolean }): Promise<Web5Connection> {
     try {
       if(this.isConnected()) {
         return this.connection;
