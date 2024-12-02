@@ -41,7 +41,7 @@ DRPM is a set of tools using DIDs to publish, install, and interact with DPKs pu
 
 In the case of DRPM, we add the DID Method and ID to the package name, so the registry server can lookup the DID document using the DID method (which defines where the DID doc was stored, i.e. which decentralized storage network).
 
-DRPM support one DID method - DHT - with upcoming support for DID WEB and DID BTC. The creation of a DID DHT requires the inclusion of a DWN endpoint. This endpoint is included in the DID document under the "service" section.
+DRPM supports one DID method - DHT - with upcoming support for DID WEB and DID BTC. The creation of a DID DHT requires the inclusion of a DWN endpoint. This endpoint is included in the DID document under the "service" section.
 
 ```json
 {
@@ -61,13 +61,13 @@ DRPM support one DID method - DHT - with upcoming support for DID WEB and DID BT
 
 The service key is a list of objects where each object defines a service available to that DID. In this case, the service used is called `DecentralizedWebNode`.
 
-Resolving the did yields the doc yields the endpoint yields the location for record reads and creates. To participate, you merely need to install the DRPM protocol into your DWN. To view the protocol rules, checkout out [drpm.tools/protocols/drpm](https://drpm.tools/protocols/drpm).
+Resolving the DID yields the doc yields the endpoint yields the location for record reads and creates. To participate, you merely need to install the DRPM protocol into your DWN. To view the protocol rules, checkout out [drpm.tools/protocols/drpm](https://drpm.tools/protocols/drpm).
 
 ## Goals
 
-The goal of DRPM is to decentralize package management putting control of the packages in the hands of the users - not the package registry or package manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs.
+The goal of DRPM is to decentralize package management, putting control of the packages in the hands of the users - not the package registry or package manager. This ensures reliability by eliminating the possibility for broken links. With DRPM, publishers write code to their DWNs.
 
-Developers can discover packages here just like npmjs.com, except explorer.drpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable an source in their own DWN. This forever eliminates the possiblity for brokens links or censorship.
+Developers can discover packages here just like npmjs.com, except explorer.drpm.sofware does not store the code, only offers publishers the ability to list it for discovery. The publishers store the code in their own DWNs and users can query, download and keep a copy of that code as immutable and source in their own DWN. This forever eliminates the possiblity for broken links or censorship.
 
 Npmjs packages are published under usernames or organization names. Devs can publish packages directly to npmjs under the package name and organizations can have an organization username (such as `@web5`) with a list of packages that under that org name. This paradigm is well known and understood but has a limited namespace resulting in gatekeeping, sniping or squatting.
 
@@ -77,16 +77,16 @@ The below sections outline various details differentiating DRPM, explaining how 
 
 ### Dependencies
 
-DRPM reuses the `package.json` and `package-lock.json` files for easy integration to the normal `npm` dev env. The same principals apply: the entries in each file ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution
+DRPM reuses the `package.json` and `package-lock.json` files for easy integration to the normal `npm` dev env. The same principles apply: the entries in each file ensure version locking and integrity hashing. This approach guarantees that packages are always accessible and versioned securely, enabling a more resilient and trustworthy ecosystem for software distribution
 
 * DRPM intercepts `npm install` and redirects the GET calls to a registry running on `localhost:2092`
-* This registry is a simple express server mimicing the paths used by npm to `GET` pacakges from `registry.npmjs.org`
+* This registry is a simple express server mimicking the paths used by npm to `GET` pacakges from `registry.npmjs.org`
 * The express server parses API url path to construct a DRL (Decentralized Resource Locator)
-* DRPM requests the DPK from the DWN found in the DID doc assocaigted with the DID from the dependency version string
+* DRPM requests the DPK from the DWN found in the DID doc associated with the DID from the dependency version string
 * The registry server installs the DPK metadata and tarball into a local folder called `.registry` and passes the path to the tarball back to the `npm install` cli call
 * From there, `npm` handles the rest normally installing the tarball into `node_modules` under `@drpm/{packageName}/{version}`
 * Integrity hashes are produced using the DPK.tgz content ensuring the publisher cannot swap out code under a specific verion in the protocol path.
-* Additionally, DRPM allows developers to republish the code pulled from the remote DWN to their own DWN forever allowing them to secure an immutable copy
+* Additionally, DRPM allows developers to republish the code pulled from the remote DWN to their own DWN, forever allowing them to secure an immutable copy
 * Once a release is published and copied to your own DWN, it can only be changed by the DWN owner.
 * To see the custom registry server, check out [registry.ts](/src/registry/registry.ts)
 
@@ -231,13 +231,13 @@ Resolving the id yields the DID Document for that id located on the method netwo
 
 ### NPM Compatible
 
-DRPM leverages the existing `npm` cli took to achieve all of this eliminating the need for developers to adopt a whole new cli took and new dev workflow.
+DRPM leverages the existing `npm` cli tool to achieve all of this, eliminating the need for developers to adopt a whole new cli tool and new dev workflow.
 
 **How does DRPM highjack the NPM flow?***
 
-On `npm install`, npm sees `@drpm` in `.npmrc` and redirects the GET requests from the defaul registry at `registry.npmjs.org` to a localhost registry server. Npm structures the request based on the left-hand-side name in the dependency object and forms a GET URL using it (e.g. `http://localhost:2092/@drpm/tool5~dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy`). The server routes are setup to capture this request, parse the path params and construct the needed info to find the DWN and fetch the package.
+On `npm install`, npm sees `@drpm` in `.npmrc` and redirects the GET requests from the default registry at `registry.npmjs.org` to a localhost registry server. Npm structures the request based on the left-hand-side name in the dependency object and forms a GET URL using it (e.g. `http://localhost:2092/@drpm/tool5~dhdsxf8w7rd36i5jx8hcpw8hkg1cg8sjhepm1n9iuj55zd3gpjdy`). The server routes are setup to capture this request, parse the path params and construct the needed info to find the DWN and fetch the package.
 
-The method (or implied method) after name and before `~` is the network to use to lookup to specific id at the end of the `~`. If no method is passed, the local server assumes dht. Think of it the method (e.g. `dht`) answers "in what general direction should I look?" (e.g. look in Atlanta, GA) and the id answers "where specifically in that direction should I look?" (look at 123 Main Street Apt 1, Atlanta GA 30308).
+The method (or implied method) after name and before `~` is the network to use to lookup to specific id at the end of the `~`. If no method is passed, the local server assumes dht. Think of it as the method (e.g. `dht`) answers "in what general direction should I look?" (e.g. look in Atlanta, GA) and the id answers "where specifically in that direction should I look?" (look at 123 Main Street Apt 1, Atlanta GA 30308).
 
 ### Node.js Runtime (Register/Hooks)
 
