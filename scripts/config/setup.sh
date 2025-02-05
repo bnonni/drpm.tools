@@ -18,6 +18,7 @@ DRPM_VERSION_FILE="$CONFIG_DRPM_DIR/.version"
 # Ensure CONFIG_DRPM_DIR exists
 if [[ ! -d "$CONFIG_DRPM_DIR" ]]; then
     mkdir -p "$CONFIG_DRPM_DIR"
+    mkdir "$CONFIG_DRPM_DIR/bin"
     echo "DRPM config created ($CONFIG_DRPM_DIR)"
 fi
 
