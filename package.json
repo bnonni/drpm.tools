@@ -104,7 +104,7 @@
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
-    "cli:install-local": "rm -f /usr/local/bin/drpml && npm run build && ln -s $(pwd)/dist/cli/drpm.js /usr/local/bin/drpml",
+    "install:cli": "rm -f $HOME/.config/drpm/bin/drpm && npm run build && ln -s $(pwd)/dist/cli/drpm.js $HOME/.config/drpm/bin/drpm",
     "cli:version": "sh scripts/cli/version.sh",
     "registryd:start": "sh scripts/registryd/start-restart.sh",
     "registryd:stop": "sh scripts/registryd/stop.sh",
@@ -115,6 +115,7 @@
     "docker:run": "docker run -d --rm --network drpm-network -p 2092:2092 --name drpm-registry registry.digitalocean.com/nonni/drpm-registry"
   },
   "dependencies": {
+    "@bugsnag/cuid": "^3.1.1",
     "@inquirer/prompts": "^7.0.1",
     "@tbd54566975/dwn-sdk-js": "^0.5.1",
     "@web5/agent": "^0.8.1",

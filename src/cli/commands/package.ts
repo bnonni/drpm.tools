@@ -1,15 +1,15 @@
-import { DWeb5 } from '../../lib/dweb5.js';
+// import { DWeb5 } from '../../lib/dweb5.js';
 import { Package } from '../../lib/package.js';
-import { Profile } from '../../lib/profile.js';
+// import { Profile } from '../../lib/profile.js';
 import { Logger } from '../../utils/logger.js';
 import { ICommand } from '../drpm.js';
 import { DRegistryPackageManagerError } from './error.js';
 
 export class PackageCommand implements ICommand {
-  async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
+  async execute({ options, subcommand }: { options?: any; subcommand?: string }): Promise<void> {
     try {
       console.log('PackageCommand: execute => options, subcommand', options, subcommand);
-      options.connection = await DWeb5.connect({ name: options.name ?? Profile.loadStaticSync().name });
+      // options.connection = await DWeb5.connect({ name: options.name ?? Profile.loadStaticSync().name });
       switch (subcommand) {
         case 'init':
         case 'create':
