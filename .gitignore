@@ -33,7 +33,9 @@ npm-debug.log*
 .registry*
 .dregistry*
 .postinstall
-
 .drpm/profile.json
 .drpm/registry
 .ignore
+
+# NPM
+.npmrc

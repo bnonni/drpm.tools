@@ -1,0 +1,2 @@
+//localhost:2092/:_authToken=dummy_token
+@drpm:registry=http://localhost:2092
