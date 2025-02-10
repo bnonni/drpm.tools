@@ -117,6 +117,7 @@
   "dependencies": {
     "@bugsnag/cuid": "^3.1.1",
     "@inquirer/prompts": "^7.0.1",
+    "@scure/bip39": "^1.5.4",
     "@tbd54566975/dwn-sdk-js": "^0.5.1",
     "@web5/agent": "^0.8.1",
     "@web5/api": "^0.12.0",
