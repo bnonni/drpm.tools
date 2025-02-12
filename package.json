@@ -87,10 +87,10 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node ./dist//registry/server.js",
+    "start": "node ./dist/registry/server.js",
     "prepack": "npm run build && chmod +x ./dist/cli/drpm.js ./dist/cli/create-dpk.js ./dist/cli/init-dpk.js",
     "clean": "rimraf dist coverage tests/compiled",
-    "wipe": "rimraf node_modules package-lock.json DATA",
+    "wipe": "rimraf node_modules pnpm-lock.json DATA",
     "create": "npm create dpk",
     "init-dpk": "npx init-dpk",
     "tab:1": "[[ -f ~/.npmrc ]] && cp ~/.npmrc ~/.npmrc.drpm.bak || cp .npmrc ~/.npmrc",
