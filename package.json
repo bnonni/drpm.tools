@@ -88,7 +88,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node ./dist/esm/registry/server.js",
-    "prepack": "npm run build && chmod +x ./dist/esm/cli/drpm.js ./dist/esm/cli/create-dpk.js ./dist/esm/cli/init-dpk.js",
+    "prepack": "pnpm build && chmod +x ./dist/esm/cli/drpm.js ./dist/esm/cli/create-dpk.js ./dist/esm/cli/init-dpk.js",
     "clean": "rimraf dist coverage tests/compiled",
     "wipe": "rimraf node_modules package-lock.json DATA",
     "create": "npm create dpk",
@@ -99,16 +99,16 @@
     "tab:4": "./dist/cli/drpm.js protocol configure",
     "tab:5": "node ./dist/registry/server.js",
     "tab:6": "./dist/cli/drpm.js profile get -d",
-    "test:register-hooks": "echo 'Unimplemented!' && exit 0 && npm run build:tests; node --import ./dist/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
-    "build": "npm run build:esm && npm run build:cjs",
+    "test:register-hooks": "echo 'Unimplemented!' && exit 0 && pnpm build:tests; node --import ./dist/src/register.js ./tests/compiled/tests/register-hooks.spec.js",
+    "build": "pnpm build:esm && pnpm build:cjs",
     "build:cjs": "rimraf dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > ./dist/cjs/package.json",
     "build:esm": "rimraf dist dist/types && tsc -p tsconfig.json && chmod +x ./dist/cli/drpm.js",
     "build:tests": "rimraf tests/compiled && tsc -p tests/tsconfig.json",
-    "install:cli": "rm -f $HOME/.config/drpm/bin/drpm && npm run build && ln -s $(pwd)/dist/cli/drpm.js $HOME/.config/drpm/bin/drpm",
-    "version:cli": "sh scripts/cli/version.sh",
+    "cli:install": "rm -f $HOME/.config/drpm/bin/drpm && pnpm build && ln -s $(pwd)/dist/cli/drpm.js $HOME/.config/drpm/bin/drpm",
+    "cli:version": "sh scripts/cli/version.sh",
     "registry:start": "sh scripts/registryd/start-restart.sh",
     "registry:stop": "sh scripts/registryd/stop.sh",
-    "registry:restart": "npm run registry:start -- -f",
+    "registry:restart": "pnpm registry:start -- -f",
     "registry:info": "sh scripts/registryd/info.sh",
     "docker:push": "docker push registry.digitalocean.com/nonni/drpm-registry",
     "docker:build": "docker build -f build/Dockerfile.registry -t registry.digitalocean.com/nonni/drpm-registry .",
@@ -165,5 +165,12 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.5.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sphereon/pex",
+      "classic-level",
+      "esbuild"
+    ]
   }
 }
