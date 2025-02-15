@@ -56,8 +56,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'read'
+          command: profileCommand,
+          subcommand: 'read'
         })
       );
 
@@ -74,8 +74,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'delete'
+          command: profileCommand,
+          subcommand: 'delete'
         })
       );
 
@@ -91,8 +91,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'add'
+          command: profileCommand,
+          subcommand: 'add'
         })
       );
 
@@ -105,8 +105,8 @@ class DRegistryPackageManager {
         `Examples:\n  drpm profile list    # Lists out available profile contexts`
       ).action(
         async () => await this.invokeCommand({
-          command    : profileCommand,
-          subcommand : 'list'
+          command: profileCommand,
+          subcommand: 'list'
         })
       );
 
@@ -125,8 +125,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'switch'
+          command: profileCommand,
+          subcommand: 'switch'
         })
       );
 
@@ -145,8 +145,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'backup'
+          command: profileCommand,
+          subcommand: 'backup'
         })
       );
 
@@ -167,8 +167,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : profileCommand,
-          subcommand : 'recover'
+          command: profileCommand,
+          subcommand: 'recover'
         })
       );
   }
@@ -201,8 +201,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : contextCommand,
-          subcommand : 'create'
+          command: contextCommand,
+          subcommand: 'create'
         })
       );
 
@@ -226,8 +226,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : contextCommand,
-          subcommand : 'read'
+          command: contextCommand,
+          subcommand: 'read'
         })
       );
 
@@ -248,8 +248,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : contextCommand,
-          subcommand : 'update'
+          command: contextCommand,
+          subcommand: 'update'
         })
       );
 
@@ -266,8 +266,8 @@ class DRegistryPackageManager {
       ).action(
         async (options) => await this.invokeCommand({
           options,
-          command    : contextCommand,
-          subcommand : 'delete'
+          command: contextCommand,
+          subcommand: 'delete'
         })
       );
     // TODO: context backup
@@ -294,8 +294,8 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command    : packageCommand,
-          subcommand : 'init'
+          command: packageCommand,
+          subcommand: 'init'
         })
       );
 
@@ -305,8 +305,8 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command    : packageCommand,
-          subcommand : 'create'
+          command: packageCommand,
+          subcommand: 'create'
         })
       );
 
@@ -318,8 +318,8 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command        : packageCommand,
-          subcommand     : 'publish metadata',
+          command: packageCommand,
+          subcommand: 'publish metadata',
         })
       );
 
@@ -330,8 +330,8 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command        : packageCommand,
-          subcommand     : 'publish release',
+          command: packageCommand,
+          subcommand: 'publish release',
         })
       );
 
@@ -342,8 +342,8 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command    : packageCommand,
-          subcommand : 'run'
+          command: packageCommand,
+          subcommand: 'run'
         })
       );
   }
@@ -357,7 +357,7 @@ class DRegistryPackageManager {
       .action(
         async (options) => await this.invokeCommand({
           options,
-          command : registryCommands
+          command: registryCommands
         })
       );
   }
@@ -399,7 +399,7 @@ class DRegistryPackageManager {
       Logger.error('Error reading package.json:', error);
     }
     this.DRPM.name('drpm');
-    this.DRPM.version(`Decentralized Registry Package Manager (drpm) v${this.VERSION} `,'-v, --version', 'Output the current version');
+    this.DRPM.version(`Decentralized Registry Package Manager (drpm) v${this.VERSION} `, '-v, --version', 'Output the current version');
   }
 
 

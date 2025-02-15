@@ -6,9 +6,11 @@ import { ICommand } from '../drpm.js';
 import { DRegistryPackageManagerError } from './error.js';
 
 export class PackageCommand implements ICommand {
-  async execute({ options, subcommand }: { options?: any; subcommand?: string}): Promise<void> {
+  async execute({ options, subcommand }: { options?: any; subcommand?: string }): Promise<void> {
     try {
-      console.log('PackageCommand: execute => options, subcommand', options, subcommand);
+      if (!subcommand) {
+        throw new DRegistryPackageManagerError('PackageCommand: No subcommand provided');
+      }
       options.connection = await DWeb5.connect({ name: options.name ?? Profile.loadStaticSync().name });
       switch (subcommand) {
         case 'init':
